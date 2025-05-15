@@ -36,7 +36,8 @@ bool Options::set( const std::string & p_options )
             else if ( key == "insecure"        )  m_insecure        = ( value == "1" );
             else if ( key == "timeout"         )  m_timeout         = std::stoi( value );
             else if ( key == "verbose"         )  m_verbose         = ( value == "1" );
-            // no error on unkown key to ensure backward compatibility
+            //
+            // no error on unkown key to ensure forward compatibility
         }
     }
     catch ( const std::exception & e )

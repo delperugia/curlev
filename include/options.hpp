@@ -6,7 +6,6 @@
 // This class is used to set various curl options from a string and
 // apply them to a given curl easy handle. set can be called several
 // times. The finale configuration is then applied performing the request.
-//
 
 template< typename Protocol >
 class Wrapper;
