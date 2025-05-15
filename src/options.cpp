@@ -47,7 +47,8 @@ bool Options::set( const std::string & p_options )
     return true;
 }
 
-// Apply options to curl easy handle
+// Apply the configured options to the given CURL easy handle.
+// It returns false if any option fails to set.
 bool Options::apply( CURL * p_curl )
 {
     bool ok = true;
