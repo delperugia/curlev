@@ -1,7 +1,3 @@
-#include <sstream>
-#include <string>
-#include <algorithm>
-
 #include "common.hpp"
 #include "authentication.hpp"
 
@@ -14,42 +10,23 @@
 //   secret     password or token
 bool Authentication::set(const std::string& p_options)
 {
-    try
-    {
-        std::istringstream iss( p_options );
-        std::string        token;
-        //
-        while ( std::getline( iss, token, ',' ) )
-        {
-            token = trim( token );
-            //
-            auto delimiter_pos = token.find( '=' );
-            if ( delimiter_pos == std::string::npos )
-                return false;  // invalid format
-            //
-            std::string key   = trim( token.substr( 0, delimiter_pos  ) );
-            std::string value = trim( token.substr( delimiter_pos + 1 ) );
-            //
-            if ( key == "mode" )
-            {
-                     if ( value == "basic"  ) m_mode = basic;
-                else if ( value == "digest" ) m_mode = digest;
-                else if ( value == "bearer" ) m_mode = bearer;
-                else
-                    return false;  // unknown mode
-            }
-            else if ( key == "user"   ) m_user = value;
-            else if ( key == "secret" ) m_secret = value;
-            //
-            // ignore unknown keys for forward compatibility
-        }
-    }
-    catch ( const std::exception & )
-    {
-        return false;
-    }
-    //
-    return true;
+    return parse_cskv( p_options,
+                       [ this ]( const std::string & key, const std::string & value )
+                       {
+                           if ( key == "mode" )
+                           {
+                                    if ( value == "basic"  ) m_mode = basic;
+                               else if ( value == "digest" ) m_mode = digest;
+                               else if ( value == "bearer" ) m_mode = bearer;
+                               else
+                                   return false;  // unhandleds mode
+                           }
+                           else if ( key == "user"   ) m_user   = value;
+                           else if ( key == "secret" ) m_secret = value;
+                           // ignore unknown keys for forward compatibility
+                           //
+                           return true;
+                       } );
 }
 
 // Apply credential to curl easy handle.

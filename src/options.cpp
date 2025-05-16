@@ -1,6 +1,3 @@
-#include <sstream>
-#include <string>
-
 #include "common.hpp"
 #include "options.hpp"
 
@@ -13,39 +10,20 @@
 //   insecure          false    0 or 1   disables certificate validation
 //   timeout           30       second   receive data timeout
 //   verbose           false    0 or 1   debug log on console
-bool Options::set( const std::string & p_options )
+bool Options::set(const std::string& p_options)
 {
-    try
-    {
-        std::istringstream iss( p_options );
-        std::string        token;
-        //
-        while ( std::getline( iss, token, ',' ) )
-        {
-            token = trim( token );
-            //
-            auto delimiter_pos = token.find( '=' );
-            if ( delimiter_pos == std::string::npos )
-                return false;  // invalid format
-            //
-            std::string key   = trim( token.substr( 0, delimiter_pos  ) );
-            std::string value = trim( token.substr( delimiter_pos + 1 ) );
-            //
-                 if ( key == "connect_timeout" )  m_connect_timeout = std::stoi( value );
-            else if ( key == "follow_location" )  m_follow_location = ( value == "1" );
-            else if ( key == "insecure"        )  m_insecure        = ( value == "1" );
-            else if ( key == "timeout"         )  m_timeout         = std::stoi( value );
-            else if ( key == "verbose"         )  m_verbose         = ( value == "1" );
-            //
-            // no error on unkown key to ensure forward compatibility
-        }
-    }
-    catch ( const std::exception & e )
-    {
-        return false;
-    }
-    //
-    return true;
+    return parse_cskv( p_options,
+                       [ this ]( const std::string & key, const std::string & value )
+                       {
+                                if ( key == "connect_timeout" ) m_connect_timeout = std::stoi( value );
+                           else if ( key == "follow_location" ) m_follow_location = ( value == "1" );
+                           else if ( key == "insecure"        ) m_insecure        = ( value == "1" );
+                           else if ( key == "timeout"         ) m_timeout         = std::stoi( value );
+                           else if ( key == "verbose"         ) m_verbose         = ( value == "1" );
+                           // no error on unknown key to ensure forward compatibility
+                           //
+                           return true;
+                       } );
 }
 
 // Apply the configured options to the given CURL easy handle.

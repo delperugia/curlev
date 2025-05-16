@@ -44,8 +44,8 @@ find_program(VALGRIND_EXECUTABLE NAMES valgrind)
 if(VALGRIND_EXECUTABLE)
     add_custom_target(
         valgrind
-        COMMAND ${VALGRIND_EXECUTABLE} --leak-check=full --track-origins=yes ./test_curlev 99
-        DEPENDS test_curlev
+        COMMAND ${VALGRIND_EXECUTABLE} --leak-check=full --track-origins=yes ./test_1 99
+        DEPENDS test_1
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         COMMENT "Running test_curlev with Valgrind"
     )

@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <curl/curl.h>
+#include <sstream>
+#include <functional>
 
 #include "common.hpp"
 
@@ -25,11 +27,44 @@ bool curl_slist_checked_append( struct curl_slist *& p_list, const std::string &
     }
 }
 
-// Remove leading and trailing white spaces from string.s
+// Remove leading and trailing white spaces from string.
 std::string trim( const std::string & p_string )
 {
     auto begin = std::find_if_not( p_string.begin(), p_string.end(), ::isspace );
     auto end   = std::find_if_not( p_string.rbegin(), p_string.rend(), ::isspace ).base();
     //
     return ( begin < end ) ? std::string( begin, end ) : "";
+}
+
+// Parse a key-value comma-separated string (KVCS) and call the handler for each pair.
+// The handler must return false if the key-value pair is invalid.
+bool parse_cskv( const std::string &                                                       p_options,
+                 const std::function< bool( const std::string &, const std::string & ) > & p_handler )
+{
+    try
+    {
+        std::istringstream iss( p_options );
+        std::string        token;
+        //
+        while ( std::getline( iss, token, ',' ) )
+        {
+            token = trim( token );
+            //
+            auto delimiter_pos = token.find( '=' );
+            if ( delimiter_pos == std::string::npos )
+                return false;  // invalid format
+            //
+            std::string key   = trim( token.substr( 0, delimiter_pos ) );
+            std::string value = trim( token.substr( delimiter_pos + 1 ) );
+            //
+            if ( ! p_handler( key, value ) )
+                return false; // invalid option
+        }
+    }
+    catch ( const std::exception & )
+    {
+        return false;
+    }
+    //
+    return true;
 }
