@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Sources
 set(SRC_FILES
     src/async.cpp
+    src/authentication.cpp
     src/common.cpp
     src/http.cpp
     src/options.cpp

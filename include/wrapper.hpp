@@ -8,6 +8,7 @@
 
 #include "async.hpp"
 #include "options.hpp"
+#include "authentication.hpp"
 
 constexpr long c_code_success                    =  0;
 constexpr long c_code_error_option               = -1;
@@ -18,6 +19,7 @@ constexpr long c_code_error_http_prepare_body    = -5;
 constexpr long c_code_error_http_prepare_mime    = -6;
 constexpr long c_code_error_http_mime            = -7;
 constexpr long c_code_error_wrapper_prepare      = -8;
+constexpr long c_code_error_authentication       = -9;
 
 // The Wrapper class is used to handle all the common curl processing
 // and communication with ASync.
@@ -86,6 +88,7 @@ class Wrapper: public WrapperBase
             bool ok = true;
             //
             ok = ok && m_options.apply( m_curl );
+            ok = ok && m_authentication.apply( m_curl );
             //
             if ( ok )
                 return true;
@@ -110,7 +113,7 @@ class Wrapper: public WrapperBase
                         m_user_cb     = p_user_cb;
                         m_self_shared = self;          // count=3 (user shared, m_self_weak locked and m_self_shared)
                         //
-                        m_async.start_request( m_curl );
+                        m_async.start_request( m_curl ); // async processing starts here
                         //
                         return *dynamic_cast< Protocol * >( this );  // count=2 (user shared and m_self_shared remains)
                     }
@@ -123,7 +126,7 @@ class Wrapper: public WrapperBase
             {
                 std::lock_guard lock( m_exec_mutex );
                 m_exec_done = true;
-                m_exec_cv.notify_one();
+                m_exec_cv.notify_one(); // to unlock the join the user will do
             }
             //
             return *dynamic_cast< Protocol * >( this );
@@ -134,7 +137,7 @@ class Wrapper: public WrapperBase
             {
                 std::unique_lock lock( m_exec_mutex );
                 if ( ! m_exec_done )
-                    m_exec_cv.wait( lock );
+                    m_exec_cv.wait( lock ); // wait for the end of the async processing
             }
             //
             return *dynamic_cast< Protocol * >( this );
@@ -142,7 +145,7 @@ class Wrapper: public WrapperBase
         //
         Protocol & exec( void )
         {
-            return start( nullptr ).join();
+            return start( nullptr ).join(); // start and wait
         }
         //
         Protocol & options( const std::string & p_options )
@@ -154,9 +157,19 @@ class Wrapper: public WrapperBase
             return *dynamic_cast< Protocol * >( this );
         }
         //
+        Protocol & authentication( const std::string & p_credential )
+        {
+            if ( m_response_code == c_code_success )
+                if ( ! m_authentication.set( p_credential ) )
+                    m_response_code = c_code_error_authentication;
+            //
+            return *dynamic_cast< Protocol * >( this );
+        }
+        //
         virtual Protocol & clear( void )
         {
             m_options.clear();
+            m_authentication.clear();
             m_response_code = c_code_success;
             //
             return *dynamic_cast< Protocol * >( this );
@@ -165,9 +178,10 @@ class Wrapper: public WrapperBase
         long get_code( void ) const { return m_response_code; };
         //
     protected:
-        CURL *  m_curl = nullptr;
-        Options m_options;
-        long    m_response_code = c_code_success;
+        CURL *         m_curl = nullptr;
+        Options        m_options;
+        Authentication m_authentication;
+        long           m_response_code = c_code_success;
         //
         void back( long p_result ) override
         {
