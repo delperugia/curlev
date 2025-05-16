@@ -16,7 +16,8 @@ class Wrapper;
 class ASync
 {
     public:
-        ASync();
+         ASync();
+        ~ASync();
         //
         bool   start( void );
         void   stop( void );

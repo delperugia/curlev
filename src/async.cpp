@@ -8,6 +8,11 @@ ASync::ASync()
     m_uv_timer.data = nullptr;
 }
 
+ASync::~ASync()
+{
+    stop();
+}
+
 // Start curl, share and multi, then uv and its worker thread
 bool ASync::start()
 {
