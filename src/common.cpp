@@ -9,6 +9,9 @@
 // of p_list must be kept to be preserved to be freed.
 bool curl_slist_checked_append( struct curl_slist *& p_list, const std::string & p_string )
 {
+    if ( p_string.empty() )
+        return false;
+    //
     struct curl_slist * temp = curl_slist_append( p_list, p_string.c_str() );
     //
     if ( temp == nullptr )

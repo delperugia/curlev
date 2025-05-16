@@ -14,20 +14,15 @@ set(SRC_FILES
 )
 
 # Tests
-set(TEST_FILES
-    tests/test_main.cpp
-    tests/test_1.cpp
-    tests/test_2.cpp
+set(TEST_1_FILES
+    tests/test_1_common.cpp
+    tests/test_1_b.cpp
 )
 
 # Add the library
 add_library(curlev STATIC ${SRC_FILES})
 target_include_directories(curlev PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(curlev PUBLIC uv curl)
-
-# Test executable
-add_executable(test_curlev ${TEST_FILES})
-target_link_libraries(test_curlev PRIVATE curlev)
 
 # cppcheck target
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
@@ -58,5 +53,10 @@ endif()
 
 # Enable testing and add test
 enable_testing()
-add_test(NAME test_1 COMMAND test_curlev 1)
-add_test(NAME test_2 COMMAND test_curlev 2)
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+
+add_executable(test_1 ${TEST_1_FILES})
+target_link_libraries(test_1 GTest::gtest GTest::gtest_main curlev)
+
+add_test(NAME Test_1 COMMAND test_1)

@@ -8,7 +8,7 @@ waiting for the completion.
 
 # Installation
 
-sudo apt-get install g++ libcurl4-openssl-dev libuv1-dev cmake pkg-config make
+sudo apt-get install g++ libcurl4-openssl-dev libuv1-dev cmake pkg-config make libgtest-dev
 
 libcurl: minimal version is v7.69. v8.5.0 that come with Ubuntu 24.04 is buggy.
 
