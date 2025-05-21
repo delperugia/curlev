@@ -1,0 +1,39 @@
+
+Language:                                   Cpp
+Standard:                                   c++17
+ColumnLimit:                                100
+
+AlignConsecutiveAssignments:
+  Enabled:                true
+  AlignCompound:          true
+  AlignFunctionPointers:  true
+  PadOperators:           true
+AlignConsecutiveDeclarations:
+  Enabled:                true
+  AlignCompound:          true
+  AlignFunctionPointers:  true
+  PadOperators:           true
+
+AllowAllParametersOfDeclarationOnNextLine:  false
+BinPackParameters:                          false
+BreakAfterReturnType:                       Automatic
+IndentWrappedFunctionNames:                 true
+AllowShortEnumsOnASingleLine:               true
+
+BreakBeforeBraces:                          Allman    
+PointerAlignment:                           Middle
+ReferenceAlignment:                         Middle
+QualifierAlignment:                         Left
+SpacesInParens:                             Custom
+SpacesInParensOptions:                      
+  InConditionalStatements:                  true
+  Other:                                    true
+SpacesInSquareBrackets:                     true
+SpacesInAngles:                             true
+SpaceAfterLogicalNot :                      true
+
+ReflowComments:                             false
+
+PenaltyBreakScopeResolution:                10000
+PenaltyIndentedWhitespace:                  1000
+PenaltyReturnTypeOnItsOwnLine:              200

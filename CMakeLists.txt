@@ -1,0 +1,66 @@
+cmake_minimum_required(VERSION 3.15)
+project(curlev VERSION 0.1 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Sources
+set(SRC_FILES
+    src/async.cpp
+    src/authentication.cpp
+    src/common.cpp
+    src/http.cpp
+    src/options.cpp
+)
+
+# Tests
+set(TEST_1_FILES
+    tests/test_utils.cpp
+    tests/test_1_common.cpp
+    tests/test_1_http_basic.cpp
+    tests/test_1_http_complex.cpp
+)
+
+# Add the library
+add_library(curlev STATIC ${SRC_FILES})
+target_include_directories(curlev PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(curlev PUBLIC uv curl)
+
+# cppcheck target
+find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
+if(CPPCHECK_EXECUTABLE)
+    add_custom_target(
+        cppcheck
+        COMMAND ${CPPCHECK_EXECUTABLE} --enable=all --inconclusive --inline-suppr --std=c++17 --force
+                --quiet --suppress=missingIncludeSystem
+                --suppress=unusedFunction --suppress=checkersReport 
+                ${SRC_FILES} ${TEST_FILES}
+                -I include
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running cppcheck on sources"
+    )
+endif()
+
+# valgrind target
+find_program(VALGRIND_EXECUTABLE NAMES valgrind)
+if(VALGRIND_EXECUTABLE)
+    add_custom_target(
+        valgrind
+        COMMAND ${VALGRIND_EXECUTABLE} --leak-check=full --track-origins=yes ./test_1 99
+        DEPENDS test_1
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMENT "Running test_curlev with Valgrind"
+    )
+endif()
+
+# Enable testing and add test
+enable_testing()
+find_package(GTest REQUIRED)
+find_package(nlohmann_json REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+include(CTest)
+
+add_executable(test_1 ${TEST_1_FILES})
+target_link_libraries(test_1 GTest::gtest GTest::gtest_main curlev nlohmann_json::nlohmann_json)
+
+add_test(NAME Test_1 COMMAND test_1)
