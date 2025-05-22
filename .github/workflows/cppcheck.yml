@@ -13,7 +13,10 @@ jobs:
   cppcheck:
     name: Run Cppcheck
     runs-on: ubuntu-latest
-
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,5 +28,8 @@ jobs:
         run: |
           cppcheck --enable=all --inconclusive --inline-suppr --std=c++17 --force \
                 --quiet --suppress=missingIncludeSystem \
+                --suppress=unusedFunction --suppress=checkersReport \
                 --error-exitcode=1 \
-                --suppress=unusedFunction --suppress=checkersReport -I src -I tests src tests
+                -I include \
+                src/ tests/
+

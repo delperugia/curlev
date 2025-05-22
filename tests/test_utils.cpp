@@ -42,11 +42,12 @@ std::string json_extract( const std::string & p_json, const std::string & p_path
 
   // Split path into components
   std::istringstream           path_stream( clean_path );
-  std::string                  component;
   nlohmann::json::json_pointer ptr;
   //
   try
   {
+    std::string component;
+    //
     while ( std::getline( path_stream, component, '.' ) )
       ptr /= component;
     //

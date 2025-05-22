@@ -7,17 +7,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(src)
 add_subdirectory(tests)
 
-# cppcheck target
+# Cppcheck target
 find_program(CPPCHECK_EXECUTABLE NAMES cppcheck)
 if(CPPCHECK_EXECUTABLE)
     add_custom_target(
-        cppcheck
+        Cppcheck
         COMMAND ${CPPCHECK_EXECUTABLE} --enable=all --inconclusive --inline-suppr --std=c++17 --force
                 --quiet --suppress=missingIncludeSystem
                 --suppress=unusedFunction --suppress=checkersReport 
-                ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/test/
                 -I ${CMAKE_SOURCE_DIR}/include
+                ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/tests/
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Running cppcheck on sources"
+        COMMENT "Running Cppcheck on sources"
     )
 endif()
