@@ -2,6 +2,7 @@ curlev
 ======
 [![CodeQL](https://github.com/delperugia/curlev/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/github-code-scanning/codeql)
 [![flawfinder](https://github.com/delperugia/curlev/actions/workflows/flawfinder.yml/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/flawfinder.yml)
+![Cppcheck Status](https://github.com/delperugia/curlev/actions/workflows/cppcheck.yml/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This library is based on the libcurl example [multi-uv](https://curl.se/libcurl/c/multi-uv.html]).
