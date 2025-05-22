@@ -2,6 +2,8 @@
 
 #include <string>
 
+extern std::string c_server_httpbin;
+extern std::string c_server_httpbun;
 extern std::string c_server;
 
 // Returns the number of attributes in the object pointed by p_path.

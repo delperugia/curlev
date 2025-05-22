@@ -84,7 +84,7 @@ TEST( http, get )
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 0 );
     EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
     //
-    EXPECT_EQ( json_extract( http->get_body(), "$.args.a" ), "21"  );
+    EXPECT_EQ( json_extract( http->get_body(), "$.args.a" ), "21" );
     EXPECT_EQ( json_extract( http->get_body(), "$.args.bb"), "23" );
   }
   //
@@ -211,7 +211,7 @@ TEST( http, post_mime )
   {
     auto http = HTTP::create( async );
     auto code =
-        http->POST( c_server + "post" )
+        http->POST( c_server_httpbun + "post" )
             .add_mime_parameters( { HTTP::t_mime_file{ "f1", "text/plain", "Hello!", "f1.txt" } } )
             .exec()
             .get_code();
@@ -229,7 +229,7 @@ TEST( http, post_mime )
   {
     auto http = HTTP::create( async );
     auto code =
-        http->POST( c_server + "post" )
+        http->POST( c_server_httpbun + "post" )
             .add_mime_parameters( { ( HTTP::t_mime_parameter{ "m21", "51" } ),
                                     ( HTTP::t_mime_parameter{ "m22", "52" } ),
                                     ( HTTP::t_mime_file     { "f21", "text/html", "World", "f21.txt" } ) } )

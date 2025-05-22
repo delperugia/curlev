@@ -1,6 +1,8 @@
 #include <nlohmann/json.hpp>
 
-std::string c_server = "http://httpbun.com/";  // "http://httpbin.org/";
+std::string c_server_httpbun = "http://httpbun.com/";
+std::string c_server_httpbin = "http://httpbin.org/";
+std::string c_server         = c_server_httpbun;
 
 // Returns the number of attributes in the object pointed by p_path.
 // Returns -1 on error.

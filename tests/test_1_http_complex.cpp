@@ -28,26 +28,3 @@ TEST( http, simultaneous )
   //
   async.stop();
 }
-
-TEST( http, headers )
-{
-  // send specific header
-}
-
-TEST( http, post_json )
-{
-  // with json body
-  // with query & json body
-}
-
-TEST( http, clear )
-{
-  // request, clear, request
-  // clear in middle
-}
-
-TEST( http, errors )
-{
-  // 2 requests
-  // 0 request
-}

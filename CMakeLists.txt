@@ -18,6 +18,7 @@ set(TEST_1_FILES
     tests/test_utils.cpp
     tests/test_1_common.cpp
     tests/test_1_http_basic.cpp
+    tests/test_1_http_advanced.cpp
     tests/test_1_http_complex.cpp
 )
 
