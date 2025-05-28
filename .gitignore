@@ -1,0 +1,8 @@
+# VSC
+settings.json
+
+# Build directories
+build/
+
+# Test directories
+Testing/
