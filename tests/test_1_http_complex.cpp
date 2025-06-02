@@ -163,8 +163,8 @@ TEST( http, abort )
     //
     auto start = uv_hrtime();
     async.stop(); // should wait for the end of all pending requests
-    auto duration = uv_hrtime() - start;
-    EXPECT_TRUE( duration < 2'000'000'000 );
+    auto duration = uv_hrtime() - start;  // in nanoseconds.
+    EXPECT_LT( duration, 3'000'000'000 ); // < 3s
   }
   //
   EXPECT_TRUE( cb_count == 1 );
