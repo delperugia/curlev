@@ -13,6 +13,7 @@ offering both synchronous and asynchronous request handling using a limited over
 
 Key features:
 - Asynchronous requests with callback support
+- Event driven
 - All standard HTTP methods (GET, POST, PUT, PATCH, DELETE)
 - Query parameters, form data and MIME handling
 - Custom headers and authentication
@@ -22,7 +23,7 @@ Key features:
 A simple synchronous request:
 
 ```cpp
-#include "http.hpp"
+#include <curlev/http.hpp>
 #include <iostream>
 
 using namespace curlev;
@@ -44,10 +45,10 @@ int main( int argc, char ** argv )
 }
 ```
 
-A simple asynchronous request:
+A simple asynchronous request with callback:
 
 ```cpp
-#include "http.hpp"
+#include <curlev/http.hpp>
 #include <iostream>
 
 using namespace curlev;
@@ -77,42 +78,46 @@ The complete reference manual can be found [here](docs/reference_manual.md).
 Its architecture and code are ready to give access to the other protocols
 provided by `libcurl`, but only HTTP is available today.
 
-# Build & tests
+# Installing and compiling
 
-To build, you need to have a C++17 compiler, `cmake`, `libcurl` (>=7.33.0)
-and `libuv` installed.
+In order to compile `curlev` you will need the following:
 
-On Ubuntu you can use:
-```sh
-sudo apt-get install cmake g++ libcurl4-openssl-dev libuv1-dev
-```
-or
-```sh
-sudo apt-get install cmake clang libcurl4-gnutls-dev libuv1-dev
-```
+ - git
+ - cmake
+ - a C++17 compiler
+ - libcurl (>=7.33.0)
+ - libuv
 
-On Suze:
-```sh
-sudo zypper in gcc-c++ cmake git libcurl-devel libuv-devel
-```
+Here are the package name for some distribution:
 
-Then:
+Distribution | packages
+-------------|-----------------------
+Ubuntu       | git, cmake, g++ or clang, libcurl4-openssl-dev or libcurl4-gnutls-dev, libuv1-dev
+Suze         | git, cmake, gcc-c++ or clang, libcurl-devel, libuv-devel
+Oracle       | git, cmake, g++, libcurl-devel, libuv-devel
+
+In a console, execute the following:
+
 ```sh
 git clone https://github.com/delperugia/curlev
 cd curlev/
-rm -rf build/
 cmake -B         build/  -DCMAKE_BUILD_TYPE=Release
 cmake --build    build/
 cmake --install  build/
 ```
 
-For testing and debugging, extra packages must be installed:
+# Testing and debugging
 
-```sh
-sudo apt-get install pkg-config libgtest-dev nlohmann-json3-dev cppcheck valgrind
-```
+For testing and debugging, the following extra packages must be installed:
 
-Then:
+ - pkg-config
+ - gtest
+ - nlohmann-json
+ - cppcheck
+ - valgrind
+
+In a console, execute the following:
+
 ```sh
 git clone https://github.com/delperugia/curlev
 cd curlev/
@@ -126,8 +131,8 @@ cmake --build    build/ --target clean
 ```
 
 Tested with:
- - G++                  7.5.0 and 13.3.0
+ - g++                  7.5.0, 11.5 and 13.3.0
  - clang                14.0.0
- - libuv                1.43.0, 1.44.2 and 1.48.0
- - libcurl4-gnutls      7.81.0
- - libcurl4-openssl-dev 8.5.0
+ - libuv                1.42.0, 1.43.0, 1.44.2 and 1.48.0
+ - libcurl4-gnutls-dev  7.81.0
+ - libcurl4-openssl-dev 7.76.1 and 8.5.0
