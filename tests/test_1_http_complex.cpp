@@ -15,7 +15,7 @@ using namespace curlev;
 
 //--------------------------------------------------------------------
 // 9 simultaneous requests
-TEST( http, simultaneous )
+TEST( http_complex, simultaneous )
 {
   ASync async;
   async.start();
@@ -40,7 +40,7 @@ TEST( http, simultaneous )
 
 //--------------------------------------------------------------------
 // Request continues and ASync is stopped
-TEST( http, detached )
+TEST( http_complex, detached )
 {
   bool done = false;
   //
@@ -69,7 +69,7 @@ TEST( http, detached )
 //--------------------------------------------------------------------
 // Check that cookies if activated are properly handled
 // and don't spill on other handles.
-TEST( http, cookies )
+TEST( http_complex, cookies )
 {
   ASync async;
   async.start();
@@ -140,7 +140,7 @@ TEST( http, cookies )
 
 //--------------------------------------------------------------------
 // Abort the request then retry
-TEST( http, abort )
+TEST( http_complex, abort )
 {
   std::atomic_int cb_count = 0;
   //
@@ -194,7 +194,7 @@ TEST( http, abort )
 
 //--------------------------------------------------------------------
 // Request continues and ASync is stopped
-TEST( http, threaded_mode )
+TEST( http_complex, threaded_mode )
 {
  {
     ASync async;

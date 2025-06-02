@@ -14,7 +14,7 @@
 using namespace curlev;
 
 //--------------------------------------------------------------------
-TEST( http, async )
+TEST( http_basic, async )
 {
   {
     ASync async;
@@ -35,7 +35,7 @@ TEST( http, async )
 //--------------------------------------------------------------------
 // Ensure that all methods are properly implemented. Once this is done it is possible
 // to focus on the various function signatures of GET and POST.
-TEST( http, method_equivalence )
+TEST( http_basic, method_equivalence )
 {
   ASync async;
   async.start();
@@ -76,7 +76,7 @@ TEST( http, method_equivalence )
 
 //--------------------------------------------------------------------
 // Validate the p_query_parameters handling in requests without body
-TEST( http, get )
+TEST( http_basic, get )
 {
   ASync async;
   async.start();
@@ -133,7 +133,7 @@ TEST( http, get )
 }
 
 //--------------------------------------------------------------------
-TEST( http, post )
+TEST( http_basic, post )
 {
   ASync async;
   async.start();
@@ -197,7 +197,7 @@ TEST( http, post )
 }
 
 //--------------------------------------------------------------------
-TEST( http, post_mime )
+TEST( http_basic, post_mime )
 {
   ASync async;
   async.start();

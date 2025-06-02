@@ -14,7 +14,7 @@
 using namespace curlev;
 
 //--------------------------------------------------------------------
-TEST( http, headers )
+TEST( http_advanced, headers )
 {
   ASync async;
   async.start();
@@ -56,7 +56,7 @@ TEST( http, headers )
 }
 
 //--------------------------------------------------------------------
-TEST( http, post_json )
+TEST( http_advanced, post_json )
 {
   ASync async;
   async.start();
@@ -101,7 +101,7 @@ TEST( http, post_json )
 }
 
 //--------------------------------------------------------------------
-TEST( http, auth )
+TEST( http_advanced, auth )
 {
   ASync async;
   async.start();
@@ -142,7 +142,7 @@ TEST( http, auth )
 
 //--------------------------------------------------------------------
 // Various clear in middle of requests
-TEST( http, clear )
+TEST( http_advanced, clear )
 {
   ASync async;
   async.start();
@@ -230,7 +230,7 @@ TEST( http, clear )
 
 //--------------------------------------------------------------------
 // 2nd request attempted while the 1st is running
-TEST( http, errors )
+TEST( http_advanced, errors )
 {
   ASync async;
   async.start();
@@ -253,7 +253,7 @@ TEST( http, errors )
 }
 
 //--------------------------------------------------------------------
-TEST( http, user_cb )
+TEST( http_advanced, user_cb )
 {
   ASync async;
   async.start();
@@ -282,7 +282,7 @@ TEST( http, user_cb )
 }
 
 //--------------------------------------------------------------------
-TEST( http, consecutive )
+TEST( http_advanced, consecutive )
 {
   ASync async;
   async.start();
