@@ -6,6 +6,7 @@
 #pragma once
 
 #include <atomic>
+#include <deque>
 #include <condition_variable>
 #include <curl/curl.h>
 #include <mutex>
@@ -15,6 +16,7 @@
 namespace curlev
 {
 
+class                                WrapperBase;
 template < typename Protocol > class Wrapper;
 
 // This class handles the communications between libcurl multi and libuv.
@@ -54,12 +56,16 @@ protected:
   //
 private:
   //
+  // Number of currently running requests, from start_request to post Wrapper notification
+  std::atomic< long > m_nb_running_requests = 0;
+  //
   // libcurl share interface - share data between multiple easy handles (DNS, TLS...)
   //
   CURLSH *   m_share_handle = nullptr;
   std::mutex m_share_locks[ CURL_LOCK_DATA_LAST ];
   //
   bool        share_init( void );
+  void        share_clear( void );
   static void share_cb_unlock( CURL * p_handle, curl_lock_data p_data, void * p_user_ptr );
   static void share_cb_lock(
       CURL *           p_handle,
@@ -72,6 +78,7 @@ private:
   CURLM * m_multi_handle = nullptr;
   //
   bool       multi_init( void );
+  void       multi_clear( void );
   void       multi_fetch_messages( void );
   static int multi_cb_timer( CURLM * p_multi, long p_timeout_ms, void * p_clientp );
   static int multi_cb_socket(
@@ -89,9 +96,9 @@ private:
   std::thread                     m_uv_worker;
   uv_loop_t *                     m_uv_loop = nullptr;
   uv_timer_t                      m_uv_timer;
-  long                            m_nb_running_requests = 0; // number of currently running requests
   //
   bool        uv_init( void );
+  void        uv_clear( void );
   static void uv_io_cb( uv_poll_t * p_handle, int p_status, int p_events );
   static void uv_timeout_cb( uv_timer_t * p_handle );
   //
@@ -108,6 +115,18 @@ private:
   //
   CurlContext * create_curl_context ( curl_socket_t p_socket );
   void          destroy_curl_context( CurlContext * p_context ) const; // cppcheck-suppress functionStatic
+  //
+  // Callback thread
+  //
+  typedef std::tuple< WrapperBase *, long > t_cb_job;
+  mutable std::condition_variable           m_cb_cv;
+  mutable std::mutex                        m_cb_mutex;
+  std::deque< t_cb_job >                    m_cb_queue;
+  bool                                      m_cb_running = false; // worker thread is running
+  std::thread                               m_cb_worker;
+  //
+  bool cb_init( void );
+  void cb_clear( void );
   //
   // To store data received during a transfer
   static size_t curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, void * p_userdata );

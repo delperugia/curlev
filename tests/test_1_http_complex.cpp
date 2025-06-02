@@ -191,3 +191,72 @@ TEST( http, abort )
     async.stop();
   }
 }
+
+//--------------------------------------------------------------------
+// Request continues and ASync is stopped
+TEST( http, threaded_mode )
+{
+ {
+    ASync async;
+    async.start();
+    //
+    {
+      auto http    = HTTP::create( async );
+      long cb_code = 0;
+      std::string cb_body;
+      auto        code =
+          http->GET( c_server + "delay/1" )
+              .threaded_callback( false )
+              .start(
+                  [ &cb_code, &cb_body ]( const auto & h )
+                  {
+                    cb_code = h.get_code();
+                    cb_body = h.get_body();
+                  } )
+              .join()
+              .get_code();
+      ASSERT_EQ( code, 200 );
+      //
+      EXPECT_EQ( cb_code, code );
+      EXPECT_EQ( cb_body, http->get_body() );
+    }
+    //
+    {
+      auto http = HTTP::create( async );
+      auto code = http->GET( c_server + "get" )
+                      .threaded_callback( false )
+                      .exec()
+                      .get_code();
+      //
+      EXPECT_EQ( code, 200 );
+    }
+    //
+    async.stop();
+  }
+  //
+  {
+    bool done = false;
+    //
+    {
+      ASync async;
+      async.start();
+      //
+      {
+        HTTP::create( async )
+            ->GET( c_server + "delay/1" )
+            .threaded_callback( false )
+            .start(
+                [ &done ]( const auto & http )
+                {
+                  ASSERT_EQ( http.get_code(), 200 );
+                  EXPECT_EQ( http.get_body(), "OK" );
+                  done = true;
+                } );
+      }
+      //
+      async.stop(); // should wait for the end of all pending requests
+    }
+    //
+    EXPECT_TRUE( done );
+  }
+}

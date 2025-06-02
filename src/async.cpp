@@ -32,7 +32,7 @@ ASync::~ASync()
 
 //--------------------------------------------------------------------
 // Must be called at least once before doing calling any other function of curlev.
-// Start curl, share and multi, then uv and its worker thread.
+// Start curl, share and multi, then UV and its worker thread.
 bool ASync::start()
 {
   if ( m_uv_running )
@@ -44,6 +44,7 @@ bool ASync::start()
   ok = ok && share_init();
   ok = ok && multi_init();
   ok = ok && uv_init(); // set m_uv_running to true
+  ok = ok && cb_init(); // set m_cb_running to true
   //
   return ok;
 }
@@ -52,55 +53,17 @@ bool ASync::start()
 // Must be called at least when the program stops.
 // Waits a maximum of p_timeout_s seconds before forcefully stopping,
 // returns true if stopping was forced.
-// Stop the worker thread used by uv, share and multi of curl.
-// Ensure all uv handles are released.
+// Stop the worker thread used by UV and CB, clear share and multi of curl.
+// Ensure all UV handles are released.
 // Clean curl.
 bool ASync::stop( unsigned p_timeout_s /* = 30 */)
 {
   bool forced = ! wait_pending_requests( p_timeout_s );
   //
-  // Stops uv_run() thread loop
-  m_uv_running = false;
-  //
-  if ( m_uv_worker.joinable() )
-    m_uv_worker.join();
-  //
-  // m_uv_timer is set to this in start(): it is used to know if uv_timer_init was called
-  if ( m_uv_timer.data != nullptr )
-  {
-    uv_timer_stop( &m_uv_timer ); // crashes if uv_timer_init was not called
-    m_uv_timer.data = nullptr;
-  }
-  //
-  curl_share_cleanup( m_share_handle ); // ok on nullptr
-  m_share_handle = nullptr;
-  //
-  curl_multi_cleanup( m_multi_handle ); // ok on nullptr
-  m_multi_handle = nullptr;
-  //
-  if ( m_uv_loop != nullptr )
-  {
-    // see https://stackoverflow.com/questions/25615340/closing-libuv-handles-correctly
-    //
-    uv_stop( m_uv_loop );
-    //
-    uv_walk(
-        m_uv_loop,
-        []( uv_handle_t * handle, [[maybe_unused]] void * arg )
-        {
-          if ( ! uv_is_closing( handle ) )
-            uv_close( handle, nullptr );
-        },
-        nullptr );
-    //
-    while ( uv_run( m_uv_loop, UV_RUN_ONCE ) != 0 )
-      uv_sleep( 10 );
-    //
-    while ( uv_loop_close( m_uv_loop ) == UV_EBUSY )
-      uv_sleep( 10 );
-    //
-    m_uv_loop = nullptr;
-  }
+  uv_clear();
+  cb_clear();
+  share_clear();
+  multi_clear();
   //
   curl_global_cleanup();
   //
@@ -147,9 +110,9 @@ void ASync::start_request( CURL * p_curl )
   CURLMcode result_code;
   //
   {
-    std::lock_guard lock( m_uv_run_mutex );
-    //
     m_nb_running_requests++;
+    //
+    std::lock_guard lock( m_uv_run_mutex );
     //
     // It will be added at the end of the current uv_run (worker thread of uv_init())
     result_code = curl_multi_add_handle( m_multi_handle, p_curl ); // ok on nullptr
@@ -209,6 +172,13 @@ bool ASync::share_init( void )
 }
 
 //--------------------------------------------------------------------
+void ASync::share_clear( void )
+{
+  curl_share_cleanup( m_share_handle ); // ok on nullptr
+  m_share_handle = nullptr;
+}
+
+//--------------------------------------------------------------------
 // Unlock some of curl share data
 void ASync::share_cb_unlock(
     [[maybe_unused]] CURL * p_handle,
@@ -254,6 +224,13 @@ bool ASync::multi_init( void )
   }
   //
   return ok;
+}
+
+//--------------------------------------------------------------------
+void ASync::multi_clear( void )
+{
+  curl_multi_cleanup( m_multi_handle ); // ok on nullptr
+  m_multi_handle = nullptr;
 }
 
 //--------------------------------------------------------------------
@@ -379,7 +356,7 @@ int ASync::multi_cb_socket(
 }
 
 //--------------------------------------------------------------------
-// Start uv loop and timer, and the worker thread waiting for IO
+// Start UV loop and timer, and the worker thread waiting for IO
 bool ASync::uv_init( void )
 {
   m_uv_loop = uv_default_loop();
@@ -415,6 +392,46 @@ bool ASync::uv_init( void )
   }
   //
   return ok;
+}
+
+//--------------------------------------------------------------------
+void ASync::uv_clear( void )
+{
+  m_uv_running = false;
+  //
+  if ( m_uv_worker.joinable() )
+    m_uv_worker.join();
+  //
+  // m_uv_timer is set to this in start(): it is used to know if uv_timer_init was called
+  if ( m_uv_timer.data != nullptr )
+  {
+    uv_timer_stop( &m_uv_timer ); // crashes if uv_timer_init was not called
+    m_uv_timer.data = nullptr;
+  }
+  //
+  if ( m_uv_loop != nullptr )
+  {
+    // see https://stackoverflow.com/questions/25615340/closing-libuv-handles-correctly
+    //
+    uv_stop( m_uv_loop );
+    //
+    uv_walk(
+        m_uv_loop,
+        []( uv_handle_t * handle, [[maybe_unused]] void * arg )
+        {
+          if ( ! uv_is_closing( handle ) )
+            uv_close( handle, nullptr );
+        },
+        nullptr );
+    //
+    while ( uv_run( m_uv_loop, UV_RUN_ONCE ) != 0 )
+      uv_sleep( 10 );
+    //
+    while ( uv_loop_close( m_uv_loop ) == UV_EBUSY )
+      uv_sleep( 10 );
+    //
+    m_uv_loop = nullptr;
+  }
 }
 
 //--------------------------------------------------------------------
@@ -459,9 +476,9 @@ void ASync::uv_timeout_cb( uv_timer_t * p_handle )
 }
 
 //--------------------------------------------------------------------
-// The context is shared between multi and uv:
+// The context is shared between multi and UV:
 //  - as multi socket data (curl_multi_assign)
-//  - in uv poll member data (here)
+//  - in UV poll member data (here)
 // m_uv_run_mutex is locked.
 ASync::CurlContext * ASync::create_curl_context( curl_socket_t p_socket )
 {
@@ -503,6 +520,47 @@ void ASync::destroy_curl_context( CurlContext * p_context ) const
             delete context;
         } );
   }
+}
+
+//--------------------------------------------------------------------
+// Start the CB worker thread that will call the Wrapper callback
+bool ASync::cb_init( void )
+{
+  m_cb_running = true;
+  m_cb_worker  = std::thread(
+      [ this ]
+      {
+        std::unique_lock lock( m_cb_mutex );
+        //
+        while ( m_cb_running )
+        {
+          while ( ! m_cb_queue.empty() )        // if some notifications are pending
+          {
+            auto [ wrapper, p_result_code ] = m_cb_queue.front();
+            m_cb_queue.pop_front();
+            lock.unlock();                      // retrieve the notification, unlock
+            //
+            wrapper->async_cb( p_result_code ); // notify: the Wrapper can be deleted here
+            m_nb_running_requests--;
+            //
+            lock.lock();                        // lock
+          }
+          //
+          m_cb_cv.wait_for( lock, std::chrono::seconds( 1 ) ); // unlock, wait, notify_wrapper, lock
+        }
+      } );
+  //
+  return true;
+}
+
+//--------------------------------------------------------------------
+// Stop the CB worker thread
+void ASync::cb_clear( void )
+{
+  m_cb_running = false;
+  //
+  if ( m_cb_worker.joinable() )
+    m_cb_worker.join();
 }
 
 //--------------------------------------------------------------------
@@ -557,11 +615,12 @@ size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nit
 // Wait a maximum of 30s, returns false if timeout is reached
 bool ASync::wait_pending_requests( unsigned p_timeout_s ) const
 {
-  for ( unsigned attempts = p_timeout_s * 10; attempts > 0; attempts--, uv_sleep( 100 ) )
+  for ( unsigned attempts = p_timeout_s * 10; attempts > 0; attempts-- )
   {
-    std::lock_guard lock( m_uv_run_mutex );
     if ( m_nb_running_requests == 0 )
       return true;
+    //
+    uv_sleep( 100 );
   }
   //
   return false;
@@ -570,7 +629,10 @@ bool ASync::wait_pending_requests( unsigned p_timeout_s ) const
 //--------------------------------------------------------------------
 // Returns the operation outcome to the Wrapper.
 // Ensure that the Wrapper is only called once (which should always be the case,
-// except for abort_request), and decrement the number of running queries.
+// except for abort_request).
+// Depending on the config:
+//  1] push the job in the queue, callback thread will call the Wrapper.
+//  2] call the Wrapper from UV worker thread.
 // m_uv_run_mutex is locked.
 void ASync::notify_wrapper( CURL * p_curl, long p_result_code )
 {
@@ -582,9 +644,17 @@ void ASync::notify_wrapper( CURL * p_curl, long p_result_code )
     {
       curl_easy_setopt( p_curl, CURLOPT_PRIVATE, nullptr ); // set when Wrapper start(), cleared here
       //
-      wrapper->async_cb( p_result_code ); // must be the last line as the Wrapper can be deleted here
-      //
-      m_nb_running_requests--;
+      if ( wrapper->m_threaded_cb ) // push it to CB queue
+      {
+        std::lock_guard lock( m_cb_mutex );
+        m_cb_queue.push_back( std::make_tuple( wrapper, p_result_code ) );
+        m_cb_cv.notify_one();
+      }
+      else // call it here
+      {
+        wrapper->async_cb( p_result_code ); // notify: the Wrapper can be deleted here
+        m_nb_running_requests--;
+      }
     }
   }
 }

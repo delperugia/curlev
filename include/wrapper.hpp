@@ -50,6 +50,9 @@ protected:
   // Prevent copy
   WrapperBase( const WrapperBase & )             = delete;
   WrapperBase & operator=( const WrapperBase & ) = delete;
+  //
+  // Is async_cb called in ASync uv thread (false) or a dedicated thread (true)
+  bool m_threaded_cb = true;
 };
 
 // Exception thrown when the factory fails to create a new protocol class
@@ -173,6 +176,15 @@ class Wrapper: public WrapperBase
       return static_cast< Protocol & >( *this );
     }
     //
+    // Set the callback mode (default true: threaded)
+    Protocol & threaded_callback( bool p_mode )
+    {
+      if ( m_response_code == c_code_success )
+        m_threaded_cb = p_mode;
+      //
+      return static_cast< Protocol & >( *this );
+    }
+    //
     // Reset the protocol before starting a new transfer
     Protocol & clear( void )
     {
@@ -183,6 +195,7 @@ class Wrapper: public WrapperBase
         m_options.clear();
         m_authentication.clear();
         m_response_code = c_code_success;
+        m_threaded_cb   = true;
       }
       //
       return static_cast< Protocol & >( *this );
