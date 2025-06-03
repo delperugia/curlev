@@ -102,11 +102,25 @@ For example:
 # Executing the request
 
 Once the request is ready, it has to be started using `start()`.
-The request run then asynchronously. This method accepts a function
+The request run then asynchronously. This method accepts a callback function
 that will be called once the request is finished, successfully or not.
 Then call `join()` to wait for asynchronous request completion.
 
 The convenient method `exec()` execute the request synchronously.
+
+By default the callback is invoked from a separate thread. This prevents
+the main IO thread to be blocked while processing the callback but
+add a small extra overhead. If the callback is known to be very fast,
+it is possible to invoke it directly from the IO thread by using
+the `threaded_callback` method of the HTTP instance:
+
+```cpp
+http->GET( "http://www.httpbin.org/get",
+           { { "name", "Alice" }, { "role", "admin" } } )
+     .threaded_callback( false )
+     .start( [ some_context ]( const auto & p_http ) {
+             ...
+```
 
 While a request is running, all methods except `join()` and `exec()` are ignored.
 

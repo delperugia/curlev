@@ -33,11 +33,13 @@ between `libcurl` and `libuv`:
 
 ## Threads and locking
 
-There is one thread running in ASync, in `uv_init()` and invoking `uv_run()`.
-This thread is the root of all function calls on the ASync side.
+There are two threads running in ASync:
+ - one in `uv_init()` and invoking `uv_run()`. This thread is the root of all function calls on the ASync side.
+ - one in `cb_init()` used to notifying the Wrapper when an operation completes (jobs queued from the 1st thread).
+
 Then there are users' threads invoking `start_request()` and `abort_request()`:
 
-The mutex `m_uv_run_mutex` protects the internal objects.
+The mutex `m_uv_run_mutex` protects the internal objects, the mutex `m_cb_mutex` protects the job queue.
 
 ```
     start_request
