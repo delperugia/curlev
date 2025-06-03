@@ -84,6 +84,7 @@ In order to compile `curlev` you will need the following:
 
  - git
  - cmake
+ - pkg-config
  - a C++17 compiler
  - libcurl (>=7.33.0)
  - libuv
@@ -92,9 +93,9 @@ Here are the package name for some distribution:
 
 Distribution | packages
 -------------|-----------------------
-Ubuntu       | git, cmake, g++ or clang, libcurl4-openssl-dev or libcurl4-gnutls-dev, libuv1-dev
-Suze         | git, cmake, gcc-c++ or clang, libcurl-devel, libuv-devel
-Oracle       | git, cmake, g++, libcurl-devel, libuv-devel
+Ubuntu       | git, cmake, pkg-config, g++ or clang, libcurl4-openssl-dev or libcurl4-gnutls-dev, libuv1-dev
+Suze         | git, cmake, pkg-config, gcc-c++ or clang, libcurl-devel, libuv-devel
+Oracle       | git, cmake, pkgconf-pkg-config, g++, libcurl-devel, libuv-devel
 
 In a console, execute the following:
 
@@ -110,7 +111,6 @@ cmake --install  build/
 
 For testing and debugging, the following extra packages must be installed:
 
- - pkg-config
  - gtest
  - nlohmann-json
  - cppcheck
@@ -121,12 +121,11 @@ In a console, execute the following:
 ```sh
 git clone https://github.com/delperugia/curlev
 cd curlev/
-rm -rf build/
 cmake -B         build/  -DCMAKE_BUILD_TYPE=Debug
 cmake --build    build/
-ctest --test-dir build/tests
+ctest --test-dir build/ -T test -T coverage
+ctest --test-dir build/ -T memcheck
 cmake --build    build/ --target cppcheck
-cmake --build    build/ --target valgrind
 cmake --build    build/ --target clean
 ```
 

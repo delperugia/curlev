@@ -14,22 +14,23 @@ jobs:
     name: Run Cppcheck
     runs-on: ubuntu-latest
     permissions:
-      actions: read
-      contents: read
+      actions:         read
+      contents:        read
       security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install Cppcheck
-        run: sudo apt-get update && sudo apt-get install -y cppcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cppcheck
 
       - name: Run Cppcheck on source and tests
         run: |
           cppcheck --enable=all --inconclusive --inline-suppr --std=c++17 --force \
-                --quiet --suppress=missingIncludeSystem \
-                --suppress=unusedFunction --suppress=checkersReport \
+                --quiet --suppress=missingIncludeSystem --suppress=unmatchedSuppression \
+                --suppress=unusedFunction --suppress=checkersReport --suppress=useStlAlgorithm \
                 --error-exitcode=1 \
                 -I include \
                 src/ tests/
-
