@@ -47,6 +47,7 @@ TEST( common, trim_unicode )
 }
 
 //--------------------------------------------------------------------
+// cppcheck-suppress-begin nullPointer
 TEST( common, curl_slist_checked_append )
 {
   curl_slist * slist = nullptr;
@@ -59,16 +60,20 @@ TEST( common, curl_slist_checked_append )
   // Append another header
   EXPECT_TRUE( curl_slist_checked_append( slist, "Header2: value2" ) );
   ASSERT_NE( slist, nullptr );
+  ASSERT_NE( slist->next, nullptr );
   EXPECT_STREQ( slist->next->data, "Header2: value2" );
   //
   // Append an empty string (should not change list)
   curl_slist * slist_before = slist;
   EXPECT_FALSE( curl_slist_checked_append( slist, "" ) );
+  ASSERT_NE( slist, nullptr );
+  ASSERT_NE( slist->next, nullptr );
   EXPECT_EQ( slist_before, slist );
   EXPECT_STREQ( slist->next->data, "Header2: value2" );
   //
   curl_slist_free_all( slist );
 }
+// cppcheck-suppress-end nullPointer
 
 //--------------------------------------------------------------------
 TEST( common, parse_cskv )

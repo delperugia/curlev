@@ -26,7 +26,7 @@ TEST( http_basic, async )
     ASync async;
     async.start();
     {
-      auto http = HTTP::create( async );
+      auto http = HTTP::create( async ); // cppcheck-suppress unreadVariable
     }
     async.stop();
   }
