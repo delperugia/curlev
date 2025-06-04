@@ -38,11 +38,9 @@ jobs:
           ctest --test-dir build/ -T test -T coverage --output-on-failure
           lcov --capture --directory build/src/  --output-file build/coverage.info --ignore-errors gcov,gcov
           lcov --extract build/coverage.info '*/src/*' --output-file build/coverage.info.final
-          bash <(curl -s https://codecov.io/bash) -f build/coverage.info.final || echo "Codecov did not collect coverage reports"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           files: build/coverage.info.final
           flags: unittests
-
