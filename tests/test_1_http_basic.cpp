@@ -25,9 +25,31 @@ TEST( http_basic, async )
   {
     ASync async;
     async.start();
+    async.start();
+    async.stop();
+  }
+  //
+  {
+    ASync async;
+    async.start();
     {
       auto http = HTTP::create( async );
     }
+    async.stop();
+  }
+  //
+  {
+    ASync async;
+    async.start();
+    //
+    {
+      auto http = HTTP::create( async );
+      auto code = http->GET( c_server + "get" ).exec().get_code();
+      //
+      EXPECT_EQ( code, 200 );
+    }
+    //
+    async.stop();
     async.stop();
   }
 }
