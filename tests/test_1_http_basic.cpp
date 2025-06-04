@@ -26,7 +26,7 @@ TEST( http_basic, async )
     ASync async;
     async.start();
     {
-      auto http = HTTP::create( async ); // cppcheck-suppress unreadVariable
+      auto http = HTTP::create( async );
     }
     async.stop();
   }
@@ -86,6 +86,7 @@ TEST( http_basic, get )
     auto code = http->GET( c_server + "get" ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
+    EXPECT_EQ( http->get_content_type(), "application/json" );
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 0 );
     EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
@@ -191,6 +192,24 @@ TEST( http_basic, post )
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.form.a" ), "1" );
     EXPECT_EQ( json_extract( http->get_body(), "$.args.b" ), "2" );
+  }
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->POST( c_server + "post", { { "b1", "1" } } )
+                    .add_query_parameters(     { { "q1", "2" } } )
+                    .add_body_parameters (     { { "b2", "3" } } )
+                    .exec()
+                    .get_code();
+    ASSERT_EQ( code, 200 );
+    //
+    EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 1 );
+    EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 2 );
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    //
+    EXPECT_EQ( json_extract( http->get_body(), "$.form.b1" ), "1" );
+    EXPECT_EQ( json_extract( http->get_body(), "$.form.b2" ), "3" );
+    EXPECT_EQ( json_extract( http->get_body(), "$.args.q1" ), "2" );
   }
   //
   async.stop();

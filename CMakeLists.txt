@@ -33,9 +33,11 @@ if( CPPCHECK_EXECUTABLE )
     add_custom_target(
         cppcheck
         COMMAND ${CPPCHECK_EXECUTABLE}
-                --enable=all --inconclusive --inline-suppr --std=c++17 --force
-                --quiet --suppress=missingIncludeSystem --suppress=unmatchedSuppression
-                --suppress=unusedFunction --suppress=checkersReport --suppress=useStlAlgorithm
+                --enable=all --inconclusive --force 
+                --inline-suppr --std=c++17 --quiet
+                --suppress=checkersReport
+                --suppress=missingIncludeSystem
+                --error-exitcode=1
                 -I ${CMAKE_SOURCE_DIR}/include
                 ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/tests/
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

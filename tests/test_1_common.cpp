@@ -47,7 +47,6 @@ TEST( common, trim_unicode )
 }
 
 //--------------------------------------------------------------------
-// cppcheck-suppress-begin nullPointer
 TEST( common, curl_slist_checked_append )
 {
   curl_slist * slist = nullptr;
@@ -73,7 +72,6 @@ TEST( common, curl_slist_checked_append )
   //
   curl_slist_free_all( slist );
 }
-// cppcheck-suppress-end nullPointer
 
 //--------------------------------------------------------------------
 TEST( common, parse_cskv )

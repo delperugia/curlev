@@ -94,7 +94,7 @@ Here are the package name for some distribution:
 Distribution | packages
 -------------|-----------------------
 Ubuntu       | git, cmake, pkg-config, g++ or clang, libcurl4-openssl-dev or libcurl4-gnutls-dev, libuv1-dev
-Suze         | git, cmake, pkg-config, gcc-c++ or clang, libcurl-devel, libuv-devel
+Suse         | git, cmake, pkg-config, gcc-c++ or clang, libcurl-devel, libuv-devel
 Oracle       | git, cmake, pkgconf-pkg-config, g++, libcurl-devel, libuv-devel
 
 In a console, execute the following:
@@ -113,7 +113,7 @@ For testing and debugging, the following extra packages must be installed:
 
  - gtest
  - nlohmann-json
- - cppcheck
+ - cppcheck (>=2.13)
  - valgrind
 
 In a console, execute the following:

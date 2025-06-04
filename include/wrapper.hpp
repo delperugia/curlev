@@ -58,7 +58,11 @@ protected:
 // Exception thrown when the factory fails to create a new protocol class
 struct bad_curl_easy_alloc : public std::bad_alloc
 {
-  const char * what() const noexcept override { return "Initializing curl easy handle"; }
+  // cppcheck-suppress unusedFunction
+  const char * what() const noexcept override
+  {
+    return "Initializing curl easy handle";
+  }
 };
 
 template< typename Protocol >

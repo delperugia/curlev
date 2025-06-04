@@ -139,6 +139,25 @@ TEST( http_complex, cookies )
 }
 
 //--------------------------------------------------------------------
+// Validate the p_query_parameters handling in requests without body
+TEST( http_basic, redirect )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->GET( c_server + "redirect", { { "url", "http://somewhere.com/" } } )
+                     .exec().get_code();
+    ASSERT_EQ( code, 302 );
+    //
+    EXPECT_EQ(  http->get_redirect_url(), "http://somewhere.com/" );
+  }
+  //
+  async.stop();
+}
+
+//--------------------------------------------------------------------
 // Abort the request then retry
 TEST( http_complex, abort )
 {

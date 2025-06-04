@@ -28,9 +28,10 @@ jobs:
 
       - name: Run Cppcheck on source and tests
         run: |
-          cppcheck --enable=all --inconclusive --inline-suppr --std=c++17 --force \
-                --quiet --suppress=missingIncludeSystem --suppress=unmatchedSuppression \
-                --suppress=unusedFunction --suppress=checkersReport --suppress=useStlAlgorithm \
-                --error-exitcode=1 \
-                -I include \
-                src/ tests/
+          cppcheck --enable=all --inconclusive --force \
+                   --inline-suppr --std=c++17 --quiet \
+                   --suppress=checkersReport \
+                   --suppress=missingIncludeSystem \
+                   --error-exitcode=1 \
+                   -I include \
+                   src/ tests/
