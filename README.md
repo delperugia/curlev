@@ -5,7 +5,7 @@ curlev
 [![flawfinder](https://github.com/delperugia/curlev/actions/workflows/flawfinder.yml/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/flawfinder.yml)
 [![Cppcheck](https://github.com/delperugia/curlev/actions/workflows/cppcheck.yml/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/cppcheck.yml)
 [![Valgrind](https://github.com/delperugia/curlev/actions/workflows/valgrind.yml/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/valgrind.yml)
-[![Codecov](https://codecov.io/gh/delperugia/curlev/branch/main/graph/badge.svg)](https://codecov.io/gh/delperugia/curlev/branch/main)
+[![Codecov](https://codecov.io/gh/delperugia/curlev/graph/badge.svg?token=339AIQXBS3)](https://codecov.io/gh/delperugia/curlev)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A C++ HTTP library providing a flexible and easy-to-use interface for making HTTP requests.
