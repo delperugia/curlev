@@ -13,12 +13,12 @@ It combines the power of `libcurl` for HTTP operations with `libuv` for asynchro
 offering both synchronous and asynchronous request handling using a limited overhead.
 
 Key features:
-- Asynchronous requests with callback support
+
 - Event driven
+- Synchronous and asynchronous requests with callback support
 - All standard HTTP methods (GET, POST, PUT, PATCH, DELETE)
 - Query parameters, form data and MIME handling
 - Custom headers and authentication
-- Thread-safe design
 - Method chaining
 
 A simple synchronous request:
@@ -87,7 +87,7 @@ In order to compile `curlev` you will need the following:
  - cmake
  - pkg-config
  - a C++17 compiler
- - libcurl (>=7.33.0)
+ - libcurl (>=7.61.1)
  - libuv
 
 Here are the package name for some distribution:
