@@ -21,8 +21,20 @@ m_async.stop();
 
 `stop()` waits for all pending requests to finish before returning.
 If a timeout occurs (30s bby default), it returns `true`.
-If there is still existing protocol objects when this function is
-called, memory leaks will occur.
+If there is still existing protocol objects (like HTTP) when
+this function is called, memory leaks will occur:
+
+```cpp
+ASync async;
+async.start();
+auto http = HTTP::create( async );
+http->GET( c_server + "get" ).exec().get_code();
+async.stop();
+```
+
+causes a leak because `http` (which holds an easy curl handle) still exist
+when `ASync` (and libcurl) is stopped (technically `curl_share_cleanup` is called
+while a `CURL` handle still has a reference on the `CURLSH` handle).
 
 # Creating an HTTP instance
 
