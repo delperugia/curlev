@@ -34,8 +34,8 @@ TEST( http_complex, simultaneous )
     for ( auto i = 0; i < codes.size(); i++ )
       EXPECT_EQ( std::to_string( https[ i ]->join().get_code() ), codes[ i ] );
     //
-    EXPECT_EQ( async.get_running_request_max(), codes.size() );
-    EXPECT_EQ( async.get_running_request() , 0            );
+    EXPECT_EQ( async.peak_requests(), codes.size() );
+    EXPECT_EQ( async.active_requests(), 0 );
   }
   //
   async.stop();

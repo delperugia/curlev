@@ -39,8 +39,8 @@ public:
   bool stop( unsigned p_timeout_s = 30 );
   //
   // Accessors
-  int get_running_request_max( void ) const { return m_multi_running_max; }
-  int get_running_request    ( void ) const { return m_multi_running_current; }
+  int peak_requests  ( void ) const { return m_multi_running_max; }
+  int active_requests( void ) const { return m_multi_running_current; }
   //
 protected:
   template < typename Protocol > friend class Wrapper;
