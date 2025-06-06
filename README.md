@@ -103,9 +103,9 @@ In a console, execute the following:
 ```sh
 git clone https://github.com/delperugia/curlev
 cd curlev/
-cmake -B         build/  -DCMAKE_BUILD_TYPE=Release
-cmake --build    build/
-cmake --install  build/
+cmake      -B         build/  -DCMAKE_BUILD_TYPE=Release
+cmake      --build    build/  -j
+sudo cmake --install  build/
 ```
 
 # Testing and debugging
@@ -123,7 +123,7 @@ In a console, execute the following:
 git clone https://github.com/delperugia/curlev
 cd curlev/
 cmake -B         build/  -DCMAKE_BUILD_TYPE=Debug
-cmake --build    build/
+cmake --build    build/  -j
 ctest --test-dir build/ -T test -T coverage
 ctest --test-dir build/ -T memcheck
 cmake --build    build/ --target cppcheck
