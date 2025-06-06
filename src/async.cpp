@@ -109,7 +109,9 @@ void ASync::start_request( CURL * p_curl )
 {
   m_nb_running_requests++;
   //
+  m_nb_waiting_requests++;
   std::lock_guard lock( m_uv_run_mutex );
+  m_nb_waiting_requests--;
   //
   // It will be added at the end of the current uv_run (worker thread of uv_init())
   auto result_code = curl_multi_add_handle( m_multi_handle, p_curl ); // ok on nullptr
@@ -370,10 +372,10 @@ bool ASync::uv_init( void )
           std::unique_lock lock( m_uv_run_mutex );
           //
           while ( m_uv_running )
-            if ( uv_run( m_uv_loop, UV_RUN_NOWAIT ) )                  // if some requests are executing:
-              lock.unlock(), uv_sleep( 0 ), lock.lock();               //    unlock, accept start_request, lock
-            else                                                       // else
-              m_uv_run_cv.wait_for( lock, std::chrono::seconds( 1 ) ); //    unlock, wait, start_request, lock
+            if ( uv_run( m_uv_loop, UV_RUN_NOWAIT ) ) // if some requests are executing:
+              uv_run_accept_requests( lock );         //   accept them (unlock, accept, lock)
+            else                                      // else
+              uv_run_wait_requests( lock );           //   wait for them (unlock, wait, lock)
         } );
   }
   else
@@ -429,6 +431,44 @@ void ASync::uv_clear( void )
 }
 
 //--------------------------------------------------------------------
+// Called between uv_run by uv_init thread when there is requests executing.
+// Try to sleep as little as possible, not at all if possible.
+// unlock, accept start_request, lock
+void ASync::uv_run_accept_requests( std::unique_lock< std::mutex > & p_lock ) const
+{
+  if ( m_nb_waiting_requests == 0 ) // then it is not even needed to unlock
+    return;
+  //
+  p_lock.unlock();
+  //
+  // Some magic values: it is possible to start around 300req/ms without the lock.
+  unsigned to_wait_ms = m_nb_waiting_requests / 300;
+  //
+  uv_sleep( to_wait_ms );
+  //
+  p_lock.lock();
+}
+
+//--------------------------------------------------------------------
+// Called between uv_run by uv_init thread when there is no request executing.
+// unlock, wait for start_request, lock
+void ASync::uv_run_wait_requests( std::unique_lock< std::mutex > & p_lock )
+{
+  m_uv_run_cv.wait_for( p_lock, std::chrono::seconds( 1 ) );
+}
+
+//--------------------------------------------------------------------
+void ASync::multi_update_running_stats( int p_running_handles )
+{
+  int previous = m_multi_running_max.load();
+  while ( p_running_handles > previous &&
+          ! m_multi_running_max.compare_exchange_strong( previous, p_running_handles ) )
+    ;
+  //
+  m_multi_running_current = p_running_handles;
+}
+
+//--------------------------------------------------------------------
 // Called by uv_run() when there is some data sent/received, inform multi,
 // then check if the multi operation are finished.
 // m_uv_run_mutex is locked.
@@ -450,6 +490,8 @@ void ASync::uv_io_cb( uv_poll_t * p_handle, [[maybe_unused]] int p_status, int p
   int running_handles;
   curl_multi_socket_action( context->async.m_multi_handle, context->curl, flags, &running_handles ); // call multi_cb_socket
   //
+  context->async.multi_update_running_stats( running_handles );
+  //
   context->async.multi_fetch_messages(); // must be the last line as the wrapper can be deleted here
 }
 
@@ -465,6 +507,8 @@ void ASync::uv_timeout_cb( uv_timer_t * p_handle )
   // Inform multi that a timeout occurred
   int running_handles;
   curl_multi_socket_action( self->m_multi_handle, CURL_SOCKET_TIMEOUT, 0, &running_handles ); // call multi_cb_socket
+  //
+  self->multi_update_running_stats( running_handles );
   //
   self->multi_fetch_messages(); // must be the last line as the wrapper can be deleted here
 }
