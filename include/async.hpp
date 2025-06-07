@@ -53,7 +53,7 @@ protected:
   //
   // Starts the transfer, ok on nullptr
   // If it fails the wrapper is notified with the curl result code
-  void start_request( CURL * p_curl );
+  bool start_request( CURL * p_curl, void * p_protocol_cb );
   //
   // Aborts a request previously started
   void abort_request( CURL * p_curl );
@@ -130,7 +130,9 @@ private:
   //
   // Callback thread
   //
-  typedef std::tuple< WrapperBase *, long > t_cb_job;
+  using t_wrapper_shared_ptr_ptr = std::shared_ptr< WrapperBase > *;
+  using t_cb_job                 = std::tuple< t_wrapper_shared_ptr_ptr, long >;
+  //
   mutable std::condition_variable           m_cb_cv;
   mutable std::mutex                        m_cb_mutex;
   std::deque< t_cb_job >                    m_cb_queue;
@@ -149,8 +151,11 @@ private:
   // Wait for all pending requests to finish
   bool wait_pending_requests( unsigned p_timeout_s ) const;
   //
-  // Returns the operation outcome to the wrapper
+  // Returns the operation outcome to the wrapper, immediately or delayed
   void notify_wrapper( CURL * p_curl, long p_result_code );
+  //
+  // Call the wrapper, delete the shared_ptr
+  void invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code );
 };
 
 } // namespace curlev

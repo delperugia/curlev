@@ -29,7 +29,8 @@ constexpr long c_code_error_http_prepare_mime    =  -6;
 constexpr long c_code_error_http_method          =  -7;
 constexpr long c_code_error_http_mime            =  -8;
 constexpr long c_code_error_wrapper_prepare      =  -9;
-constexpr long c_code_error_authentication       = -10;
+constexpr long c_code_error_wrapper_start        = -10;
+constexpr long c_code_error_authentication       = -11;
 
 // The Wrapper class is used to handle all the common curl processing
 // and communication with ASync.
@@ -87,7 +88,7 @@ class Wrapper: public WrapperBase
       if ( wrapper->m_curl == nullptr )
         throw bad_curl_easy_alloc();
       //
-      wrapper->m_self_weak = wrapper;
+      wrapper->m_self_weak = wrapper; // used to create and pass a shared_ptr to ASync
       //
       return wrapper;
     }
@@ -102,32 +103,32 @@ class Wrapper: public WrapperBase
     }
     //
     // To start a transfer asynchronously.
-    // To ensure persistency, a new shared pointer is created. This increases the
-    // reference counter of the shared pointer, and thus the class continues
-    // to exist even if the share pointer on by the user goes out of scope and is reset.
+    // To ensure persistency, a new shared pointer is created and passed to ASync.
+    // This increases the reference counter of the shared pointer, and thus the class continues
+    // to exist even if the share pointer owned by the user goes out of scope and is reset.
     Protocol & start( std::function<void( const Protocol & )> p_user_cb = nullptr )
     {
       if ( ! m_exec_running )
       {
-        m_user_cb = p_user_cb; // will be cleared by cb_protocol
+        m_user_cb = p_user_cb; // will be cleared by cb_protocol (below or in async_cb) 
         //
-        if ( prepare_protocol() && prepare_local() ) // set m_response_code on error
+        if ( prepare_protocol() && prepare_local() )  // set m_response_code on error
         {
-          if ( auto self = m_self_weak.lock() ) // must succeed since we are invoked, shared must exist
+          if ( auto self = m_self_weak.lock() )       // must succeed since we are invoked
           {
-            if ( easy_setopt( m_curl, CURLOPT_PRIVATE, this ) ) // used (and cleared) by ASync to call async_cb()
-            {
-              m_exec_running = true;
-              m_self_shared  = self; // count=3 (user shared, m_self_weak locked and m_self_shared)
-              //
-              m_async.start_request( m_curl ); // async processing starts here
-              //
-              return static_cast< Protocol & >( *this ); // count=2 (user shared and m_self_shared remains)
-            }
+            auto cb_data   = new std::shared_ptr< Protocol >( self ); // a new shared_ptr for ASync, deleted by ASync
+            m_exec_running = true;                                    // will cleared in async_cb called by ASync
+            //
+            if ( m_async.start_request( m_curl, cb_data ) ) // async processing starts here
+                return static_cast< Protocol & >( *this );
+            //
+            // Failed cases
+            m_exec_running  = false;
+            m_response_code = c_code_error_wrapper_start;
+            delete cb_data;
           }
         }
         //
-        // Failed case
         cb_protocol( static_cast< Protocol & >( *this ) ); // invoke user's callback, clear m_user_cb
       }
       //
@@ -246,15 +247,7 @@ class Wrapper: public WrapperBase
         m_exec_cv.notify_one();
       }
       //
-      cb_protocol( *m_self_shared ); // invoke user's callback, clear m_user_cb
-      //
-      // To avoid any reentrancy problem on self destruction (reset() calls destructor
-      // that calls reset()...), use a local temporary variable
-      {
-        auto tmp = m_self_shared; // increment count, now 2 or 3 (if user shared still exist)
-        m_self_shared.reset();    // now 1 or 2 (if user shared still exist)
-        tmp.reset();              // now 0 (object destructed) or 1 (if user shared still exist)
-      }
+      cb_protocol( static_cast< Protocol & >( *this ) ); // invoke user's callback, clear m_user_cb
     }
     //
     // When starting, the Protocol configures the easy handle
@@ -288,11 +281,11 @@ class Wrapper: public WrapperBase
     //
   private:
     ASync &                     m_async;
-    std::weak_ptr< Protocol >   m_self_weak;   // set at creation
-    std::shared_ptr< Protocol > m_self_shared; // set while the transfer is executing to ensure object lifetime
+    std::weak_ptr< Protocol >   m_self_weak; // set on self at creation, used to create and pass a shared_ptr to ASync
     //
     std::function< void( const Protocol & ) > m_user_cb = nullptr;
     //
+    // Usd by join()
     std::mutex              m_exec_mutex;
     std::condition_variable m_exec_cv;
     bool                    m_exec_running = false;

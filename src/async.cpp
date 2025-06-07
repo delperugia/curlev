@@ -104,25 +104,27 @@ void ASync::return_handle( CURL * p_curl ) const
 
 //--------------------------------------------------------------------
 // Starts the transfer, ok on nullptr.
-// If it fails the wrapper is notified with the curl result code.
-void ASync::start_request( CURL * p_curl )
+// Waits the end of the current uv_run() to add the handle.
+bool ASync::start_request( CURL * p_curl, void * p_protocol_cb )
 {
+  if ( ! easy_setopt( p_curl, CURLOPT_PRIVATE, p_protocol_cb ) )
+    return false;
+  //
   m_nb_running_requests++;
   //
   m_nb_waiting_requests++;
   std::lock_guard lock( m_uv_run_mutex );
   m_nb_waiting_requests--;
   //
-  // It will be added at the end of the current uv_run (worker thread of uv_init())
-  auto result_code = curl_multi_add_handle( m_multi_handle, p_curl ); // ok on nullptr
-  //
-  if ( result_code == CURLM_OK )
+  // Added for the next uv_run() (in worker thread of uv_init())
+  if ( curl_multi_add_handle( m_multi_handle, p_curl ) == CURLM_OK ) // ok on nullptr
   {
     m_uv_run_cv.notify_one();
+    return true;
   }
   else
   {
-    notify_wrapper( p_curl, result_code ); // wrapper cannot be deleted here since it is currently calling us
+    return false;
   }
 }
 
@@ -578,8 +580,7 @@ bool ASync::cb_init( void )
             m_cb_queue.pop_front();
             lock.unlock();                      // retrieve the notification, unlock
             //
-            wrapper->async_cb( p_result_code ); // notify: the Wrapper can be deleted here
-            m_nb_running_requests--;
+            invoke_wrapper( wrapper, p_result_code );
             //
             lock.lock();                        // lock
           }
@@ -676,27 +677,43 @@ bool ASync::wait_pending_requests( unsigned p_timeout_s ) const
 // m_uv_run_mutex is locked.
 void ASync::notify_wrapper( CURL * p_curl, long p_result_code )
 {
-  WrapperBase * wrapper = nullptr;
+  void * cb_data = nullptr;
+  if ( curl_easy_getinfo( p_curl, CURLINFO_PRIVATE, &cb_data ) != CURLE_OK ||
+       cb_data == nullptr ) // already notified
+    return;
   //
-  if ( curl_easy_getinfo( p_curl, CURLINFO_PRIVATE, &wrapper ) == CURLE_OK )
+  curl_easy_setopt( p_curl, CURLOPT_PRIVATE, nullptr ); // set when Wrapper start(), cleared here
+  //
+  auto wrapper = static_cast< t_wrapper_shared_ptr_ptr >( cb_data ); // allocated by Wrapper start()
+  if ( ! ( *wrapper ) )                                              // cannot happen
+    return;
+  //
+  if ( ( *wrapper )->m_threaded_cb ) // push it to CB queue
   {
-    if ( wrapper != nullptr ) // if not already notified
-    {
-      curl_easy_setopt( p_curl, CURLOPT_PRIVATE, nullptr ); // set when Wrapper start(), cleared here
-      //
-      if ( wrapper->m_threaded_cb ) // push it to CB queue
-      {
-        std::lock_guard lock( m_cb_mutex );
-        m_cb_queue.push_back( std::make_tuple( wrapper, p_result_code ) );
-        m_cb_cv.notify_one();
-      }
-      else // call it here
-      {
-        wrapper->async_cb( p_result_code ); // notify: the Wrapper can be deleted here
-        m_nb_running_requests--;
-      }
-    }
+    std::lock_guard lock( m_cb_mutex );
+    m_cb_queue.push_back( std::make_tuple( wrapper, p_result_code ) );
+    m_cb_cv.notify_one();
   }
+  else // call it now and here (uv_run worker thread)
+  {
+    invoke_wrapper( wrapper, p_result_code );
+  }
+}
+
+//--------------------------------------------------------------------
+// Call the wrapper, delete the shared_ptr
+void ASync::invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code )
+{
+  if ( p_wrapper == nullptr || ! *p_wrapper ) // cannot happen
+    return;
+  //
+  ( *p_wrapper )->async_cb( p_result_code ); // call Protocol
+  //
+  m_nb_running_requests--;
+  //
+  ( *p_wrapper ).reset(); // possibly delete Protocol
+  delete p_wrapper;
+  p_wrapper = nullptr;
 }
 
 } // namespace curlev
