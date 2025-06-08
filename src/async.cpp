@@ -18,6 +18,9 @@
 namespace curlev
 {
 
+// Used by threads to periodically check for a "stop" condition
+constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 500 );
+
 //--------------------------------------------------------------------
 ASync::ASync()
 {
@@ -40,7 +43,7 @@ bool ASync::start()
   //
   bool ok = true;
   //
-  ok = ok && CURLE_OK == curl_global_init( CURL_GLOBAL_ALL );
+  ok = ok && global_init();
   ok = ok && share_init();
   ok = ok && multi_init();
   ok = ok && uv_init(); // set m_uv_running to true
@@ -64,8 +67,7 @@ bool ASync::stop( unsigned p_timeout_s /* = 30 */)
   cb_clear();
   share_clear();
   multi_clear();
-  //
-  curl_global_cleanup();
+  global_clear();
   //
   return forced;
 }
@@ -142,6 +144,32 @@ void ASync::abort_request( CURL * p_curl )
 }
 
 //--------------------------------------------------------------------
+// Number or curl_global_init() must match the number of curl_global_cleanup()
+bool ASync::global_init( void )
+{
+  std::lock_guard lock( m_global_mutex );
+  //
+  bool ok = m_global_count > 0 ||                             // already initialized
+            CURLE_OK == curl_global_init( CURL_GLOBAL_ALL );  // or first initialization
+  //
+  if ( ok )
+    m_global_count++;
+  //
+  return ok;
+}
+
+//--------------------------------------------------------------------
+// Number or curl_global_init() must match the number of curl_global_cleanup()
+void ASync::global_clear( void )
+{
+  std::lock_guard lock( m_global_mutex );
+  //
+  if ( m_global_count > 0 )       // safety if global_clear() is invoked more than global_init()
+    if ( --m_global_count == 0 )  // last one
+      curl_global_cleanup();
+}
+
+//--------------------------------------------------------------------
 // Cookies are not shared since the easy handles can be used in
 // different contexts.
 bool ASync::share_init( void )
@@ -151,9 +179,9 @@ bool ASync::share_init( void )
   bool ok = true;
   //
   ok = ok && m_share_handle != nullptr;
+  ok = ok && share_setopt( m_share_handle, CURLSHOPT_SHARE     , CURL_LOCK_DATA_CONNECT     );
   ok = ok && share_setopt( m_share_handle, CURLSHOPT_SHARE     , CURL_LOCK_DATA_DNS         );
   ok = ok && share_setopt( m_share_handle, CURLSHOPT_SHARE     , CURL_LOCK_DATA_SSL_SESSION );
-  ok = ok && share_setopt( m_share_handle, CURLSHOPT_SHARE     , CURL_LOCK_DATA_CONNECT     );
   ok = ok && share_setopt( m_share_handle, CURLSHOPT_LOCKFUNC  , &share_cb_lock             );
   ok = ok && share_setopt( m_share_handle, CURLSHOPT_UNLOCKFUNC, &share_cb_unlock           );
   ok = ok && share_setopt( m_share_handle, CURLSHOPT_USERDATA  , this                       );
@@ -355,13 +383,30 @@ int ASync::multi_cb_socket(
 
 //--------------------------------------------------------------------
 // Start UV loop and timer, and the worker thread waiting for IO
+
+namespace
+{
+  // Cleanly close and deallocate a loop
+  void uv_clear_loop( uv_loop_t *& p_loop )
+  {
+    if ( p_loop != nullptr )
+    {
+      while ( uv_loop_close( p_loop ) == UV_EBUSY )
+        uv_sleep( 10 );
+      //
+      delete p_loop;
+      p_loop = nullptr;
+    }
+  }
+} // namespace
+
 bool ASync::uv_init( void )
 {
-  m_uv_loop = uv_default_loop();
-  //
   bool ok = true;
   //
-  ok = ok && m_uv_loop != nullptr;
+  ok = ok && m_uv_loop == nullptr;
+  ok = ok && ( m_uv_loop = new uv_loop_t ) != nullptr;
+  ok = ok && 0 == uv_loop_init ( m_uv_loop );
   ok = ok && 0 == uv_timer_init( m_uv_loop, &m_uv_timer );
   //
   if ( ok )
@@ -382,11 +427,7 @@ bool ASync::uv_init( void )
   }
   else
   {
-    if ( m_uv_loop != nullptr )
-    {
-      uv_loop_close( m_uv_loop );
-      m_uv_loop = nullptr;
-    }
+    uv_clear_loop( m_uv_loop );
   }
   //
   return ok;
@@ -425,10 +466,7 @@ void ASync::uv_clear( void )
     while ( uv_run( m_uv_loop, UV_RUN_ONCE ) != 0 )
       uv_sleep( 10 );
     //
-    while ( uv_loop_close( m_uv_loop ) == UV_EBUSY )
-      uv_sleep( 10 );
-    //
-    m_uv_loop = nullptr;
+    uv_clear_loop( m_uv_loop );
   }
 }
 
@@ -456,7 +494,7 @@ void ASync::uv_run_accept_requests( std::unique_lock< std::mutex > & p_lock ) co
 // unlock, wait for start_request, lock
 void ASync::uv_run_wait_requests( std::unique_lock< std::mutex > & p_lock )
 {
-  m_uv_run_cv.wait_for( p_lock, std::chrono::seconds( 1 ) );
+  m_uv_run_cv.wait_for( p_lock, c_event_wait_timeout );
 }
 
 //--------------------------------------------------------------------
@@ -585,7 +623,7 @@ bool ASync::cb_init( void )
             lock.lock();                        // lock
           }
           //
-          m_cb_cv.wait_for( lock, std::chrono::seconds( 1 ) ); // unlock, wait, notify_wrapper, lock
+          m_cb_cv.wait_for( lock, c_event_wait_timeout ); // unlock, wait, notify_wrapper, lock
         }
       } );
   //

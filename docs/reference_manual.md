@@ -6,7 +6,7 @@ All classes and functions are inside the namespace `curlev`.
 # Starting
 
 The `libcurl` and `libuv` libraries must be started before any other operations,
-usually when the application starts. A single instance of `ASync` must be instantiated
+usually when the application starts. Multiple instances of `ASync` can be instantiated
 and started using:
 
 ```cpp

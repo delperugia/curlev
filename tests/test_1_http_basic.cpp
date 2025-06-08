@@ -52,6 +52,20 @@ TEST( http_basic, async )
     async.stop();
     async.stop();
   }
+  //
+  {
+    ASync async1;
+    ASync async2;
+    ASync async3;
+    async1.start();
+    async1.start();
+    async2.start();
+    async1.stop();
+    async3.start();
+    async2.stop();
+    async3.stop();
+    async3.stop();
+  }
 }
 
 //--------------------------------------------------------------------

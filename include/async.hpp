@@ -66,6 +66,14 @@ private:
   // Number of currently running (including waiting) requests, from start_request to post Wrapper notification
   std::atomic_long m_nb_running_requests = 0;
   //
+  // libcurl global
+  //
+  unsigned   m_global_count = 0;
+  std::mutex m_global_mutex;
+  //
+  bool global_init( void );
+  void global_clear( void );
+  //
   // libcurl share interface - share data between multiple easy handles (DNS, TLS...)
   //
   CURLSH *   m_share_handle = nullptr;
@@ -110,7 +118,7 @@ private:
   bool        uv_init( void );
   void        uv_clear( void );
   void        uv_run_accept_requests( std::unique_lock< std::mutex > & p_lock ) const;
-  void        uv_run_wait_requests( std::unique_lock< std::mutex > & p_lock );
+  void        uv_run_wait_requests  ( std::unique_lock< std::mutex > & p_lock );
   static void uv_io_cb( uv_poll_t * p_handle, int p_status, int p_events );
   static void uv_timeout_cb( uv_timer_t * p_handle );
   //
