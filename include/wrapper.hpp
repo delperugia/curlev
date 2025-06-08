@@ -19,18 +19,15 @@
 namespace curlev
 {
 
-constexpr long c_code_success                    =   0;
-constexpr long c_code_error_option               =  -1;
-constexpr long c_code_error_http_headers         =  -2;
-constexpr long c_code_error_http_prepare         =  -3;
-constexpr long c_code_error_http_prepare_no_body =  -4;
-constexpr long c_code_error_http_prepare_body    =  -5;
-constexpr long c_code_error_http_prepare_mime    =  -6;
-constexpr long c_code_error_http_method          =  -7;
-constexpr long c_code_error_http_mime            =  -8;
-constexpr long c_code_error_wrapper_prepare      =  -9;
-constexpr long c_code_error_wrapper_start        = -10;
-constexpr long c_code_error_authentication       = -11;
+constexpr long c_success                     =  0;
+constexpr long c_error_start                 = -1; // internal error
+constexpr long c_error_options_format        = -2; // bad options format string
+constexpr long c_error_authentication_format = -3; // bad authentication format string
+constexpr long c_error_options_set           = -4; // bad option value
+constexpr long c_error_authentication_set    = -5; // bad authentication value
+constexpr long c_error_http_headers_set      = -6; // bad header
+constexpr long c_error_http_method_set       = -7; // internal error
+constexpr long c_error_http_mime_set         = -8; // bad MIME value
 
 // The Wrapper class is used to handle all the common curl processing
 // and communication with ASync.
@@ -124,7 +121,7 @@ class Wrapper: public WrapperBase
             //
             // Failed cases
             m_exec_running  = false;
-            m_response_code = c_code_error_wrapper_start;
+            m_response_code = c_error_start;
             delete cb_data;
           }
         }
@@ -164,9 +161,9 @@ class Wrapper: public WrapperBase
     // Set easy libcurl options. Can be called several times
     Protocol & options( const std::string & p_options )
     {
-      if ( m_response_code == c_code_success )
+      if ( m_response_code == c_success )
         if ( ! m_options.set( p_options ) )
-          m_response_code = c_code_error_option;
+          m_response_code = c_error_options_format;
       //
       return static_cast< Protocol & >( *this );
     }
@@ -174,9 +171,9 @@ class Wrapper: public WrapperBase
     // Set easy libcurl credential
     Protocol & authentication( const std::string & p_credential )
     {
-      if ( m_response_code == c_code_success )
+      if ( m_response_code == c_success )
         if ( ! m_authentication.set( p_credential ) )
-          m_response_code = c_code_error_authentication;
+          m_response_code = c_error_authentication_format;
       //
       return static_cast< Protocol & >( *this );
     }
@@ -184,7 +181,7 @@ class Wrapper: public WrapperBase
     // Set the callback mode (default true: threaded)
     Protocol & threaded_callback( bool p_mode )
     {
-      if ( m_response_code == c_code_success )
+      if ( m_response_code == c_success )
         m_threaded_cb = p_mode;
       //
       return static_cast< Protocol & >( *this );
@@ -199,7 +196,7 @@ class Wrapper: public WrapperBase
         //
         m_options.clear();
         m_authentication.clear();
-        m_response_code = c_code_success;
+        m_response_code = c_success;
         m_threaded_cb   = true;
       }
       //
@@ -213,7 +210,7 @@ class Wrapper: public WrapperBase
     CURL *         m_curl = nullptr;
     Options        m_options;
     Authentication m_authentication;
-    long           m_response_code = c_code_success;
+    long           m_response_code = c_success;
     //
   protected:
     //
@@ -221,16 +218,19 @@ class Wrapper: public WrapperBase
     // It is guaranteed that there is no operation running.
     bool prepare_local( void )
     {
-      bool ok = true;
+      if ( ! m_options.apply( m_curl ) )
+      {
+        m_response_code = c_error_options_set;
+        return false;
+      }
       //
-      ok = ok && m_options.apply( m_curl );
-      ok = ok && m_authentication.apply( m_curl );
+      if ( ! m_authentication.apply( m_curl ) )
+      {
+        m_response_code = c_error_authentication_set;
+        return false;
+      }
       //
-      if ( ok )
-        return true;
-      //
-      m_response_code = c_code_error_wrapper_prepare;
-      return false;
+      return true;
     }
     //
     // Called by ASync when the asynchronous transfer is finished

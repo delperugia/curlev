@@ -222,7 +222,6 @@ bool HTTP::prepare_protocol( void )
   if ( ok )
     return true;
   //
-  m_response_code = c_code_error_http_prepare;
   return false;
 }
 
@@ -283,7 +282,7 @@ bool HTTP::fill_method( void )
   switch ( m_request_method )
   {
     default:
-    case none   : m_response_code = c_code_error_http_method;
+    case none   : m_response_code = c_error_http_method_set;
                   return false;
     case eGET   : method = "GET"   ; break;
     case eDELETE: method = "DELETE"; break;
@@ -313,7 +312,7 @@ bool HTTP::fill_headers( void )
   {
     curl_slist_free_all( m_curl_headers );
     m_curl_headers  = nullptr;
-    m_response_code = c_code_error_http_headers;
+    m_response_code = c_error_http_headers_set;
   }
   //
   return ok;
@@ -329,7 +328,7 @@ bool HTTP::fill_body( void )
   if ( m_request_method == ePOST || m_request_method == ePUT || m_request_method == ePATCH )
   {
     if ( ! m_request_mime.empty() ) // has precedence over m_request_body and m_request_body_parameters
-      return fill_body_mime();
+      return fill_body_mime();      // set m_response_code on error
     //
     if ( ! m_request_body_parameters.empty() ) // has precedence over m_request_body
     {
@@ -435,7 +434,7 @@ bool HTTP::fill_body_mime( void )
     //
     curl_mime_free( m_curl_mime );
     m_curl_mime     = nullptr;
-    m_response_code = c_code_error_http_mime;
+    m_response_code = c_error_http_mime_set;
   }
   //
   return ok;
