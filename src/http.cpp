@@ -21,6 +21,8 @@ HTTP & HTTP::GET( const std::string & p_url, const t_key_values & p_query_parame
 {
   if ( ! is_running() )
   {
+    clear();
+    //
     m_request_method = eGET;
     m_request_url    = p_url;
     m_request_query_parameters.insert( p_query_parameters.begin(), p_query_parameters.end() );
@@ -35,6 +37,8 @@ HTTP & HTTP::DELETE( const std::string & p_url, const t_key_values & p_query_par
 {
   if ( ! is_running() )
   {
+    clear();
+    //
     m_request_method = eDELETE;
     m_request_url    = p_url;
     m_request_query_parameters.insert( p_query_parameters.begin(), p_query_parameters.end() );
@@ -52,6 +56,8 @@ HTTP & HTTP::POST(
 {
   if ( ! is_running() )
   {
+    clear();
+    //
     m_request_method       = ePOST;
     m_request_url          = p_url;
     m_request_body         = p_body;
@@ -70,6 +76,8 @@ HTTP & HTTP::PUT(
 {
   if ( ! is_running() )
   {
+    clear();
+    //
     m_request_method       = ePUT;
     m_request_url          = p_url;
     m_request_body         = p_body;
@@ -88,6 +96,8 @@ HTTP & HTTP::PATCH(
 {
   if ( ! is_running() )
   {
+    clear();
+    //
     m_request_method       = ePATCH;
     m_request_url          = p_url;
     m_request_body         = p_body;
@@ -103,6 +113,8 @@ HTTP & HTTP::POST( const std::string & p_url, const t_key_values & p_body_parame
 {
   if ( ! is_running() )
   {
+    clear();
+    //
     m_request_method = ePOST;
     m_request_url    = p_url;
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
@@ -117,6 +129,8 @@ HTTP & HTTP::PUT( const std::string & p_url, const t_key_values & p_body_paramet
 {
   if ( ! is_running() )
   {
+    clear();
+    //
     m_request_method = ePUT;
     m_request_url    = p_url;
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
@@ -131,6 +145,8 @@ HTTP & HTTP::PATCH( const std::string & p_url, const t_key_values & p_body_param
 {
   if ( ! is_running() )
   {
+    clear();
+    //
     m_request_method = ePATCH;
     m_request_url    = p_url;
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
@@ -267,8 +283,8 @@ void HTTP::clear_protocol( void )
 // Release extra curl handles that were used during the operation
 void HTTP::release_curl_extras( void )
 {
-  curl_slist_free_all( m_curl_headers );
-  curl_mime_free( m_curl_mime );
+  curl_slist_free_all( m_curl_headers ); // ok on nullptr
+  curl_mime_free( m_curl_mime );         // ok on nullptr
   m_curl_headers = nullptr;
   m_curl_mime    = nullptr;
 }
@@ -298,7 +314,7 @@ bool HTTP::fill_method( void )
 // Add all headers to the request
 bool HTTP::fill_headers( void )
 {
-  curl_slist_free_all( m_curl_headers );
+  curl_slist_free_all( m_curl_headers ); // ok on nullptr
   m_curl_headers = nullptr;
   //
   bool ok = true;
@@ -310,7 +326,7 @@ bool HTTP::fill_headers( void )
   //
   if ( ! ok )
   {
-    curl_slist_free_all( m_curl_headers );
+    curl_slist_free_all( m_curl_headers ); // ok on nullptr
     m_curl_headers  = nullptr;
     m_response_code = c_error_http_headers_set;
   }

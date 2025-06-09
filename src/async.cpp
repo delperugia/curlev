@@ -19,7 +19,12 @@ namespace curlev
 {
 
 // Used by threads to periodically check for a "stop" condition
-constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 500 );
+
+#if defined NDEBUG
+constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 500 ); // in release, reduce overhead
+#else
+constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 100 ); // in debug, speedup stop()
+#endif
 
 //--------------------------------------------------------------------
 ASync::ASync()

@@ -71,6 +71,44 @@ TEST( http_basic, async )
 //--------------------------------------------------------------------
 // Ensure that all methods are properly implemented. Once this is done it is possible
 // to focus on the various function signatures of GET and POST.
+
+// Internal libcurl constant
+#ifndef CURL_MAX_INPUT_LENGTH
+#define CURL_MAX_INPUT_LENGTH 8000000
+#endif
+
+TEST( http_basic, cskv_error )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto http = HTTP::create( async );
+    long code;
+    //
+    code = http->GET( c_server + "get" ).options("").authentication("").exec().get_code();
+    EXPECT_EQ( code, 200 );
+    //
+    code = http->GET( c_server + "get" ).options( "alpha" ).exec().get_code();
+    EXPECT_EQ( code, c_error_options_format );
+    //
+    code = http->GET( c_server + "get" ).authentication( "beta" ).exec().get_code();
+    EXPECT_EQ( code, c_error_authentication_format );
+    //
+    code = http->GET( c_server + "get" ).options( "timeout=-30" ).exec().get_code();
+    EXPECT_EQ( code, c_error_options_set );
+    //
+    std::string too_long = std::string( CURL_MAX_INPUT_LENGTH + 16, '*' );
+    code = http->GET( c_server + "get" ).authentication( "mode=basic,user=joe,secret="+too_long ).exec().get_code();
+    EXPECT_EQ( code, c_error_authentication_set );
+  }
+  //
+  async.stop();
+}
+
+//--------------------------------------------------------------------
+// Ensure that all methods are properly implemented. Once this is done it is possible
+// to focus on the various function signatures of GET and POST.
 TEST( http_basic, method_equivalence )
 {
   ASync async;

@@ -12,7 +12,7 @@ set( SRC_FILES
 )
 
 # The curlev library
-add_library               ( curlev STATIC ${SRC_FILES} )
+add_library               ( curlev STATIC ${SRC_FILES}                           )
 target_include_directories( curlev PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include )
 target_link_libraries     ( curlev PUBLIC CURL::libcurl
                                           PkgConfig::LIBUV )
@@ -28,9 +28,7 @@ target_compile_options( curlev PRIVATE
 )
 
 if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-    target_compile_options( curlev PRIVATE -g -coverage )
-elseif( CMAKE_BUILD_TYPE STREQUAL "Release" )
-    target_compile_options( curlev PRIVATE -O2 )
+    target_compile_options( curlev PRIVATE -coverage )
 endif()
 
 # Installation

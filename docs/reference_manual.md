@@ -3,6 +3,16 @@ curlev - manual
 
 All classes and functions are inside the namespace `curlev`.
 
+# Quickstart guide
+
+ - Instantiate a global `ASync` object
+ - To do a request:
+   - create an `HTTP` object using `HTTP::create()`
+   - call one of `GET()`, `DELETE()`, `POST()`, `PUT()` and `PATCH()`
+   - optionally call `add_headers()`, `add_..._parameters()`, `options()`, `headers()`
+   - call `exec()` (synchronous) or `start()`/`join()` (asynchronous)
+   - call the `get_...()` methods
+
 # Starting
 
 The `libcurl` and `libuv` libraries must be started before any other operations,
@@ -43,13 +53,14 @@ and its reference counter allows to have an object that can continues to run det
 the creation context.
 
 ```cpp
-auto http = HTTP::create( m_async );  // async is the instance of ASync
+auto http = HTTP::create( async );  // async is the instance of ASync
 ```
 
 # Building the request
 
-On the HTTP object, you have to call one of the HTTP methods `GET()`, `DELETE()`,
-`POST()`, `PUT()` or `PATCH()`.
+On the HTTP object, you first have to call one of the HTTP methods.
+This will restart a new request sessions.
+Available methods are `GET()`, `DELETE()`, `POST()`, `PUT()` and `PATCH()`.
 
 `GET()` and `DELETE()` are requests without body and expect an URL and
 an optional map of parameters to send on the query string.
@@ -67,7 +78,6 @@ are available:
 - `add_headers( headers )`:         add headers
 - `authentication( auth_string )`:  set authentication
 - `options( opt_string )`:          set options
-- `clear()`:                        reset the HTTP method and all options
 
 The `add_mime_parameters` method expects a vector of parameters and files
 to place in the MIME document that will be sent as the body of the request:

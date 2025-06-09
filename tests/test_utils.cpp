@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************/
 
+#include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
 std::string c_server_httpbun = "http://httpbun.com/";
@@ -32,8 +33,9 @@ int json_count( const std::string & p_json, const std::string & p_path )
     auto element = json[ ptr ];
     return element.is_object() ? element.size() : 0;
   }
-  catch ( ... )
+  catch ( const std::exception & e )
   {
+    GTEST_LOG_(INFO) << "json_count: " << p_path << " " << e.what() << "\n" << p_json << "\n";
     return -1;
   }
 }
@@ -60,8 +62,9 @@ std::string json_extract( const std::string & p_json, const std::string & p_path
     //
     return json[ ptr ].get< std::string >();
   }
-  catch ( ... )
+  catch ( const std::exception & e )
   {
-    return "";
+    GTEST_LOG_(INFO) << "json_extract: " << p_path << " " << e.what() << "\n" << p_json << "\n";
+    return "?";
   }
 }

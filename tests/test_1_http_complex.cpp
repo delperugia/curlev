@@ -81,58 +81,52 @@ TEST( http_complex, cookies )
     auto http1 = HTTP::create( async );
     auto http2 = HTTP::create( async );
     //
-    auto code = http1->GET( c_server + "cookies/set", { { "d1", "61" } } )
-      .options ( "cookies=1" )
-      .exec().get_code();
+    // Set a cookie
+    auto code = http1->GET( c_server + "cookies/set", { { "d1", "61" } } ).options ( "cookies=1" ).exec().get_code();
     ASSERT_EQ( code, 302 );
     //
-    code = http1->GET( c_server + "cookies" )
-      .options ( "cookies=1" )
-      .exec().get_code();
+    // And retrieve it
+    code = http1->GET( c_server + "cookies" ).options ( "cookies=1" ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_extract( http1->get_body(), "$.cookies.d1" ), "61" );
     //
-    code = http2->GET( c_server + "cookies" )
-      .exec().get_code();
+    // But must not be retrieved from another connection
+    code = http2->GET( c_server + "cookies" ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
-    EXPECT_EQ( json_extract( http2->get_body(), "$.cookies.d1" ), "" );
+    EXPECT_EQ( json_count( http2->get_body(), "$.cookies" ), 0 );
   }
   //
   {
+    // The previous cookie must be retrieve from a new context
     auto http = HTTP::create( async );
-    auto code = http->GET( c_server + "cookies" )
-      .exec().get_code();
+    auto code = http->GET( c_server + "cookies" ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
-    EXPECT_EQ( json_extract( http->get_body(), "$.cookies.d1" ), "" );
+    EXPECT_EQ( json_count( http->get_body(), "$.cookies" ), 0 );
   }
   //
   {
     auto http1 = HTTP::create( async );
     auto http2 = HTTP::create( async );
     //
-    auto code = http1->GET( c_server + "cookies/set", { { "e1", "71" } } )
-      .options ( "cookies=1" )
-      .exec().get_code();
+    // Set cookie
+    auto code = http1->GET( c_server + "cookies/set", { { "e1", "71" } } ).options ( "cookies=1" ).exec().get_code();
     ASSERT_EQ( code, 302 );
     //
-    code = http2->GET( c_server + "cookies/set", { { "e2", "72" } } )
-      .options ( "cookies=1" )
-      .exec().get_code();
+    // Set another cookie
+    code = http2->GET( c_server + "cookies/set", { { "e2", "72" } } ) .options ( "cookies=1" ) .exec().get_code();
     ASSERT_EQ( code, 302 );
     //
-    code = http2->GET( c_server + "cookies" )
-      .options ( "cookies=1" )
-      .exec().get_code();
+    // Retrieve 2nd cookie
+    code = http2->GET( c_server + "cookies" ) .options ( "cookies=1" ) .exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_extract( http2->get_body(), "$.cookies.e2" ), "72" );
     //
-    code = http1->GET( c_server + "cookies" )
-      .options ( "cookies=1" )
-      .exec().get_code();
+    // Retrieve 1st cookie
+    code = http1->GET( c_server + "cookies" ) .options ( "cookies=1" ) .exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_extract( http1->get_body(), "$.cookies.e1" ), "71" );

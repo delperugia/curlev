@@ -124,10 +124,10 @@ git clone https://github.com/delperugia/curlev
 cd curlev/
 cmake -B         build/  -DCMAKE_BUILD_TYPE=Debug
 cmake --build    build/  -j
-ctest --test-dir build/ -T test -T coverage
-ctest --test-dir build/ -T memcheck
-cmake --build    build/ --target cppcheck
-cmake --build    build/ --target clean
+ctest --test-dir build/  -T test -T coverage
+ctest --test-dir build/  -T memcheck
+cmake --build    build/  --target cppcheck
+cmake --build    build/  --target clean
 ```
 
 Tested with:

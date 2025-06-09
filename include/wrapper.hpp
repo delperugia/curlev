@@ -105,7 +105,7 @@ class Wrapper: public WrapperBase
     // to exist even if the share pointer owned by the user goes out of scope and is reset.
     Protocol & start( std::function<void( const Protocol & )> p_user_cb = nullptr )
     {
-      if ( ! m_exec_running )
+      if ( ! m_exec_running && m_response_code == c_success )
       {
         m_user_cb = p_user_cb; // will be cleared by cb_protocol (below or in async_cb) 
         //
@@ -187,22 +187,6 @@ class Wrapper: public WrapperBase
       return static_cast< Protocol & >( *this );
     }
     //
-    // Reset the protocol before starting a new transfer
-    Protocol & clear( void )
-    {
-      if ( ! m_exec_running )
-      {
-        clear_protocol();
-        //
-        m_options.clear();
-        m_authentication.clear();
-        m_response_code = c_success;
-        m_threaded_cb   = true;
-      }
-      //
-      return static_cast< Protocol & >( *this );
-    }
-    //
     // Accessors
     long get_code( void ) const { return m_response_code; };
     //
@@ -213,6 +197,20 @@ class Wrapper: public WrapperBase
     long           m_response_code = c_success;
     //
   protected:
+    //
+    // Reset the protocol before starting a new transfer
+    void clear( void )
+    {
+      if ( ! m_exec_running )
+      {
+        clear_protocol();
+        //
+        m_options.clear();
+        m_authentication.clear();
+        m_response_code = c_success;
+        m_threaded_cb   = true;
+      }
+    }
     //
     // When starting, applies the local configuration.
     // It is guaranteed that there is no operation running.
