@@ -1,5 +1,5 @@
-curlev - architecture
-=====================
+curlev - internals
+==================
 
 This library is based on the `libcurl` example [multi-uv](https://curl.se/libcurl/c/multi-uv.html]).
 
@@ -34,8 +34,10 @@ between `libcurl` and `libuv`:
 ## Threads and locking
 
 There are two threads running in ASync:
- - one in `uv_init()` and invoking `uv_run()`. This thread is the root of all function calls on the ASync side.
- - one in `cb_init()` used to notifying the Wrapper when an operation completes (jobs queued from the 1st thread).
+ 1. one in `uv_init()` and invoking `uv_run()`. This thread is the root
+    of all function calls on the ASync side.
+ 2. one in `cb_init()` used to notifying the Wrapper when an operation
+    completes (jobs queued from the 1st thread by `notify_wrapper()`).
 
 Then there are users' threads invoking `start_request()` and `abort_request()`:
 
@@ -58,7 +60,6 @@ L               curl_multi_info_read
 L                   curl_multi_remove_handle
 L                   notify_wrapper
 L                       m_nb_running_requests--
-L                                           
 L
 L  >>>  uv_timeout_cb
 L           multi_fetch_messages
@@ -99,6 +100,48 @@ This specialization of `Wrapper` implements the HTTP protocol.
 The `Wrapper` invokes HTTP just before starting a request to
 finish configuring the curl easy handle, and just after
 to retrieve protocol specific details.
+
+# Comparisons with other libraries
+
+[cpr](https://github.com/libcpr/cpr) is succinct but uses std::async and a pool
+of threads for callbacks, which can lead to a large number of threads
+(number of cores by default).
+The multi interface can only be used to run a batch of queries, it is not
+possible to add session while Perform is running, and the results are returned
+once all requests are terminated.
+
+[curlcpp](https://github.com/JosephP91/curlcpp) is exhaustive but low-level
+and verbose: a simple request requires numerous lines of call. There is
+no real asynchronous model and using the multi interface is not thread
+safe, not allowing to add easy handle while another thread loops on perform
+(beside the fact that you have to manage that thread and do the polling).
+
+[restclient-cpp](https://github.com/mrtazz/restclient-cpp) doesn't have
+asynchronous functions.
+
+## Performances
+
+The following table shows the timing of an application starting
+50K asynchronous calls, each with a callback checking the result
+code and incrementing two atomic counters:
+
+Config               | Starting |  Waiting  |   Total | CPU usage | RSS
+---------------------|----------|-----------|---------|-----------|-----------
+cpr [8 threads]      |  0.085 s |   2.777 s |   2.863 |      438% |  28'364 KB
+cpr 1 thread         |  0.032 s |  12.224 s |  12.256 |       83% |  27'472 KB
+curlev unthreaded CB |  2.900 s |   0.003 s |   2.903 |       75% |  15'476 KB
+curlev               |  3.581 s |   0.004 s |   3.585 |       73% |  15'144 KB
+
+For reference, the multi models of `curlcpp` and `cpr` were tested, and despite
+increasing the OS limits, it was not possible to go higher than 30K asynchronous calls:
+
+Config               | Starting |  Waiting  |   Total | CPU usage | RSS
+---------------------|----------|-----------|---------|-----------|-----------
+curlcpp              |  0.381 s |  44.966 s |  45.347 |       99% | 625'204 KB
+cpr multi            |  0.170 s | 163.301 s | 163.471 |      100% | 550'320 KB
+
+The slowest part in curlev is the `start()` function because ASync::start_request()
+needs to wait `m_uv_run_mutex` which is only unlocked for 0ms by `uv_run()` time to time.
 
 # References
 

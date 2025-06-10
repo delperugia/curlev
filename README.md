@@ -21,7 +21,7 @@ Key features:
 - Custom headers and authentication
 - Method chaining
 
-A simple synchronous request:
+Example of a simple synchronous request:
 
 ```cpp
 #include <curlev/http.hpp>
@@ -45,7 +45,7 @@ int main( int argc, char ** argv )
 }
 ```
 
-A simple asynchronous request with callback:
+And a simple asynchronous request with callback:
 
 ```cpp
 #include <curlev/http.hpp>

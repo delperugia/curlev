@@ -1,20 +1,21 @@
-curlev - manual
-===============
+curlev - reference manual
+=========================
 
 All classes and functions are inside the namespace `curlev`.
+The only header to include is `curlev/http.hpp`.
 
 # Quickstart guide
 
  - Instantiate a global `ASync` object
  - To do a request:
    - create an `HTTP` object using `HTTP::create()`
-   - call one of `GET()`, `DELETE()`, `POST()`, `PUT()` and `PATCH()`
+   - call one of `GET()`, `DELETE()`, `POST()`, `PUT()` or `PATCH()`
    - optionally call `add_headers()`, `add_..._parameters()`, `options()`, `headers()`
    - call `exec()` (synchronous) or `start()`/`join()` (asynchronous)
    - call the `get_...()` methods
 - Notes:
   - if used, the callback in `start()` must be as short as possible
-  - `ASync`'s `stop()` must be called when all `HTTP` objects are already released
+  - `ASync`'s `stop()` must be called after all `HTTP` objects are released
 
 # Starting
 
@@ -33,7 +34,7 @@ m_async.stop();
 ```
 
 `stop()` waits for all pending requests to finish before returning.
-If a timeout occurs (30s bby default), it returns `true`.
+If a timeout occurs (30s by default), it returns `true`.
 If there is still existing protocol objects (like HTTP) when
 this function is called, memory leaks will occur:
 
@@ -135,7 +136,7 @@ The convenient method `exec()` execute the request synchronously.
 
 By default the callback is invoked from a separate thread. This prevents
 the main IO thread to be blocked while processing the callback but
-add a small extra overhead. As all callbacks, it must return quickly.
+add an extra overhead. As all callbacks, it must return quickly.
 
 If the callback is known to be very fast, it is possible to invoke it
 directly from the IO thread by changing the default mode
@@ -165,6 +166,13 @@ Once the request is finished, the
 A request can be aborted while running by calling the `abort()` method.
 
 # Examples
+
+Assuming the following code:
+
+```cpp
+#include <curlev/http.hpp>
+using namespace curlev;
+```
 
 Starting the ASync instance:
 ```cpp
@@ -203,7 +211,7 @@ An asynchronous example:
   //
   some_lengthy_function();
   //
-  auto code = join().get_code();
+  auto code = http->join().get_code();
   std::cout << code << " " << http->get_body() << std::endl;
 ```
 
@@ -222,7 +230,7 @@ Posting a MIME document:
 ```cpp
 std::string data = read_file( "alice.jpg" );
 auto        code =
-    http->POST( "http://www.httpbin.org/get" )
+    http->POST( "http://www.httpbin.org/post" )
         .add_mime_parameters( { ( HTTP::t_mime_parameter{ "name", "Alice" } ),
                                 ( HTTP::t_mime_parameter{ "role", "admin" } ),
                                 ( HTTP::t_mime_file     { "picture", "image/jpeg", data, "alice.jpg" } ) } )
