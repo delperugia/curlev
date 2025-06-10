@@ -137,7 +137,7 @@ TEST( http_complex, cookies )
 
 //--------------------------------------------------------------------
 // Validate the p_query_parameters handling in requests without body
-TEST( http_basic, redirect )
+TEST( http_complex, redirect )
 {
   ASync async;
   async.start();
@@ -149,6 +149,26 @@ TEST( http_basic, redirect )
     ASSERT_EQ( code, 302 );
     //
     EXPECT_EQ(  http->get_redirect_url(), "http://somewhere.com/" );
+  }
+  //
+  async.stop();
+}
+
+//--------------------------------------------------------------------
+// A 308 to the target site is received from httpbun.com
+TEST( http_complex, proxy )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->GET( "http://example.com/" )
+                     .options( "proxy=" + c_server_httpbun )
+                     .exec().get_code();
+    ASSERT_EQ( code, 308 );
+    //
+    EXPECT_EQ(  http->get_redirect_url(), "https://example.com/" );
   }
   //
   async.stop();

@@ -95,7 +95,7 @@ TEST( http_basic, cskv_error )
     code = http->GET( c_server + "get" ).authentication( "beta" ).exec().get_code();
     EXPECT_EQ( code, c_error_authentication_format );
     //
-    code = http->GET( c_server + "get" ).options( "timeout=-30" ).exec().get_code();
+    code = http->GET( c_server + "get" ).options( "maxredirs=-5" ).exec().get_code();
     EXPECT_EQ( code, c_error_options_set );
     //
     std::string too_long = std::string( CURL_MAX_INPUT_LENGTH + 16, '*' );

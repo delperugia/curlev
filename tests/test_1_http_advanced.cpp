@@ -14,6 +14,46 @@
 using namespace curlev;
 
 //--------------------------------------------------------------------
+TEST( http_advanced, results )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code =
+        http->GET( c_server + "delay/2" )
+            .options( "timeout=500" )
+            .exec()
+            .get_code();
+    //
+    EXPECT_EQ( code, CURLE_OPERATION_TIMEDOUT );
+  }
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code =
+        http->GET( "http://localhost:9999/" )
+            .exec()
+            .get_code();
+    //
+    EXPECT_EQ( code, CURLE_COULDNT_CONNECT );
+  }
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code =
+        http->GET( "http://server.that.doesnt.exist.gouv/" )
+            .exec()
+            .get_code();
+    //
+    EXPECT_EQ( code, CURLE_COULDNT_RESOLVE_HOST );
+  }
+  //
+  async.stop();
+}
+
+//--------------------------------------------------------------------
 TEST( http_advanced, headers )
 {
   ASync async;
@@ -142,7 +182,7 @@ TEST( http_advanced, auth )
 
 //--------------------------------------------------------------------
 // 2nd request attempted while the 1st is running
-TEST( http_advanced, errors )
+TEST( http_advanced, while_running )
 {
   ASync async;
   async.start();
@@ -150,7 +190,7 @@ TEST( http_advanced, errors )
   {
     auto http = HTTP::create( async );
     auto code =
-        http->GET( c_server + "delay/1" )
+        http->GET( c_server + "delay/0" )
             .start()
               .GET( c_server + "invalid", { { "a", "11" } } )
               .exec()
@@ -175,7 +215,7 @@ TEST( http_advanced, user_cb )
     long cb_code = 0;
     std::string cb_body;
     auto        code =
-        http->GET( c_server + "delay/1" )
+        http->GET( c_server + "get" )
             .start(
                 [ &cb_code, &cb_body ]( const auto & h )
                 {
@@ -185,6 +225,8 @@ TEST( http_advanced, user_cb )
             .join()
             .get_code();
     ASSERT_EQ( code, 200 );
+    //
+    uv_sleep( 60 ); // because the join() is release before the CB by Wrapper
     //
     EXPECT_EQ( cb_code, code );
     EXPECT_EQ( cb_body, http->get_body() );

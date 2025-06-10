@@ -6,8 +6,8 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
-std::string c_server_httpbun = "http://httpbun.com/";
-std::string c_server_httpbin = "http://httpbin.org/";
+std::string c_server_httpbun = "http://httpbun.com:80/";
+std::string c_server_httpbin = "http://httpbin.org:80/";
 std::string c_server         = c_server_httpbun;
 
 //--------------------------------------------------------------------

@@ -112,19 +112,22 @@ For example:
 The string expected by the `options()` is a key-value comma
 separated string with the following keys available:
 
-| Name             | Default | Unit   | Comment
-|------------------|---------|--------|-------------------------
-| connect_timeout  | 30      | second | connection timeout
-| follow_location  | 0       | 0 or 1 | follow HTTP 3xx redirects
-| insecure         | 0       | 0 or 1 | disables certificate validation
-| timeout          | 30      | second | receive data timeout
-| verbose          | 0       | 0 or 1 | debug log on console
-| cookies          | false   | 0 or 1 | receive and resend cookies
+| Name             | Default | Unit         | Comment
+|------------------|---------|--------------|-------------------------
+| connect_timeout  | 30000   | milliseconds | connection timeout
+| cookies          | false   | 0 or 1       | receive and resend cookies
+| follow_location  | 0       | 0 or 1       | follow HTTP 3xx redirects
+| insecure         | 0       | 0 or 1       | disables certificate validation
+| maxredirs        | 5       | count        | maximum number of redirects allowed
+| proxy            |         | string       | the SOCKS or HTTP URl to a proxy (see https://curl.se/libcurl/c/CURLOPT_PROXY.html)
+| timeout          | 30000   | milliseconds | receive data timeout
+| verbose          | 0       | 0 or 1       | debug log on console
 
 For example:
-- follow_location=1,timeout=5
+- follow_location=1,timeout=5000
 - insecure=1
-  
+- proxy=socks5://user123:pass456@192.168.1.100:1080
+
 # Executing the request
 
 Once the request is ready, it has to be started using `start()`.
@@ -251,7 +254,7 @@ auto code =
         .add_headers         ( { { "Accept"         , "text/html" },
                                  { "Accept-Language", "en-US"     } } )
         .authentication      ( "mode=basic,user=joe,secret=abc123" )
-        .options             ( "follow_location=1,insecure=1,timeout=120" )
+        .options             ( "follow_location=1,insecure=1,timeout=120000" )
         .exec()
         .get_code();
 std::cout << code << " " << http->get_body() << std::endl;
