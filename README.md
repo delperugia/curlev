@@ -35,12 +35,11 @@ int main( int argc, char ** argv )
   async.start();
   //
   auto http = HTTP::create( async );
-  auto code =
-      http->GET( "http://www.httpbin.org/get",
-                 { { "name", "Alice" },
-                   { "role", "admin" } } )
-          .exec()
-          .get_code();
+  auto code = http->GET( "http://www.httpbin.org/get",
+                          { { "name", "Alice" },
+                            { "role", "admin" } } )
+                  .exec()
+                  .get_code();
   //
   std::cout << code << " " << http->get_body() << std::endl;
 }

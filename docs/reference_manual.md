@@ -12,6 +12,9 @@ All classes and functions are inside the namespace `curlev`.
    - optionally call `add_headers()`, `add_..._parameters()`, `options()`, `headers()`
    - call `exec()` (synchronous) or `start()`/`join()` (asynchronous)
    - call the `get_...()` methods
+- Notes:
+  - if used, the callback in `start()` must be as short as possible
+  - `ASync`'s `stop()` must be called when all `HTTP` objects are already released
 
 # Starting
 
@@ -132,9 +135,11 @@ The convenient method `exec()` execute the request synchronously.
 
 By default the callback is invoked from a separate thread. This prevents
 the main IO thread to be blocked while processing the callback but
-add a small extra overhead. If the callback is known to be very fast,
-it is possible to invoke it directly from the IO thread by changing
-the default mode using `threaded_callback()` method of the HTTP instance:
+add a small extra overhead. As all callbacks, it must return quickly.
+
+If the callback is known to be very fast, it is possible to invoke it
+directly from the IO thread by changing the default mode
+using `threaded_callback()` method of the HTTP instance:
 
 ```cpp
 http->GET( "http://www.httpbin.org/get",
