@@ -12,11 +12,6 @@ namespace curlev
 //--------------------------------------------------------------------
 // Expect a KVCS list of credential details. Example:
 //   mode=basic,user=joe,secret=abc123
-// Available keys are:
-//   Name       Comment
-//   mode       basic, digest or bearer
-//   user       for basic and digest only: user login
-//   secret     password or token
 bool Authentication::set(const std::string& p_options)
 {
   return parse_cskv(
@@ -78,9 +73,9 @@ bool Authentication::apply( CURL * p_curl )
 // Reset credential to its default value
 void Authentication::clear( void )
 {
-  m_mode = none;
-  m_user.clear();
-  m_secret.clear();
+  m_mode  = none;     // no authentication
+  m_user  .clear();   // user login
+  m_secret.clear();   // user password or access token
 }
 
 } // namespace curlev

@@ -12,17 +12,6 @@ namespace curlev
 //--------------------------------------------------------------------
 // Expect a CSKV list of options to set. Example:
 //   follow_location=1,insecure=1
-// Available keys are:
-//   Name               Default  Unit          Comment
-//   accept_compression 0        0 or 1        activate compression
-//   connect_timeout    30000    milliseconds  connection timeout
-//   cookies            false    0 or 1        receive and resend cookies
-//   follow_location    false    0 or 1        follow HTTP 3xx redirects
-//   insecure           false    0 or 1        disables certificate validation
-//   maxredirs          5        count         maximum number of redirects allowed
-//   proxy                       string        the SOCKS or HTTP URl to a proxy
-//   timeout            30000    milliseconds  receive data timeout
-//   verbose            false    0 or 1        debug log on console
 bool Options::set( const std::string & p_options )
 {
   return parse_cskv(
@@ -69,15 +58,15 @@ bool Options::apply( CURL * p_curl )
 // Reset options to their default values
 void Options::clear( void )
 {
-  m_accept_compression = Options().m_accept_compression;
-  m_connect_timeout    = Options().m_connect_timeout;
-  m_cookies            = Options().m_cookies;
-  m_follow_location    = Options().m_follow_location;
-  m_insecure           = Options().m_insecure;
-  m_maxredirs          = Options().m_maxredirs;
-  m_proxy              = Options().m_proxy;
-  m_timeout            = Options().m_timeout;
-  m_verbose            = Options().m_verbose;
+  m_accept_compression = false ;  // activate compression
+  m_connect_timeout    = 30000 ;  // in milliseconds
+  m_cookies            = false ;  // receive and resend cookies
+  m_follow_location    = false ;  // follow HTTP 3xx redirects
+  m_insecure           = false ;  // disables certificate validation
+  m_maxredirs          = 5     ;  // maximum number of redirects allowed
+  m_proxy              .clear();  // the SOCKS or HTTP URl to a proxy
+  m_timeout            = 30000 ;  // in milliseconds
+  m_verbose            = false ;  // debug log on console
 }
 
 } // namespace curlev
