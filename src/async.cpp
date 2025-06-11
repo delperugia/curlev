@@ -18,13 +18,8 @@
 namespace curlev
 {
 
-// Used by threads to periodically check for a "stop" condition
-
-#if defined NDEBUG
-constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 500 ); // in release, reduce overhead
-#else
-constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 100 ); // in debug, speedup stop()
-#endif
+// A safety in case a notification is lost
+constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 1000 );
 
 //--------------------------------------------------------------------
 ASync::ASync()
@@ -117,7 +112,7 @@ bool ASync::start_request( CURL * p_curl, void * p_protocol_cb )
   if ( ! easy_setopt( p_curl, CURLOPT_PRIVATE, p_protocol_cb ) )
     return false;
   //
-  m_nb_running_requests++;
+  m_nb_running_requests++; // the running state includes the waiting period
   //
   m_nb_waiting_requests++;
   std::lock_guard lock( m_uv_run_mutex );
@@ -131,6 +126,7 @@ bool ASync::start_request( CURL * p_curl, void * p_protocol_cb )
   }
   else
   {
+    m_nb_running_requests--;
     return false;
   }
 }
@@ -425,9 +421,9 @@ bool ASync::uv_init( void )
           //
           while ( m_uv_running )
             if ( uv_run( m_uv_loop, UV_RUN_NOWAIT ) ) // if some requests are executing:
-              uv_run_accept_requests( lock );         //   accept them (unlock, accept, lock)
+              uv_run_accept_requests( lock );         //   accept new ones (unlock, accept, lock)
             else                                      // else
-              uv_run_wait_requests( lock );           //   wait for them (unlock, wait, lock)
+              uv_run_wait_requests( lock );           //   wait for new ones (unlock, wait, lock)
         } );
   }
   else
@@ -442,6 +438,7 @@ bool ASync::uv_init( void )
 void ASync::uv_clear( void )
 {
   m_uv_running = false;
+  m_uv_run_cv.notify_one(); // speedup the exit of uv_run_wait_requests
   //
   if ( m_uv_worker.joinable() )
     m_uv_worker.join();
@@ -640,6 +637,7 @@ bool ASync::cb_init( void )
 void ASync::cb_clear( void )
 {
   m_cb_running = false;
+  m_cb_cv.notify_one(); // speedup the exit of cb_init's thread
   //
   if ( m_cb_worker.joinable() )
     m_cb_worker.join();
