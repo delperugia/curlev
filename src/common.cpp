@@ -52,32 +52,25 @@ std::string trim( const std::string & p_string )
 bool parse_cskv( const std::string &                                                       p_options,
                  const std::function< bool( const std::string &, const std::string & ) > & p_handler )
 {
-    try
-    {
-        std::istringstream iss( p_options );
-        std::string        token;
-        //
-        while ( std::getline( iss, token, ',' ) )
-        {
-            token = trim( token );
-            //
-            auto delimiter_pos = token.find( '=' );
-            if ( delimiter_pos == std::string::npos )
-                return false;  // invalid format: no = sign
-            //
-            std::string key   = trim( token.substr( 0, delimiter_pos ) );
-            std::string value = trim( token.substr( delimiter_pos + 1 ) );
-            //
-            if ( ! p_handler( key, value ) )
-                return false; // invalid option reported
-        }
-    }
-    catch ( const std::exception & )
-    {
-        return false;
-    }
+  std::istringstream iss( p_options );
+  std::string        token;
+  //
+  while ( std::getline( iss, token, ',' ) )
+  {
+    token = trim( token );
     //
-    return true;
+    auto delimiter_pos = token.find( '=' );
+    if ( delimiter_pos == std::string::npos )
+      return false; // invalid format: no = sign
+    //
+    std::string key   = trim( token.substr( 0, delimiter_pos ) );
+    std::string value = trim( token.substr( delimiter_pos + 1 ) );
+    //
+    if ( ! p_handler( key, value ) )
+      return false; // invalid option reported
+  }
+  //
+  return true;
 }
 
 } // namespace curlev

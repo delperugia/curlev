@@ -232,6 +232,20 @@ TEST( http_advanced, user_cb )
     EXPECT_EQ( cb_body, http->get_body() );
   }
   //
+  {
+    auto http = HTTP::create( async );
+    auto code =
+        http->GET( c_server_httpbun + "get" )
+            .start(
+                []( const auto & h )
+                {
+                  throw std::runtime_error("error");
+                } )
+            .join()
+            .get_code();
+    ASSERT_EQ( code, 200 );
+  }
+  //
   async.stop();
 }
 

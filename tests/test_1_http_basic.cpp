@@ -116,6 +116,12 @@ TEST( http_basic, method_equivalence )
   //
   {
     auto http = HTTP::create( async );
+    auto code = http->exec().get_code();
+    //
+    EXPECT_EQ( code, c_error_http_method_set );
+  }
+  {
+    auto http = HTTP::create( async );
     auto code = http->DELETE( c_server_httpbun + "delete" ).exec().get_code();
     //
     EXPECT_EQ( code, 200 );
@@ -284,6 +290,40 @@ TEST( http_basic, post )
     EXPECT_EQ( json_extract( http->get_body(), "$.form.b1" ), "1" );
     EXPECT_EQ( json_extract( http->get_body(), "$.form.b2" ), "3" );
     EXPECT_EQ( json_extract( http->get_body(), "$.args.q1" ), "2" );
+  }
+  //
+  async.stop();
+}
+
+//--------------------------------------------------------------------
+TEST( http_basic, put_patch )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->PATCH( c_server_httpbun + "patch", { { "a", "a1" }, { "b", "a2" } } ).exec().get_code();
+    ASSERT_EQ( code, 200 );
+    //
+    EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
+    EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 2 );
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    //
+    EXPECT_EQ( json_extract( http->get_body(), "$.form.a" ), "a1" );
+    EXPECT_EQ( json_extract( http->get_body(), "$.form.b" ), "a2" );
+  }
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->PUT( c_server_httpbun + "put", { { "a", "u1" } } ).exec().get_code();
+    ASSERT_EQ( code, 200 );
+    //
+    EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
+    EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 1 );
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    //
+    EXPECT_EQ( json_extract( http->get_body(), "$.form.a" ), "u1" );
   }
   //
   async.stop();
