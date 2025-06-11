@@ -112,16 +112,17 @@ For example:
 The string expected by the `options()` is a key-value comma
 separated string with the following keys available:
 
-| Name             | Default | Unit         | Comment
-|------------------|---------|--------------|-------------------------
-| connect_timeout  | 30000   | milliseconds | connection timeout
-| cookies          | false   | 0 or 1       | receive and resend cookies
-| follow_location  | 0       | 0 or 1       | follow HTTP 3xx redirects
-| insecure         | 0       | 0 or 1       | disables certificate validation
-| maxredirs        | 5       | count        | maximum number of redirects allowed
-| proxy            |         | string       | the SOCKS or HTTP URl to a proxy (see https://curl.se/libcurl/c/CURLOPT_PROXY.html)
-| timeout          | 30000   | milliseconds | receive data timeout
-| verbose          | 0       | 0 or 1       | debug log on console
+| Name               | Default | Unit         | Comment
+|--------------------|---------|--------------|-------------------------
+| accept_compression | 0       | 0 or 1       | activate compression
+| connect_timeout    | 30000   | milliseconds | connection timeout
+| cookies            | false   | 0 or 1       | receive and resend cookies
+| follow_location    | 0       | 0 or 1       | follow HTTP 3xx redirects
+| insecure           | 0       | 0 or 1       | disables certificate validation
+| maxredirs          | 5       | count        | maximum number of redirects allowed
+| proxy              |         | string       | the SOCKS or HTTP URl to a proxy (see https://curl.se/libcurl/c/CURLOPT_PROXY.html)
+| timeout            | 30000   | milliseconds | receive data timeout
+| verbose            | 0       | 0 or 1       | debug log on console
 
 For example:
 - follow_location=1,timeout=5000

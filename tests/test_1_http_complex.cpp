@@ -28,7 +28,7 @@ TEST( http_complex, simultaneous )
     for ( const std::string & expected_code : codes )
     {
       https.emplace_back( HTTP::create( async ) );
-      https.back()->GET( c_server + "status/" + expected_code ).start();
+      https.back()->GET( c_server_httpbun + "status/" + expected_code ).start();
     }
     //
     for ( auto i = 0; i < codes.size(); i++ )
@@ -53,7 +53,7 @@ TEST( http_complex, detached )
     //
     {
       HTTP::create( async )
-          ->GET( c_server + "delay/1" )
+          ->GET( c_server_httpbun + "delay/1" )
           .start(
               [ &done ]( const auto & http )
               {
@@ -82,17 +82,17 @@ TEST( http_complex, cookies )
     auto http2 = HTTP::create( async );
     //
     // Set a cookie
-    auto code = http1->GET( c_server + "cookies/set", { { "d1", "61" } } ).options ( "cookies=1" ).exec().get_code();
+    auto code = http1->GET( c_server_httpbun + "cookies/set", { { "d1", "61" } } ).options ( "cookies=1" ).exec().get_code();
     ASSERT_EQ( code, 302 );
     //
     // And retrieve it
-    code = http1->GET( c_server + "cookies" ).options ( "cookies=1" ).exec().get_code();
+    code = http1->GET( c_server_httpbun + "cookies" ).options ( "cookies=1" ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_extract( http1->get_body(), "$.cookies.d1" ), "61" );
     //
     // But must not be retrieved from another connection
-    code = http2->GET( c_server + "cookies" ).exec().get_code();
+    code = http2->GET( c_server_httpbun + "cookies" ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_count( http2->get_body(), "$.cookies" ), 0 );
@@ -101,7 +101,7 @@ TEST( http_complex, cookies )
   {
     // The previous cookie must be retrieve from a new context
     auto http = HTTP::create( async );
-    auto code = http->GET( c_server + "cookies" ).exec().get_code();
+    auto code = http->GET( c_server_httpbun + "cookies" ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_count( http->get_body(), "$.cookies" ), 0 );
@@ -112,21 +112,21 @@ TEST( http_complex, cookies )
     auto http2 = HTTP::create( async );
     //
     // Set cookie
-    auto code = http1->GET( c_server + "cookies/set", { { "e1", "71" } } ).options ( "cookies=1" ).exec().get_code();
+    auto code = http1->GET( c_server_httpbun + "cookies/set", { { "e1", "71" } } ).options ( "cookies=1" ).exec().get_code();
     ASSERT_EQ( code, 302 );
     //
     // Set another cookie
-    code = http2->GET( c_server + "cookies/set", { { "e2", "72" } } ) .options ( "cookies=1" ) .exec().get_code();
+    code = http2->GET( c_server_httpbun + "cookies/set", { { "e2", "72" } } ) .options ( "cookies=1" ) .exec().get_code();
     ASSERT_EQ( code, 302 );
     //
     // Retrieve 2nd cookie
-    code = http2->GET( c_server + "cookies" ) .options ( "cookies=1" ) .exec().get_code();
+    code = http2->GET( c_server_httpbun + "cookies" ) .options ( "cookies=1" ) .exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_extract( http2->get_body(), "$.cookies.e2" ), "72" );
     //
     // Retrieve 1st cookie
-    code = http1->GET( c_server + "cookies" ) .options ( "cookies=1" ) .exec().get_code();
+    code = http1->GET( c_server_httpbun + "cookies" ) .options ( "cookies=1" ) .exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_extract( http1->get_body(), "$.cookies.e1" ), "71" );
@@ -144,7 +144,7 @@ TEST( http_complex, redirect )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->GET( c_server + "redirect", { { "url", "http://somewhere.com/" } } )
+    auto code = http->GET( c_server_httpbun + "redirect", { { "url", "http://somewhere.com/" } } )
                      .exec().get_code();
     ASSERT_EQ( code, 302 );
     //
@@ -187,7 +187,7 @@ TEST( http_complex, abort )
     {
       auto http = HTTP::create( async );
       //
-      http->GET( c_server + "delay/1" )
+      http->GET( c_server_httpbun + "delay/1" )
            .start( [ &cb_count ]( const auto & http ) { cb_count++; } );
       //
       uv_sleep( 200 );
@@ -212,14 +212,14 @@ TEST( http_complex, abort )
     {
       auto http = HTTP::create( async );
       //
-      http->GET( c_server + "delay/1" )
+      http->GET( c_server_httpbun + "delay/1" )
            .start( [ &cb_count ]( const auto & http ) { cb_count++; } );
       //
       uv_sleep( 200 );
       //
       http->abort().join();
       //
-      auto code = http->GET( c_server + "get?a=19" ).exec().get_code();
+      auto code = http->GET( c_server_httpbun + "get?a=19" ).exec().get_code();
       ASSERT_EQ( code, 200 );
       EXPECT_EQ( json_extract( http->get_body(), "$.args.a"), "19" );
     }
@@ -241,7 +241,7 @@ TEST( http_complex, threaded_mode )
       long cb_code = 0;
       std::string cb_body;
       auto        code =
-          http->GET( c_server + "delay/1" )
+          http->GET( c_server_httpbun + "delay/1" )
               .threaded_callback( false )
               .start(
                   [ &cb_code, &cb_body ]( const auto & h )
@@ -259,7 +259,7 @@ TEST( http_complex, threaded_mode )
     //
     {
       auto http = HTTP::create( async );
-      auto code = http->GET( c_server + "get" )
+      auto code = http->GET( c_server_httpbun + "get" )
                       .threaded_callback( false )
                       .exec()
                       .get_code();
@@ -279,7 +279,7 @@ TEST( http_complex, threaded_mode )
       //
       {
         HTTP::create( async )
-            ->GET( c_server + "delay/1" )
+            ->GET( c_server_httpbun + "delay/1" )
             .threaded_callback( false )
             .start(
                 [ &done ]( const auto & http )

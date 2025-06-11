@@ -7,9 +7,8 @@
 
 #include <string>
 
-extern std::string c_server_httpbin;
 extern std::string c_server_httpbun;
-extern std::string c_server;
+extern std::string c_server_compress;
 
 // Returns the number of attributes in the object pointed by p_path.
 // Returns -1 on error.

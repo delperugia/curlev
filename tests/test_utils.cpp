@@ -6,9 +6,8 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
-std::string c_server_httpbun = "http://httpbun.com:80/";
-std::string c_server_httpbin = "http://httpbin.org:80/";
-std::string c_server         = c_server_httpbun;
+std::string c_server_httpbun  = "http://httpbun.com:80/";
+std::string c_server_compress = "https://github.com/delperugia/curlev/blob/master/README.md";
 
 //--------------------------------------------------------------------
 // Returns the number of attributes in the object pointed by p_path.

@@ -22,7 +22,7 @@ TEST( http_advanced, results )
   {
     auto http = HTTP::create( async );
     auto code =
-        http->GET( c_server + "delay/2" )
+        http->GET( c_server_httpbun + "delay/2" )
             .options( "timeout=500" )
             .exec()
             .get_code();
@@ -61,7 +61,7 @@ TEST( http_advanced, headers )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->GET( c_server + "headers" )
+    auto code = http->GET( c_server_httpbun + "headers" )
                     .add_headers( { { "X-Tst-21", "11" },
                                     { "X-Tst-22", "12" } } )
                     .exec()
@@ -78,7 +78,7 @@ TEST( http_advanced, headers )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->GET( c_server + "response-headers" )
+    auto code = http->GET( c_server_httpbun + "response-headers" )
                     .add_query_parameters( { { "X-Tst-31", "41" },
                                              { "X-Tst-32", "42" } } )
                     .exec()
@@ -105,7 +105,7 @@ TEST( http_advanced, post_json )
     const std::string payload = R"({ { "a", "1" }, { "b", "2" } })";
     //
     auto http = HTTP::create( async );
-    auto code = http->POST( c_server + "post",
+    auto code = http->POST( c_server_httpbun + "post",
                             "application/json", payload ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
@@ -121,7 +121,7 @@ TEST( http_advanced, post_json )
     const std::string payload = R"({ { "a", "1" }, { "b", "2" } })";
     //
     auto http = HTTP::create( async );
-    auto code = http->POST( c_server + "post",
+    auto code = http->POST( c_server_httpbun + "post",
                             "application/json", payload )
                     .add_query_parameters( { { "c", "3" },
                                              { "d", "4" } } ).exec().get_code();
@@ -148,14 +148,14 @@ TEST( http_advanced, auth )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->GET( c_server + "basic-auth/joe/abc123" )
+    auto code = http->GET( c_server_httpbun + "basic-auth/joe/abc123" )
                     .exec().get_code();
     ASSERT_EQ( code, 401 );
   }
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->GET( c_server + "basic-auth/joe/abc123" )
+    auto code = http->GET( c_server_httpbun + "basic-auth/joe/abc123" )
                     .authentication( "mode=basic,user=joe,secret=abc123" )
                     .exec().get_code();
     ASSERT_EQ( code, 200 );
@@ -163,7 +163,7 @@ TEST( http_advanced, auth )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->GET( c_server + "digest-auth/auth/jim/abc456" )
+    auto code = http->GET( c_server_httpbun + "digest-auth/auth/jim/abc456" )
                     .authentication( "mode=digest,user=jim,secret=abc456" )
                     .exec().get_code();
     ASSERT_EQ( code, 200 );
@@ -190,9 +190,9 @@ TEST( http_advanced, while_running )
   {
     auto http = HTTP::create( async );
     auto code =
-        http->GET( c_server + "delay/0" )
+        http->GET( c_server_httpbun + "delay/0" )
             .start()
-              .GET( c_server + "invalid", { { "a", "11" } } )
+              .GET( c_server_httpbun + "invalid", { { "a", "11" } } )
               .exec()
             .join()
             .get_code();
@@ -215,7 +215,7 @@ TEST( http_advanced, user_cb )
     long cb_code = 0;
     std::string cb_body;
     auto        code =
-        http->GET( c_server + "get" )
+        http->GET( c_server_httpbun + "get" )
             .start(
                 [ &cb_code, &cb_body ]( const auto & h )
                 {
@@ -243,13 +243,45 @@ TEST( http_advanced, consecutive )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->POST( c_server + "payload", "plain/text", "123" ).exec().get_code();
+    auto code = http->POST( c_server_httpbun + "payload", "plain/text", "123" ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
-    code = http->POST( c_server + "payload", "plain/text", "456" ).exec().get_code();
+    code = http->POST( c_server_httpbun + "payload", "plain/text", "456" ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( http->get_body(), "456" );
+  }
+  //
+  async.stop();
+}
+
+//--------------------------------------------------------------------
+TEST( http_advanced, compression )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->GET( c_server_compress )
+                    .exec()
+                    .get_code();
+    //
+    ASSERT_EQ( code, 200 );
+    //
+    EXPECT_TRUE( http->get_headers()["content-encoding"].empty() );
+  }
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->GET( c_server_compress )
+                    .options( "accept_compression=1" )
+                    .exec()
+                    .get_code();
+    //
+    ASSERT_EQ( code, 200 );
+    //
+    EXPECT_FALSE( http->get_headers()["content-encoding"].empty() );
   }
   //
   async.stop();

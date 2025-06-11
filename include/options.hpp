@@ -24,15 +24,16 @@ public:
   // Expect a KVCS list of options to set. Example:
   //   follow_location=1,insecure=1
   // Available keys are:
-  //   Name              Default  Unit          Comment
-  //   connect_timeout   30000    milliseconds  connection timeout
-  //   cookies           false    0 or 1        receive and resend cookies
-  //   follow_location   false    0 or 1        follow HTTP 3xx redirects
-  //   insecure          false    0 or 1        disables certificate validation
-  //   maxredirs         5        count         maximum number of redirects allowed
+  //   Name               Default  Unit          Comment
+  //   accept_compression 0        0 or 1        activate compression
+  //   connect_timeout    30000    milliseconds  connection timeout
+  //   cookies            false    0 or 1        receive and resend cookies
+  //   follow_location    false    0 or 1        follow HTTP 3xx redirects
+  //   insecure           false    0 or 1        disables certificate validation
+  //   maxredirs          5        count         maximum number of redirects allowed
   //   proxy                      string        the SOCKS or HTTP URl to a proxy
-  //   timeout           30000    milliseconds  receive data timeout
-  //   verbose           false    0 or 1        debug log on console
+  //   timeout            30000    milliseconds  receive data timeout
+  //   verbose            false    0 or 1        debug log on console
   bool set( const std::string & p_options );
   //
 protected:
@@ -45,14 +46,15 @@ protected:
   void clear( void );
   //
 private:
-  long        m_connect_timeout = 30000; // in milliseconds
-  bool        m_cookies         = false; // receive and resend cookies
-  bool        m_follow_location = false; // follow HTTP 3xx redirects
-  bool        m_insecure        = false; // disables certificate validation
-  long        m_maxredirs       = 5;     // maximum number of redirects allowed
-  std::string m_proxy;                   // the SOCKS or HTTP URl to a proxy
-  long        m_timeout         = 30000; // in milliseconds
-  bool        m_verbose         = false; // debug log on console
+  bool        m_accept_compression = false; // activate compression
+  long        m_connect_timeout    = 30000; // in milliseconds
+  bool        m_cookies            = false; // receive and resend cookies
+  bool        m_follow_location    = false; // follow HTTP 3xx redirects
+  bool        m_insecure           = false; // disables certificate validation
+  long        m_maxredirs          = 5;     // maximum number of redirects allowed
+  std::string m_proxy;                      // the SOCKS or HTTP URl to a proxy
+  long        m_timeout            = 30000; // in milliseconds
+  bool        m_verbose            = false; // debug log on console
 };
 
 } // namespace curlev
