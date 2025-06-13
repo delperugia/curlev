@@ -253,7 +253,10 @@ void ASync::share_cb_lock(
 {
   auto self = static_cast< ASync * >( p_user_ptr );
   //
-  self->m_share_locks[ p_data ].lock();
+  if ( p_access == CURL_LOCK_ACCESS_SHARED )
+    self->m_share_locks[ p_data ].lock_shared();
+  else
+    self->m_share_locks[ p_data ].lock(); // CURL_LOCK_ACCESS_SINGLE and unknown
 }
 
 //--------------------------------------------------------------------

@@ -5,11 +5,13 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <deque>
 #include <condition_variable>
 #include <curl/curl.h>
 #include <mutex>
+#include <pthread.h>
 #include <shared_mutex>
 #include <thread>
 #include <uv.h>
@@ -22,6 +24,34 @@ namespace curlev
 
 class                                WrapperBase;
 template < typename Protocol > class Wrapper;
+
+// Because it is not possible to mix lock/unlock and lock_shared/unlock_shared
+// in std::shared_mutex, and because libcurl CURLSHOPT_UNLOCKFUNC function
+// does not receive the access, C functions must be used. They are wrapped
+// here for conveniency
+
+class shared_mutex
+{
+public:
+  explicit shared_mutex() 
+  {
+    m_initialized = pthread_rwlock_init( &m_lock, nullptr ) == 0;
+  }
+  //
+  virtual ~shared_mutex()
+  {
+    if ( m_initialized )
+      pthread_rwlock_destroy( &m_lock );
+  }
+  //
+  void lock       ( void ) { pthread_rwlock_wrlock( &m_lock ); }
+  void lock_shared( void ) { pthread_rwlock_rdlock( &m_lock ); }
+  void unlock     ( void ) { pthread_rwlock_unlock( &m_lock ); }
+  //
+private:
+  bool             m_initialized = false;
+  pthread_rwlock_t m_lock;
+};
 
 // This class handles the communications between libcurl multi and libuv.
 // It is also here that libcurl easy handle are created.
@@ -92,8 +122,8 @@ private:
   //
   // libcurl share interface - share data between multiple easy handles (DNS, TLS...)
   //
-  CURLSH *   m_share_handle = nullptr;
-  std::mutex m_share_locks[ CURL_LOCK_DATA_LAST ];
+  CURLSH *     m_share_handle = nullptr;
+  shared_mutex m_share_locks[ CURL_LOCK_DATA_LAST ];
   //
   bool        share_init( void );
   void        share_clear( void );
