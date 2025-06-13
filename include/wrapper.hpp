@@ -105,29 +105,32 @@ class Wrapper: public WrapperBase
     // to exist even if the share pointer owned by the user goes out of scope and is reset.
     Protocol & start( std::function<void( const Protocol & )> p_user_cb = nullptr )
     {
-      if ( ! m_exec_running && m_response_code == c_success )
       {
-        m_user_cb = p_user_cb; // will be cleared by cb_protocol (below or in async_cb) 
+        std::lock_guard lock( m_exec_mutex );
         //
-        if ( prepare_protocol() && prepare_local() )  // set m_response_code on error
+        if ( ! m_exec_running && m_response_code == c_success )
         {
-          if ( auto self = m_self_weak.lock() )       // must succeed since we are invoked
+          m_user_cb = p_user_cb; // will be cleared by cb_protocol (below or in async_cb) 
+          //
+          if ( prepare_protocol() && prepare_local() )  // set m_response_code on error
           {
-            auto cb_data   = new std::shared_ptr< Protocol >( self ); // a new shared_ptr for ASync, deleted by ASync
-            m_exec_running = true;                                    // will cleared in async_cb called by ASync
-            //
-            if ( m_async.start_request( m_curl, cb_data ) ) // async processing starts here
-                return static_cast< Protocol & >( *this );
-            //
-            // Failed cases
-            m_exec_running  = false;
-            m_response_code = c_error_start;
-            delete cb_data;
+            if ( auto self = m_self_weak.lock() )       // must succeed since we are invoked
+            {
+              auto cb_data   = new std::shared_ptr< Protocol >( self ); // a new shared_ptr for ASync, deleted by ASync
+              m_exec_running = true;                                    // will be cleared in async_cb called by ASync
+              //
+              if ( m_async.start_request( m_curl, cb_data ) )           // ASync processing starts here
+                  return static_cast< Protocol & >( *this );
+              //
+              m_exec_running  = false;                                  // ASync failed
+              m_response_code = c_error_start;
+              delete cb_data;
+            }
           }
         }
-        //
-        cb_protocol( static_cast< Protocol & >( *this ) ); // invoke user's callback, clear m_user_cb
       }
+      //
+      cb_protocol( static_cast< Protocol & >( *this ) ); // invoke user's callback (outside of the lock), clear m_user_cb
       //
       return static_cast< Protocol & >( *this );
     }
@@ -137,6 +140,7 @@ class Wrapper: public WrapperBase
     {
       {
         std::unique_lock lock( m_exec_mutex );
+        //
         if ( m_exec_running )
           m_exec_cv.wait( lock ); // wait for the end of the async processing
       }
@@ -241,6 +245,7 @@ class Wrapper: public WrapperBase
       // First the notification (release the join()): transfer is finished
       {
         std::lock_guard lock( m_exec_mutex );
+        //
         m_exec_running = false;
         m_exec_cv.notify_one();
       }
@@ -275,18 +280,23 @@ class Wrapper: public WrapperBase
     //
     // Return true is the request is executing, used to prevent modifications
     // of the persistent data used by libcurl.
-    bool is_running( void ) const { return m_exec_running; }
+    bool is_running( void ) const
+    {
+      std::lock_guard lock( m_exec_mutex );
+      //
+      return m_exec_running;
+    }
     //
   private:
-    ASync &                     m_async;
+    ASync &                 m_async;
+    //
+    mutable std::mutex      m_exec_mutex;
+    std::condition_variable m_exec_cv;              // used by join() 
+    bool                    m_exec_running = false; // when a requested is executing
+    //
     std::weak_ptr< Protocol >   m_self_weak; // set on self at creation, used to create and pass a shared_ptr to ASync
     //
     std::function< void( const Protocol & ) > m_user_cb = nullptr;
-    //
-    // Usd by join()
-    std::mutex              m_exec_mutex;
-    std::condition_variable m_exec_cv;
-    bool                    m_exec_running = false;
 };
 
 } // namespace curlev
