@@ -300,3 +300,50 @@ TEST( http_advanced, compression )
   //
   async.stop();
 }
+
+//--------------------------------------------------------------------
+TEST( http_advanced, default_options )
+{
+  ASync async;
+  async.start();
+  async.options( "follow_location=1" );
+  async.authentication( "mode=basic,user=joe,secret=abc123" );
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->GET( c_server_httpbun + "redirect/1" )
+                    .exec()
+                    .get_code();
+    EXPECT_EQ( code, 200 );
+  }
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->GET( c_server_httpbun + "basic-auth/joe/abc123" )
+                    .exec()
+                    .get_code();
+    ASSERT_EQ( code, 200 );
+  }
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code =
+        http->GET( c_server_httpbun + "redirect/1" )
+            .options( "follow_location=0" )
+            .exec()
+            .get_code();
+    EXPECT_EQ( code, 302 );
+  }
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code =
+        http->GET( c_server_httpbun + "basic-auth/joe/abc123" )
+            .authentication( "mode=basic,user=joe,secret=bad" )
+            .exec()
+            .get_code();
+    ASSERT_EQ( code, 401 );
+  }
+  //
+  async.stop();
+}

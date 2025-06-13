@@ -25,6 +25,8 @@ constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 1000 );
 ASync::ASync()
 {
   m_uv_timer.data = nullptr;
+  m_default_options.set_default();
+  m_default_authentication.set_default();
 }
 
 //--------------------------------------------------------------------
@@ -70,6 +72,32 @@ bool ASync::stop( unsigned p_timeout_s /* = 30 */)
   global_clear();
   //
   return forced;
+}
+
+//--------------------------------------------------------------------
+// Setting default values for options and authentication
+bool ASync::options( const std::string & p_options )
+{
+  std::unique_lock lock( m_default_locks );
+  //
+  return m_default_options.set( p_options );
+}
+
+bool ASync::authentication( const std::string & p_credential )
+{
+  std::unique_lock lock( m_default_locks );
+  //
+  return m_default_authentication.set( p_credential );
+}
+
+//--------------------------------------------------------------------
+// Retrieve the current default options and authentication
+void ASync::get_default( Options & p_options, Authentication & p_authentication ) const
+{
+  std::shared_lock lock( m_default_locks );
+  //
+  p_options        = m_default_options;
+  p_authentication = m_default_authentication;
 }
 
 //--------------------------------------------------------------------

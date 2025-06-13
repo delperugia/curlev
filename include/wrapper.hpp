@@ -12,9 +12,6 @@
 #include <mutex>
 
 #include "async.hpp"
-#include "authentication.hpp"
-#include "common.hpp"
-#include "options.hpp"
 
 namespace curlev
 {
@@ -85,7 +82,7 @@ class Wrapper: public WrapperBase
       if ( wrapper->m_curl == nullptr )
         throw bad_curl_easy_alloc();
       //
-      wrapper->m_self_weak = wrapper; // used to create and pass a shared_ptr to ASync
+      wrapper->m_self_weak      = wrapper; // used to create and pass a shared_ptr to ASync
       //
       return wrapper;
     }
@@ -207,12 +204,12 @@ class Wrapper: public WrapperBase
     {
       if ( ! m_exec_running )
       {
-        clear_protocol();
-        //
-        m_options.clear();
-        m_authentication.clear();
         m_response_code = c_success;
         m_threaded_cb   = true;
+        //
+        m_async.get_default( m_options, m_authentication );
+        //
+        clear_protocol();
       }
     }
     //

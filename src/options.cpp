@@ -56,7 +56,7 @@ bool Options::apply( CURL * p_curl )
 
 //--------------------------------------------------------------------
 // Reset options to their default values
-void Options::clear( void )
+void Options::set_default( void )
 {
   m_accept_compression = false ;  // activate compression
   m_connect_timeout    = 30000 ;  // in milliseconds

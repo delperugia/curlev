@@ -21,8 +21,6 @@ template < typename Protocol > class Wrapper;
 class Options
 {
 public:
-  Options() { clear() ; }
-  //
   // Expect a KVCS list of options to set. Example:
   //   follow_location=1,insecure=1
   // Available keys are:
@@ -38,25 +36,22 @@ public:
   //   verbose            false    0 or 1        debug log on console
   bool set( const std::string & p_options );
   //
-protected:
-  template < typename Protocol > friend class Wrapper;
-  //
   // Apply options to curl easy handle
   bool apply( CURL * p_curl );
   //
   // Reset options to their default values
-  void clear( void );
+  void set_default( void );
   //
 private:
-  bool        m_accept_compression;
-  long        m_connect_timeout;
-  bool        m_cookies;
-  bool        m_follow_location;
-  bool        m_insecure;
-  long        m_maxredirs;
+  bool        m_accept_compression = false;
+  long        m_connect_timeout    = 0;
+  bool        m_cookies            = false;
+  bool        m_follow_location    = false;
+  bool        m_insecure           = false;
+  long        m_maxredirs          = false;
   std::string m_proxy;
-  long        m_timeout;
-  bool        m_verbose;
+  long        m_timeout            = 0;
+  bool        m_verbose            = false;
 };
 
 } // namespace curlev

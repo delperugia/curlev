@@ -20,14 +20,14 @@ The only header to include is `curlev/http.hpp`.
 # Starting
 
 The `libcurl` and `libuv` libraries must be started before any other operations,
-usually when the application starts. Multiple instances of `ASync` can be instantiated
-and started using:
+usually when the application starts. Usually a single instance of ASync is needed,
+but several can be created if needed. An instance is started using:
 
 ```cpp
 m_async.start();
 ```
 
-Similarly they must be stop when the application stops using:
+Similarly it is stopped when the application terminates using:
 
 ```cpp
 m_async.stop();
@@ -49,6 +49,12 @@ async.stop();
 causes a leak because `http` (which holds an easy curl handle) still exist
 when `ASync` (and libcurl) is stopped (technically `curl_share_cleanup` is called
 while a `CURL` handle still has a reference on the `CURLSH` handle).
+
+## Default configuration
+
+The default configuration of the `HTTP` instances can be set in `ASync` using
+the two methods `options()` and `authentication()`. The parameters are the
+same as the ones described in `HTTP`.
 
 # Creating an HTTP instance
 

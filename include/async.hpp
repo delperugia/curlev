@@ -10,8 +10,12 @@
 #include <condition_variable>
 #include <curl/curl.h>
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
 #include <uv.h>
+
+#include "authentication.hpp"
+#include "options.hpp"
 
 namespace curlev
 {
@@ -42,8 +46,15 @@ public:
   int peak_requests  ( void ) const { return m_multi_running_max; }
   int active_requests( void ) const { return m_multi_running_current; }
   //
+  // Setting defaults
+  bool options       ( const std::string & p_options );
+  bool authentication( const std::string & p_credential );
+  //
 protected:
   template < typename Protocol > friend class Wrapper;
+  //
+  // Retrieving defaults
+  void get_default   ( Options & p_options, Authentication & p_authentication ) const;
   //
   // Create a new easy handle that *must* be freed using return_handle
   CURL * get_handle( void ) const;
@@ -65,6 +76,11 @@ private:
   //
   // Number of currently running (including waiting) requests, from start_request to post Wrapper notification
   std::atomic_long m_nb_running_requests = 0;
+  //
+  // Used by protocol classes as default values
+  mutable std::shared_mutex m_default_locks;
+  Options                   m_default_options;
+  Authentication            m_default_authentication;
   //
   // libcurl global
   //
@@ -141,11 +157,11 @@ private:
   using t_wrapper_shared_ptr_ptr = std::shared_ptr< WrapperBase > *;
   using t_cb_job                 = std::tuple< t_wrapper_shared_ptr_ptr, long >;
   //
-  mutable std::condition_variable           m_cb_cv;
-  mutable std::mutex                        m_cb_mutex;
-  std::deque< t_cb_job >                    m_cb_queue;
-  bool                                      m_cb_running = false; // worker thread is running
-  std::thread                               m_cb_worker;
+  mutable std::condition_variable m_cb_cv;
+  mutable std::mutex              m_cb_mutex;
+  std::deque< t_cb_job >          m_cb_queue;
+  bool                            m_cb_running = false; // worker thread is running
+  std::thread                     m_cb_worker;
   //
   bool cb_init( void );
   void cb_clear( void );

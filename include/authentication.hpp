@@ -19,8 +19,6 @@ template < typename Protocol > class Wrapper;
 class Authentication
 {
 public:
-  Authentication() { clear() ; }
-  //
   // Expect a KVCS list of credential details. Example:
   //   mode=basic,user=joe,secret=abc123
   // Available keys are:
@@ -30,17 +28,14 @@ public:
   //   secret     password or token
   bool set( const std::string & p_options );
   //
-protected:
-  template < typename Protocol > friend class Wrapper;
-  //
   // Apply credential to curl easy handle
   bool apply( CURL * p_curl );
   //
   // Reset credential to their default values
-  void clear( void );
+  void set_default( void );
   //
 private:
-  enum { none, basic, digest, bearer } m_mode;
+  enum { none, basic, digest, bearer } m_mode = none;
   std::string                          m_user;
   std::string                          m_secret;
 };
