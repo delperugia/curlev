@@ -21,7 +21,7 @@ The diagram above shows how:
 
 # ASync class
 
-The `ASync` class is a singleton that manages the event loop integration
+The `ASync` class managess the event loop integration
 between `libcurl` and `libuv`:
 
 - Wraps a `libuv` event loop that processes all asynchronous operations

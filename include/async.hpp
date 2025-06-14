@@ -28,7 +28,7 @@ template < typename Protocol > class Wrapper;
 // Because it is not possible to mix lock/unlock and lock_shared/unlock_shared
 // in std::shared_mutex, and because libcurl CURLSHOPT_UNLOCKFUNC function
 // does not receive the access, C functions must be used. They are wrapped
-// here for conveniency
+// here for conveniency (even if libcurl seldom use shared locks).
 
 class shared_mutex
 {
