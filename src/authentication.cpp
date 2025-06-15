@@ -20,7 +20,8 @@ bool Authentication::set(const std::string& p_options)
     {
       if ( key == "mode" )
       {
-               if ( value == "basic"  ) m_mode = basic;
+               if ( value == "none"   ) m_mode = none;
+          else if ( value == "basic"  ) m_mode = basic;
           else if ( value == "digest" ) m_mode = digest;
           else if ( value == "bearer" ) m_mode = bearer;
           else
