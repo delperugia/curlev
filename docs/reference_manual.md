@@ -103,11 +103,11 @@ to place in the MIME document that will be sent as the body of the request:
 The string expected by the `authentication()` is a key-value comma
 separated string with the following keys available:
 
-| Name   | Comment
-|--------|-----------------------------
-| mode   | basic, digest or bearer
-| user   | for basic and digest only: user login
-| secret | password or token
+| Name   | Comment                               | libcurl
+|--------|---------------------------------------|--------------------
+| mode   | none, basic, digest or bearer         | CURLAUTH_NONE, CURLAUTH_BASIC, CURLAUTH_DIGEST or CURLAUTH_BEARER
+| user   | for basic and digest only: user login | CURLOPT_USERNAME       
+| secret | password or token                     | CURLOPT_PASSWORD or CURLOPT_XOAUTH2_BEARER
 
 For example:
 - mode=basic,user=joe,secret=abc123
@@ -118,22 +118,27 @@ For example:
 The string expected by the `options()` is a key-value comma
 separated string with the following keys available:
 
-| Name               | Default | Unit         | Comment
-|--------------------|---------|--------------|-------------------------
-| accept_compression | 0       | 0 or 1       | activate compression
-| connect_timeout    | 30000   | milliseconds | connection timeout
-| cookies            | false   | 0 or 1       | receive and resend cookies
-| follow_location    | 0       | 0 or 1       | follow HTTP 3xx redirects
-| insecure           | 0       | 0 or 1       | disables certificate validation
-| maxredirs          | 5       | count        | maximum number of redirects allowed
-| proxy              |         | string       | the SOCKS or HTTP URl to a proxy (see https://curl.se/libcurl/c/CURLOPT_PROXY.html)
-| timeout            | 30000   | milliseconds | receive data timeout
-| verbose            | 0       | 0 or 1       | debug log on console
+| Name               | Default | Unit         | Comment                             | libcurl
+|--------------------|---------|--------------|-------------------------------------|---------------------                             
+| accept_compression | 0       | 0 or 1       | activate compression                | CURLOPT_ACCEPT_ENCODING            
+| connect_timeout    | 30000   | milliseconds | connection timeout                  | CURLOPT_CONNECTTIMEOUT_MS           
+| cookies            | false   | 0 or 1       | receive and resend cookies          | CURLOPT_COOKIEFILE                   
+| follow_location    | 0       | 0 or 1       | follow HTTP 3xx redirects           | CURLOPT_FOLLOWLOCATION
+| insecure           | 0       | 0 or 1       | disables certificate validation     | CURLOPT_SSL_VERIFYHOST and CURLOPT_SSL_VERIFYPEER                       
+| maxredirs          | 5       | count        | maximum number of redirects allowed | CURLOPT_MAXREDIRS                           
+| proxy              |         | string       | the SOCKS or HTTP URl to a proxy    | CURLOPT_PROXY                         
+| timeout            | 30000   | milliseconds | receive data timeout                | CURLOPT_TIMEOUT_MS             
+| verbose            | 0       | 0 or 1       | debug log on console                | CURLOPT_VERBOSE             
 
 For example:
 - follow_location=1,timeout=5000
 - insecure=1
 - proxy=socks5://user123:pass456@192.168.1.100:1080
+
+Notes:
+- accept_compression: all built-in supported encodings are accepted
+- cookies:            no initial file is specified when activated
+- proxy:              see https://curl.se/libcurl/c/CURLOPT_PROXY.html
 
 # Executing the request
 

@@ -14,15 +14,14 @@ namespace curlev
 // This class is used to set various curl options from a string and
 // apply them to a given curl easy handle. set can be called several
 // times to set various options. The finale configuration is then
-// applied performing the request.
-
-template < typename Protocol > class Wrapper;
+// applied when performing the request.
 
 class Options
 {
 public:
   // Expect a KVCS list of options to set. Example:
   //   follow_location=1,insecure=1
+  // See the reference manual for a complete description.
   // Available keys are:
   //   Name               Default  Unit          Comment
   //   accept_compression 0        0 or 1        activate compression

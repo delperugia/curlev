@@ -12,15 +12,14 @@ namespace curlev
 {
 
 // This class is used to set credential required for a transfer.
-// The finale configuration is then applied performing the request.
-
-template < typename Protocol > class Wrapper;
+// The finale configuration is then applied when performing the request.
 
 class Authentication
 {
 public:
   // Expect a KVCS list of credential details. Example:
   //   mode=basic,user=joe,secret=abc123
+  // See the reference manual for a complete description.
   // Available keys are:
   //   Name       Comment
   //   mode       basic, digest or bearer
