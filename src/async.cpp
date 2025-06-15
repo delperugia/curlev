@@ -77,7 +77,7 @@ bool ASync::stop( unsigned p_timeout_s /* = 30 */)
 }
 
 //--------------------------------------------------------------------
-// Setting default values for options and authentication
+// Setting default values for options, authentication and certificates
 bool ASync::options( const std::string & p_options )
 {
   std::unique_lock lock( m_default_locks );
@@ -90,6 +90,13 @@ bool ASync::authentication( const std::string & p_credential )
   std::unique_lock lock( m_default_locks );
   //
   return m_default_authentication.set( p_credential );
+}
+
+bool ASync::certificates( const std::string & p_certificates )
+{
+  std::unique_lock lock( m_default_locks );
+  //
+  return m_default_certificates.set( p_certificates );
 }
 
 //--------------------------------------------------------------------

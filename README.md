@@ -14,7 +14,7 @@ offering both synchronous and asynchronous request handling using a limited over
 
 Key features:
 
-- Event driven
+- Event driven (5 times less CPU and 2 times less RAM used in some cases)
 - Synchronous and asynchronous requests with callback support
 - All standard HTTP methods (GET, POST, PUT, PATCH, DELETE)
 - Query parameters, form data and MIME handling

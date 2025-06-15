@@ -150,7 +150,7 @@ needs to wait `m_uv_run_mutex` which is only unlocked for 0ms by `uv_run()` time
  - libcurl example [multi-uv](https://curl.se/libcurl/c/multi-uv.html])
  - [GoogleTest](https://google.github.io/googletest/)
 
-# Reviews
+# IA Reviews
 
 ## Review of `shared_ptr` Usage Between `Wrapper` and `ASync`
 
@@ -160,7 +160,7 @@ needs to wait `m_uv_run_mutex` which is only unlocked for 0ms by `uv_run()` time
    A `std::shared_ptr<Protocol>` is created and returned to the user.  
    `m_self_weak` is set to this shared pointer for later use.
 
-2. **Start of Async Operation**  
+2. **Start of ASync Operation**  
    In `Wrapper::start()`, a new `std::shared_ptr<Protocol>` is created from `m_self_weak.lock()` and heap-allocated:  
    This pointer (`cb_data`) is passed to `ASync::start_request()` as the `CURLOPT_PRIVATE` data for the CURL handle.
 

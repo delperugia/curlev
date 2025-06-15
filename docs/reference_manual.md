@@ -20,7 +20,7 @@ The only header to include is `curlev/http.hpp`.
 # Starting
 
 The `libcurl` and `libuv` libraries must be started before any other operations,
-usually when the application starts. Usually a single instance of ASync is needed,
+usually when the application starts. Usually a single instance of `ASync` is needed,
 but several can be created if needed. An instance is started using:
 
 ```cpp
@@ -88,6 +88,7 @@ are available:
 - `add_headers( headers )`:         add headers
 - `authentication( auth_string )`:  set authentication
 - `options( opt_string )`:          set options
+- `certificates()`:                 set SSL certificates
 
 The `add_mime_parameters` method expects a vector of parameters and files
 to place in the MIME document that will be sent as the body of the request:
@@ -145,23 +146,23 @@ Notes:
 The string expected by the `certificates()` is a key-value comma
 separated string with the following keys available:
 
-| Connection | Usage    | Key               | libcurl                   | Comment 
-|------------|----------|-------------------|---------------------------|-------------------------------------------
-| -          | global   | engine            | CURLOPT_SSLENGINE         | engine or provider name
-| direct     | public   | sslcert           | CURLOPT_SSLCERT	          | file  
-| "          | "        | sslcerttype       | CURLOPT_SSLCERTTYPE       | "PEM", "DER" or "P12", default "PEM"  
-| "          | private  | sslkey            | CURLOPT_SSLKEY	          | file or id
-| "          | "        | sslkeytype        | CURLOPT_SSLKEYTYPE        | "PEM", "DER", "ENG" or "PROV", default "PEM"  
-| "          | "        | keypasswd         | CURLOPT_KEYPASSWD	        | -  
-| "          | CA       | cainfo            | CURLOPT_CAINFO	          | file
-| "          | "        | capath            | CURLOPT_CAPATH	          | folder
-| proxy      | public   | proxy_sslcert     | CURLOPT_PROXY_SSLCERT	    | file  
-| "          | "        | proxy_sslcerttype | CURLOPT_PROXY_SSLCERTTYPE | "PEM", "DER" or "P12", default "PEM"  
-| "          | private  | proxy_sslkey      | CURLOPT_PROXY_SSLKEY	    | file or id
-| "          | "        | proxy_sslkeytype  | CURLOPT_PROXY_SSLKEYTYPE  | "PEM", "DER", "ENG" or "PROV", default "PEM"  
-| "          | "        | proxy_keypasswd   | CURLOPT_PROXY_KEYPASSWD	  | -  
-| "          | CA       | proxy_cainfo      | CURLOPT_PROXY_CAINFO	    | file
-| "          | "        | proxy_capath      | CURLOPT_PROXY_CAPATH	    | folder
+| Connection | Usage    | Key               | Comment                                        | libcurl                            
+|------------|----------|-------------------|------------------------------------------------|---------------------------                                                
+| -          | global   | engine            | engine or provider name                        | CURLOPT_SSLENGINE                                
+| direct     | public   | sslcert           | file                                           | CURLOPT_SSLCERT	                 
+| "          | "        | sslcerttype       | "PEM", "DER" or "P12", default "PEM"           | CURLOPT_SSLCERTTYPE                                              
+| "          | private  | sslkey            | file or id                                     | CURLOPT_SSLKEY	                     
+| "          | "        | sslkeytype        | "PEM", "DER", "ENG" or "PROV", default "PEM"   | CURLOPT_SSLKEYTYPE                                                       
+| "          | "        | keypasswd         | -                                              | CURLOPT_KEYPASSWD	           
+| "          | CA       | cainfo            | file                                           | CURLOPT_CAINFO	               
+| "          | "        | capath            | folder                                         | CURLOPT_CAPATH	                 
+| proxy      | public   | proxy_sslcert     | file                                           | CURLOPT_PROXY_SSLCERT	           
+| "          | "        | proxy_sslcerttype | "PEM", "DER" or "P12", default "PEM"           | CURLOPT_PROXY_SSLCERTTYPE                                        
+| "          | private  | proxy_sslkey      | file or id                                     | CURLOPT_PROXY_SSLKEY	               
+| "          | "        | proxy_sslkeytype  | "PEM", "DER", "ENG" or "PROV", default "PEM"   | CURLOPT_PROXY_SSLKEYTYPE                                                 
+| "          | "        | proxy_keypasswd   | -                                              | CURLOPT_PROXY_KEYPASSWD	     
+| "          | CA       | proxy_cainfo      | file                                           | CURLOPT_PROXY_CAINFO	         
+| "          | "        | proxy_capath      | folder                                         | CURLOPT_PROXY_CAPATH	           
 
 For example:
  - sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret

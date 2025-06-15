@@ -80,6 +80,7 @@ public:
   // Setting defaults
   bool options       ( const std::string & p_options );
   bool authentication( const std::string & p_credential );
+  bool certificates  ( const std::string & p_certificates );
   //
 protected:
   template < typename Protocol > friend class Wrapper;
