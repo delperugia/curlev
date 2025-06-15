@@ -181,6 +181,27 @@ TEST( http_advanced, auth )
 }
 
 //--------------------------------------------------------------------
+TEST( http_advanced, certificates )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->GET( c_server_certificates )
+                    .certificates( "sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret" )
+                    .exec().get_code();
+    EXPECT_EQ( code, CURLE_SSL_CERTPROBLEM );
+    //
+    code = http->GET( c_server_certificates )
+                    .exec().get_code();
+    EXPECT_EQ( code, 200 );
+  }
+  //
+  async.stop();
+}
+  
+//--------------------------------------------------------------------
 // 2nd request attempted while the 1st is running
 TEST( http_advanced, while_running )
 {

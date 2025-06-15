@@ -19,7 +19,7 @@ namespace curlev
 class Options
 {
 public:
-  // Expect a KVCS list of options to set. Example:
+  // Expect a CSKV list of options to set. Example:
   //   follow_location=1,insecure=1
   // See the reference manual for a complete description.
   // Available keys are:

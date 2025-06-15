@@ -16,15 +16,17 @@
 namespace curlev
 {
 
-constexpr long c_success                     =  0;
-constexpr long c_error_start                 = -1; // internal error
-constexpr long c_error_options_format        = -2; // bad options format string
-constexpr long c_error_authentication_format = -3; // bad authentication format string
-constexpr long c_error_options_set           = -4; // bad option value
-constexpr long c_error_authentication_set    = -5; // bad authentication value
-constexpr long c_error_http_headers_set      = -6; // bad header
-constexpr long c_error_http_method_set       = -7; // internal error
-constexpr long c_error_http_mime_set         = -8; // bad MIME value
+constexpr long c_success                     =   0;
+constexpr long c_error_start                 =  -1; // internal error
+constexpr long c_error_options_format        =  -2; // bad options format string
+constexpr long c_error_authentication_format =  -3; // bad authentication format string
+constexpr long c_error_certificates_format   =  -4; // bad certificates format string
+constexpr long c_error_options_set           =  -5; // bad option value
+constexpr long c_error_authentication_set    =  -6; // bad authentication value
+constexpr long c_error_certificates_set      =  -7; // bad certificates value
+constexpr long c_error_http_headers_set      =  -8; // bad header
+constexpr long c_error_http_method_set       =  -9; // internal error
+constexpr long c_error_http_mime_set         = -10; // bad MIME value
 
 // The Wrapper class is used to handle all the common curl processing
 // and communication with ASync.
@@ -179,6 +181,16 @@ class Wrapper: public WrapperBase
       return static_cast< Protocol & >( *this );
     }
     //
+    // Set easy libcurl certificates
+    Protocol & certificates( const std::string & p_certificates )
+    {
+      if ( m_response_code == c_success )
+        if ( ! m_certificates.set( p_certificates ) )
+          m_response_code = c_error_certificates_format;
+      //
+      return static_cast< Protocol & >( *this );
+    }
+    //
     // Set the callback mode (default true: threaded)
     Protocol & threaded_callback( bool p_mode )
     {
@@ -195,6 +207,7 @@ class Wrapper: public WrapperBase
     CURL *         m_curl = nullptr;
     Options        m_options;
     Authentication m_authentication;
+    Certificates   m_certificates;
     long           m_response_code = c_success;
     //
   protected:
@@ -207,7 +220,7 @@ class Wrapper: public WrapperBase
         m_response_code = c_success;
         m_threaded_cb   = true;
         //
-        m_async.get_default( m_options, m_authentication );
+        m_async.get_default( m_options, m_authentication, m_certificates ); // retrieve global default
         //
         clear_protocol();
       }
@@ -226,6 +239,12 @@ class Wrapper: public WrapperBase
       if ( ! m_authentication.apply( m_curl ) )
       {
         m_response_code = c_error_authentication_set;
+        return false;
+      }
+      //
+      if ( ! m_certificates.apply( m_curl ) )
+      {
+        m_response_code = c_error_certificates_set;
         return false;
       }
       //

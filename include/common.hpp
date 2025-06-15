@@ -25,7 +25,7 @@ bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_stri
 // Remove leading and trailing white spaces (space, tabulations...) from string
 std::string trim( const std::string & p_string );
 
-// Parse a key-value comma-separated string (KVCS) and call the handler for each pair.
+// Parse a key-value comma-separated string (CSKV) and call the handler for each pair.
 // The handler must return false if the key-value pair is invalid.
 bool parse_cskv(
     const std::string &                                                       p_options,

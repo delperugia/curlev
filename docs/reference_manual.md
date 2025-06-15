@@ -10,7 +10,7 @@ The only header to include is `curlev/http.hpp`.
  - To do a request:
    - create an `HTTP` object using `HTTP::create()`
    - call one of `GET()`, `DELETE()`, `POST()`, `PUT()` or `PATCH()`
-   - optionally call `add_headers()`, `add_..._parameters()`, `options()`, `headers()`
+   - optionally call `add_headers()`, `add_..._parameters()`, `options()`, `headers()`...
    - call `exec()` (synchronous) or `start()`/`join()` (asynchronous)
    - call the `get_...()` methods
 - Notes:
@@ -53,8 +53,8 @@ while a `CURL` handle still has a reference on the `CURLSH` handle).
 ## Default configuration
 
 The default configuration of the `HTTP` instances can be set in `ASync` using
-the two methods `options()` and `authentication()`. The parameters are the
-same as the ones described in `HTTP`.
+the two methods `options()`, `authentication()` and `certificates()`.
+The parameters are the same as the ones described in `HTTP`.
 
 # Creating an HTTP instance
 
@@ -139,6 +139,32 @@ Notes:
 - accept_compression: all built-in supported encodings are accepted
 - cookies:            no initial file is specified when activated
 - proxy:              see https://curl.se/libcurl/c/CURLOPT_PROXY.html
+
+# Setting certificates
+
+The string expected by the `certificates()` is a key-value comma
+separated string with the following keys available:
+
+| Connection | Usage    | Key               | libcurl                   | Comment 
+|------------|----------|-------------------|---------------------------|-------------------------------------------
+| -          | global   | engine            | CURLOPT_SSLENGINE         | engine or provider name
+| direct     | public   | sslcert           | CURLOPT_SSLCERT	          | file  
+| "          | "        | sslcerttype       | CURLOPT_SSLCERTTYPE       | "PEM", "DER" or "P12", default "PEM"  
+| "          | private  | sslkey            | CURLOPT_SSLKEY	          | file or id
+| "          | "        | sslkeytype        | CURLOPT_SSLKEYTYPE        | "PEM", "DER", "ENG" or "PROV", default "PEM"  
+| "          | "        | keypasswd         | CURLOPT_KEYPASSWD	        | -  
+| "          | CA       | cainfo            | CURLOPT_CAINFO	          | file
+| "          | "        | capath            | CURLOPT_CAPATH	          | folder
+| proxy      | public   | proxy_sslcert     | CURLOPT_PROXY_SSLCERT	    | file  
+| "          | "        | proxy_sslcerttype | CURLOPT_PROXY_SSLCERTTYPE | "PEM", "DER" or "P12", default "PEM"  
+| "          | private  | proxy_sslkey      | CURLOPT_PROXY_SSLKEY	    | file or id
+| "          | "        | proxy_sslkeytype  | CURLOPT_PROXY_SSLKEYTYPE  | "PEM", "DER", "ENG" or "PROV", default "PEM"  
+| "          | "        | proxy_keypasswd   | CURLOPT_PROXY_KEYPASSWD	  | -  
+| "          | CA       | proxy_cainfo      | CURLOPT_PROXY_CAINFO	    | file
+| "          | "        | proxy_capath      | CURLOPT_PROXY_CAPATH	    | folder
+
+For example:
+ - sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret
 
 # Executing the request
 

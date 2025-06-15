@@ -10,7 +10,7 @@ namespace curlev
 {
 
 //--------------------------------------------------------------------
-// Expect a KVCS list of credential details. Example:
+// Expect a CSKV list of credential details. Example:
 //   mode=basic,user=joe,secret=abc123
 bool Authentication::set(const std::string& p_options)
 {

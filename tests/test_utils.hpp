@@ -9,6 +9,7 @@
 
 extern std::string c_server_httpbun;
 extern std::string c_server_compress;
+extern std::string c_server_certificates;
 
 // Returns the number of attributes in the object pointed by p_path.
 // Returns -1 on error.

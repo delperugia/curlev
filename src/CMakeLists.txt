@@ -6,6 +6,7 @@
 set( SRC_FILES
      async.cpp
      authentication.cpp
+     certificates.cpp
      common.cpp
      http.cpp
      options.cpp

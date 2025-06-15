@@ -25,8 +25,6 @@ constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 1000 );
 ASync::ASync()
 {
   m_uv_timer.data = nullptr;
-  m_default_options.set_default();
-  m_default_authentication.set_default();
 }
 
 //--------------------------------------------------------------------
@@ -50,6 +48,10 @@ bool ASync::start()
   ok = ok && multi_init();
   ok = ok && uv_init(); // set m_uv_running to true
   ok = ok && cb_init(); // set m_cb_running to true
+  //
+  m_default_options       .set_default();
+  m_default_authentication.set_default();
+  m_default_certificates  .set_default( m_global_ca_info, m_global_ca_path );
   //
   return ok;
 }
@@ -92,12 +94,13 @@ bool ASync::authentication( const std::string & p_credential )
 
 //--------------------------------------------------------------------
 // Retrieve the current default options and authentication
-void ASync::get_default( Options & p_options, Authentication & p_authentication ) const
+void ASync::get_default( Options & p_options, Authentication & p_authentication, Certificates & p_certificates ) const
 {
   std::shared_lock lock( m_default_locks );
   //
   p_options        = m_default_options;
   p_authentication = m_default_authentication;
+  p_certificates   = m_default_certificates;
 }
 
 //--------------------------------------------------------------------
@@ -174,12 +177,55 @@ void ASync::abort_request( CURL * p_curl )
 
 //--------------------------------------------------------------------
 // Number or curl_global_init() must match the number of curl_global_cleanup()
+
+namespace
+{
+  // Retrieve the default CA path and file
+  bool get_default_ca( std::string & p_info, std::string & p_path )
+  {
+    if ( CURL * curl = curl_easy_init() )
+    {
+      char * cainfo = nullptr;
+      char * capath = nullptr;
+      //
+      bool ok = ( curl_easy_getinfo( curl, CURLINFO_CAINFO, &cainfo ) == CURLE_OK && cainfo ) &&
+                ( curl_easy_getinfo( curl, CURLINFO_CAPATH, &capath ) == CURLE_OK && capath );
+      //
+      if ( ok )
+      {
+        p_info = cainfo;
+        p_path = capath;
+      }
+      //
+      curl_easy_cleanup( curl );
+      //
+      return ok;
+    }
+    else
+    {
+      return false;
+    }
+  }
+} // namespace
+
 bool ASync::global_init( void )
 {
   std::lock_guard lock( m_global_mutex );
   //
-  bool ok = m_global_count > 0 ||                             // already initialized
-            CURLE_OK == curl_global_init( CURL_GLOBAL_ALL );  // or first initialization
+  bool ok = true;
+  //
+  if ( m_global_count == 0 ) // first initialization
+  {
+    ok = curl_global_init( CURL_GLOBAL_ALL ) == CURLE_OK;
+    //
+    if ( ok )
+    {
+      ok = get_default_ca( m_global_ca_info, m_global_ca_path );
+      //
+      if ( ! ok )
+        curl_global_cleanup();
+    }
+  }
   //
   if ( ok )
     m_global_count++;

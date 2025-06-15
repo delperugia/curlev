@@ -17,6 +17,7 @@
 #include <uv.h>
 
 #include "authentication.hpp"
+#include "certificates.hpp"
 #include "options.hpp"
 
 namespace curlev
@@ -84,7 +85,7 @@ protected:
   template < typename Protocol > friend class Wrapper;
   //
   // Retrieving defaults
-  void get_default   ( Options & p_options, Authentication & p_authentication ) const;
+  void get_default( Options & p_options, Authentication & p_authentication, Certificates & p_certificates ) const;
   //
   // Create a new easy handle that *must* be freed using return_handle
   CURL * get_handle( void ) const;
@@ -111,19 +112,22 @@ private:
   mutable std::shared_mutex m_default_locks;
   Options                   m_default_options;
   Authentication            m_default_authentication;
+  Certificates              m_default_certificates;
   //
   // libcurl global
   //
-  unsigned   m_global_count = 0;
-  std::mutex m_global_mutex;
+  std::mutex  m_global_mutex;
+  unsigned    m_global_count = 0;
+  std::string m_global_ca_info; // default CURLINFO_CAINFO
+  std::string m_global_ca_path; // default CURLINFO_CAPATH
   //
   bool global_init( void );
   void global_clear( void );
   //
   // libcurl share interface - share data between multiple easy handles (DNS, TLS...)
   //
-  CURLSH *     m_share_handle = nullptr;
   shared_mutex m_share_locks[ CURL_LOCK_DATA_LAST ];
+  CURLSH *     m_share_handle = nullptr;
   //
   bool        share_init( void );
   void        share_clear( void );
@@ -154,8 +158,8 @@ private:
   //
   // libuv - asynchronous I/O
   //
-  mutable std::condition_variable m_uv_run_cv;
   mutable std::mutex              m_uv_run_mutex;
+  mutable std::condition_variable m_uv_run_cv;
   bool                            m_uv_running = false; // worker thread is running
   std::thread                     m_uv_worker;
   uv_loop_t *                     m_uv_loop = nullptr;
@@ -187,8 +191,8 @@ private:
   using t_wrapper_shared_ptr_ptr = std::shared_ptr< WrapperBase > *;
   using t_cb_job                 = std::tuple< t_wrapper_shared_ptr_ptr, long >;
   //
-  mutable std::condition_variable m_cb_cv;
   mutable std::mutex              m_cb_mutex;
+  mutable std::condition_variable m_cb_cv;
   std::deque< t_cb_job >          m_cb_queue;
   bool                            m_cb_running = false; // worker thread is running
   std::thread                     m_cb_worker;
