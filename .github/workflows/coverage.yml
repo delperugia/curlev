@@ -36,12 +36,14 @@ jobs:
       - name: Test and coverage
         run: |
           ctest --test-dir build/ -T test -T coverage --output-on-failure
-          lcov --capture --directory build/src/  --output-file build/coverage.info --ignore-errors gcov,gcov
-          lcov --extract build/coverage.info '*/src/*' --output-file build/coverage.info.final
+          lcov --capture \
+               --directory build/src/ \
+               --include '*/curlev/src/*' \
+               --output-file build/coverage.info 
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files:          build/coverage.info.final
+          files:          build/coverage.info
           disable_search: true
           flags:          unittests
