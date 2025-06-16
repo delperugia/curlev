@@ -9,25 +9,30 @@
 namespace curlev
 {
 
-// The libcurl options associated to our keys
-static const std::map< std::string, CURLoption >
-  s_keys_to_options = {
-    { "engine"            , CURLOPT_SSLENGINE         },          
-    { "sslcert"           , CURLOPT_SSLCERT           },	         
-    { "sslcerttype"       , CURLOPT_SSLCERTTYPE       },          
-    { "sslkey"            , CURLOPT_SSLKEY            },	         
-    { "sslkeytype"        , CURLOPT_SSLKEYTYPE        },           
-    { "keypasswd"         , CURLOPT_KEYPASSWD         },  	       
-    { "cainfo"            , CURLOPT_CAINFO            },
-    { "capath"            , CURLOPT_CAPATH            },	       
-    { "proxy_sslcert"     , CURLOPT_PROXY_SSLCERT     },      	   
-    { "proxy_sslcerttype" , CURLOPT_PROXY_SSLCERTTYPE },          
-    { "proxy_sslkey"      , CURLOPT_PROXY_SSLKEY      },      	   
-    { "proxy_sslkeytype"  , CURLOPT_PROXY_SSLKEYTYPE  },           
-    { "proxy_keypasswd"   , CURLOPT_PROXY_KEYPASSWD   },        	 
-    { "proxy_cainfo"      , CURLOPT_PROXY_CAINFO      },      	  
-    { "proxy_capath"      , CURLOPT_PROXY_CAPATH      },      	
-  };
+namespace
+{
+
+  // The libcurl options associated to our keys
+  static const std::map< std::string, CURLoption >
+    s_keys_to_options = {
+      { "engine"            , CURLOPT_SSLENGINE         },          
+      { "sslcert"           , CURLOPT_SSLCERT           },	         
+      { "sslcerttype"       , CURLOPT_SSLCERTTYPE       },          
+      { "sslkey"            , CURLOPT_SSLKEY            },	         
+      { "sslkeytype"        , CURLOPT_SSLKEYTYPE        },           
+      { "keypasswd"         , CURLOPT_KEYPASSWD         },  	       
+      { "cainfo"            , CURLOPT_CAINFO            },
+      { "capath"            , CURLOPT_CAPATH            },	       
+      { "proxy_sslcert"     , CURLOPT_PROXY_SSLCERT     },      	   
+      { "proxy_sslcerttype" , CURLOPT_PROXY_SSLCERTTYPE },          
+      { "proxy_sslkey"      , CURLOPT_PROXY_SSLKEY      },      	   
+      { "proxy_sslkeytype"  , CURLOPT_PROXY_SSLKEYTYPE  },           
+      { "proxy_keypasswd"   , CURLOPT_PROXY_KEYPASSWD   },        	 
+      { "proxy_cainfo"      , CURLOPT_PROXY_CAINFO      },      	  
+      { "proxy_capath"      , CURLOPT_PROXY_CAPATH      },      	
+    };
+
+}; // namespace
 
 //--------------------------------------------------------------------
 // Expect a CSKV list of credential details. Example:
