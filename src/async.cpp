@@ -813,7 +813,7 @@ void ASync::notify_wrapper( CURL * p_curl, long p_result_code )
   if ( ! ( *wrapper ) )                                              // cannot happen
     return;
   //
-  if ( ( *wrapper )->m_threaded_cb ) // push it to CB queue
+  if ( ( *wrapper )->use_threaded_cb() ) // push it to CB queue
   {
     std::lock_guard lock( m_cb_mutex );
     m_cb_queue.push_back( std::make_tuple( wrapper, p_result_code ) );

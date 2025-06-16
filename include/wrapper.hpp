@@ -44,12 +44,12 @@ protected:
   // Called when a transfer is finished
   virtual void async_cb( long p_result ) = 0;
   //
+  // Is async_cb called in ASync uv thread (false) or a dedicated thread (true)
+  virtual bool use_threaded_cb( void ) const = 0;
+  //
   // Prevent copy
   WrapperBase( const WrapperBase & )             = delete;
   WrapperBase & operator=( const WrapperBase & ) = delete;
-  //
-  // Is async_cb called in ASync uv thread (false) or a dedicated thread (true)
-  bool m_threaded_cb = true;
 };
 
 // Exception thrown when the factory fails to create a new protocol class
@@ -195,7 +195,7 @@ class Wrapper: public WrapperBase
     Protocol & threaded_callback( bool p_mode )
     {
       if ( m_response_code == c_success )
-        m_threaded_cb = p_mode;
+        m_user_cb_threaded = p_mode;
       //
       return static_cast< Protocol & >( *this );
     }
@@ -210,15 +210,13 @@ class Wrapper: public WrapperBase
     Certificates   m_certificates;
     long           m_response_code = c_success;
     //
-  protected:
-    //
     // Reset the protocol before starting a new transfer
     void clear( void )
     {
       if ( ! m_exec_running )
       {
-        m_response_code = c_success;
-        m_threaded_cb   = true;
+        m_response_code    = c_success;
+        m_user_cb_threaded = true;
         //
         m_async.get_default( m_options, m_authentication, m_certificates ); // retrieve global default
         //
@@ -269,6 +267,14 @@ class Wrapper: public WrapperBase
       cb_protocol( static_cast< Protocol & >( *this ) ); // invoke user's callback, clear m_user_cb
     }
     //
+    // Is async_cb called in ASync uv thread (false) or a dedicated thread (true)
+    // If there is no user CB (only our async_cb code), consider that it is fast
+    // enough and don't use an extra thread.
+    bool use_threaded_cb( void ) const override
+    {
+      return m_user_cb_threaded && m_user_cb != nullptr;
+    }
+    //
     // When starting, the Protocol configures the easy handle
     virtual bool prepare_protocol( void ) = 0;
     //
@@ -304,15 +310,17 @@ class Wrapper: public WrapperBase
     }
     //
   private:
-    ASync &                 m_async;
+    ASync &                   m_async;
     //
-    mutable std::mutex      m_exec_mutex;
-    std::condition_variable m_exec_cv;              // used by join() 
-    bool                    m_exec_running = false; // when a requested is executing
+    mutable std::mutex        m_exec_mutex;
+    std::condition_variable   m_exec_cv;              // used by join() 
+    bool                      m_exec_running = false; // when a requested is executing
     //
-    std::weak_ptr< Protocol >   m_self_weak; // set on self at creation, used to create and pass a shared_ptr to ASync
+    std::weak_ptr< Protocol > m_self_weak;            // set on self at creation, used to create and pass a shared_ptr to ASync
     //
-    std::function< void( const Protocol & ) > m_user_cb = nullptr;
+    // Optional user CB invoked from async_cb
+    bool                                      m_user_cb_threaded = true;
+    std::function< void( const Protocol & ) > m_user_cb          = nullptr;
 };
 
 } // namespace curlev
