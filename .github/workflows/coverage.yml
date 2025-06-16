@@ -38,7 +38,7 @@ jobs:
           ctest --test-dir build/ -T test -T coverage --output-on-failure
           lcov --capture \
                --directory build/src/ \
-               --include '*/curlev/src/*' \
+               --include '*/curlev/src/*' --include '*/curlev/include/*' \
                --output-file build/coverage.info 
 
       - name: Upload coverage to Codecov
