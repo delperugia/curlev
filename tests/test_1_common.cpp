@@ -74,6 +74,38 @@ TEST( common, curl_slist_checked_append )
 }
 
 //--------------------------------------------------------------------
+TEST( common, svtol )
+{
+  // Basic numeric conversions
+  EXPECT_EQ( svtol( "0" ), 0 );
+  EXPECT_EQ( svtol( "42" ), 42 );
+  EXPECT_EQ( svtol( "-42" ), -42 );
+  EXPECT_EQ( svtol( "123456789" ), 123456789 );
+
+  // Leading and trailing space are not supported
+  EXPECT_EQ( svtol( "" ), 0 );
+  EXPECT_EQ( svtol( " " ), 0 );
+  EXPECT_EQ( svtol( "\t" ), 0 );
+  EXPECT_EQ( svtol( "  42  " ), 0 );
+  EXPECT_EQ( svtol( "\t-123\n" ), 0 );
+
+  // Leading zeros
+  EXPECT_EQ( svtol( "000" ), 0 );
+  EXPECT_EQ( svtol( "0042" ), 42 );
+  EXPECT_EQ( svtol( "-0042" ), -42 );
+
+  // Invalid input
+  EXPECT_EQ( svtol( "abc" ), 0 );
+  EXPECT_EQ( svtol( "12abc34" ), 0 );
+  EXPECT_EQ( svtol( "abc123" ), 0 );
+
+  // Limits
+  EXPECT_EQ( svtol( "2147483647" ), 2147483647 );
+  EXPECT_EQ( svtol( "-2147483648" ), -2147483648 );
+  EXPECT_EQ( svtol( "99999999999999999999999999" ), 0 ); // Too large
+}
+
+//--------------------------------------------------------------------
 TEST( common, parse_cskv )
 {
   // Test successful cases
@@ -82,9 +114,9 @@ TEST( common, parse_cskv )
     std::map< std::string, std::string > result;
     //
     bool success = parse_cskv( "key1=value1,key2=value2",
-                               [ & ]( const std::string & key, const std::string & value )
+                               [ & ]( std::string_view key, std::string_view value )
                                {
-                                 result[ key ] = value;
+                                 result[ std::string( key ) ] = value;
                                  return true;
                                } );
     //
@@ -99,9 +131,9 @@ TEST( common, parse_cskv )
     std::map< std::string, std::string > result;
     //
     bool success = parse_cskv( " key1 = value1 , key2 = value2 ",
-                               [ & ]( const std::string & key, const std::string & value )
+                               [ & ]( std::string_view key, std::string_view value )
                                {
-                                 result[ key ] = value;
+                                 result[ std::string( key ) ] = value;
                                  return true;
                                } );
     //
@@ -116,9 +148,9 @@ TEST( common, parse_cskv )
     std::map< std::string, std::string > result;
     //
     bool success = parse_cskv( "key=value",
-                               [ & ]( const std::string & key, const std::string & value )
+                               [ & ]( std::string_view key, std::string_view value )
                                {
-                                 result[ key ] = value;
+                                 result[ std::string( key ) ] = value;
                                  return true;
                                } );
     //
@@ -129,19 +161,19 @@ TEST( common, parse_cskv )
   //
   // Empty string
   EXPECT_TRUE( parse_cskv( "",
-                           []( const std::string &, const std::string & ) { return true; } ) );
+                           []( std::string_view key, std::string_view value ) { return true; } ) );
   //
   // Test failure cases
   //
   // Missing equals sign
   EXPECT_FALSE( parse_cskv( "key1value1",
-                            []( const std::string &, const std::string & ) { return true; } ) );
+                            []( std::string_view key, std::string_view value ) { return true; } ) );
   //                              
   // Invalid format
   EXPECT_FALSE( parse_cskv( "key1=value1,,key2=value2",
-                            []( const std::string &, const std::string & ) { return true; } ) );
+                            []( std::string_view key, std::string_view value ) { return true; } ) );
   //
   // Handler rejection
   EXPECT_FALSE( parse_cskv( "key1=value1,key2=value2",
-                            []( const std::string &, const std::string & ) { return false; } ) );
+                            []( std::string_view key, std::string_view value ) { return false; } ) );
 }

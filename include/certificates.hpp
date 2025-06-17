@@ -18,7 +18,9 @@ namespace curlev
 class Certificates
 {
 public:
-  // Expect a CSKV list of todo
+  // Expect a CSKV list of certificate parameters. Example:
+  //   sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret
+  // See the reference manual for a complete description.
   bool set( const std::string & p_options );
   //
   // Apply credential to curl easy handle

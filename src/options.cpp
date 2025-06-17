@@ -16,16 +16,16 @@ bool Options::set( const std::string & p_options )
 {
   return parse_cskv(
     p_options,
-    [ this ]( const std::string & key, const std::string & value )
+    [ this ]( std::string_view key, std::string_view value )
     {
            if ( key == "accept_compression" )  m_accept_compression = ( value == "1" );
-      else if ( key == "connect_timeout"    )  m_connect_timeout    = std::stoi( value );
+      else if ( key == "connect_timeout"    )  m_connect_timeout    = svtol( value );
       else if ( key == "cookies"            )  m_cookies            = ( value == "1" );
       else if ( key == "follow_location"    )  m_follow_location    = ( value == "1" );
       else if ( key == "insecure"           )  m_insecure           = ( value == "1" );
-      else if ( key == "maxredirs"          )  m_maxredirs          = std::stoi( value );
+      else if ( key == "maxredirs"          )  m_maxredirs          = svtol( value );
       else if ( key == "proxy"              )  m_proxy              = value;
-      else if ( key == "timeout"            )  m_timeout            = std::stoi( value );
+      else if ( key == "timeout"            )  m_timeout            = svtol( value );
       else if ( key == "verbose"            )  m_verbose            = ( value == "1" );
       // no error on unknown key to ensure forward compatibility
       //
@@ -40,16 +40,16 @@ bool Options::apply( CURL * p_curl )
 {
   bool ok = true;
   //
-  ok = ok && easy_setopt( p_curl, CURLOPT_ACCEPT_ENCODING  , m_accept_compression ? "" : nullptr );
-  ok = ok && easy_setopt( p_curl, CURLOPT_CONNECTTIMEOUT_MS, m_connect_timeout );
-  ok = ok && easy_setopt( p_curl, CURLOPT_COOKIEFILE       , m_cookies ? "" : nullptr );
-  ok = ok && easy_setopt( p_curl, CURLOPT_FOLLOWLOCATION   , m_follow_location ? 1L : 0L ); // follow 30x
-  ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYHOST   , m_insecure ? 0L : 1L );
-  ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYPEER   , m_insecure ? 0L : 1L );
+  ok = ok && easy_setopt( p_curl, CURLOPT_ACCEPT_ENCODING  , m_accept_compression ? "" : nullptr              );
+  ok = ok && easy_setopt( p_curl, CURLOPT_CONNECTTIMEOUT_MS, m_connect_timeout                                );
+  ok = ok && easy_setopt( p_curl, CURLOPT_COOKIEFILE       , m_cookies            ? "" : nullptr              );
+  ok = ok && easy_setopt( p_curl, CURLOPT_FOLLOWLOCATION   , m_follow_location    ? 1L : 0L                   ); // follow 30x
+  ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYHOST   , m_insecure           ? 0L : 1L                   );
+  ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYPEER   , m_insecure           ? 0L : 1L                   );
   ok = ok && easy_setopt( p_curl, CURLOPT_MAXREDIRS        , m_maxredirs );
-  ok = ok && easy_setopt( p_curl, CURLOPT_PROXY            , m_proxy.empty() ? nullptr : m_proxy.c_str() );
+  ok = ok && easy_setopt( p_curl, CURLOPT_PROXY            , m_proxy.empty()      ? nullptr : m_proxy.c_str() );
   ok = ok && easy_setopt( p_curl, CURLOPT_TIMEOUT_MS       , m_timeout );
-  ok = ok && easy_setopt( p_curl, CURLOPT_VERBOSE          , m_verbose ? 1L : 0L );
+  ok = ok && easy_setopt( p_curl, CURLOPT_VERBOSE          , m_verbose            ? 1L : 0L                   );
   //
   return ok;
 }

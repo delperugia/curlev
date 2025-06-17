@@ -41,10 +41,10 @@ bool Certificates::set( const std::string & p_options )
 {
   return parse_cskv(
     p_options,
-    [ this ]( const std::string & key, const std::string & value )
+    [ this ]( std::string_view key, std::string_view value )
     {
       // no error on unknown key to ensure forward compatibility
-      m_parameters[ key ] = value;
+      m_parameters[ std::string( key ) ] = value;
       return true;
     } );
 }

@@ -4,6 +4,7 @@
  ********************************************************************/
 
 #include <algorithm>
+#include <charconv>
 #include <functional>
 #include <sstream>
 
@@ -37,32 +38,48 @@ bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_stri
 }
 
 //--------------------------------------------------------------------
+// Converts a std::string_view to an long. Returns 0 on error.
+long svtol( std::string_view p_string )
+{
+  long value;
+  auto last   = p_string.data() + p_string.size();
+  auto result = std::from_chars( p_string.data(), last, value );
+  //
+  if ( result.ec == std::errc() && result.ptr == last ) // ok and no remaining character
+    return value;
+  else
+    return 0;
+}
+
+//--------------------------------------------------------------------
 // Remove leading and trailing white spaces (space, tabulations...) from string
-std::string trim( const std::string & p_string )
+std::string_view trim( std::string_view p_string )
 {
   auto begin = std::find_if_not( p_string.begin() , p_string.end() , ::isspace );
   auto end   = std::find_if_not( p_string.rbegin(), p_string.rend(), ::isspace ).base();
   //
-  return ( begin < end ) ? std::string( begin, end ) : "";
+  return ( begin < end ) ? std::string_view( begin, end - begin ) : std::string_view( "" );
 }
 
 //--------------------------------------------------------------------
 // Parse a key-value comma-separated string (CSKV) and call the handler for each pair.
 // The handler must return false if the key-value pair is invalid.
-bool parse_cskv( const std::string &                                                       p_options,
-                 const std::function< bool( const std::string &, const std::string & ) > & p_handler )
+bool parse_cskv( const std::string &                                                               p_options,
+                 const std::function< bool( std::string_view p_key, std::string_view p_value ) > & p_handler )
 {
   std::istringstream iss( p_options );
   std::string        token;
   //
   while ( std::getline( iss, token, ',' ) )
   {
-    auto delimiter_pos = token.find( '=' );
+    std::string_view key_value = token;
+    //
+    auto delimiter_pos = key_value.find( '=' );
     if ( delimiter_pos == std::string::npos )
       return false; // invalid format: no = sign
     //
-    std::string key   = trim( token.substr( 0, delimiter_pos ) );
-    std::string value = trim( token.substr( delimiter_pos + 1 ) );
+    auto key   = trim( key_value.substr( 0, delimiter_pos ) );
+    auto value = trim( key_value.substr( delimiter_pos + 1 ) );
     //
     if ( ! p_handler( key, value ) )
       return false; // invalid option reported

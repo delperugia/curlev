@@ -130,7 +130,7 @@ Config               | Starting | Waiting  |    Total | CPU usage | RSS
 cpr [8 threads]      |  0.079 s |  2.957 s |  3.036 s |      405% | 29'577 KB
 cpr 1 thread         |  0.029 s | 12.993 s | 13.021 s |       75% | 27'352 KB
 curlev unthreaded CB |  3.186 s |  0.001 s |  3.187 s |       90% | 15'177 KB
-curlev               |  4.136 s |  0.002 s |  4.138 s |       99% | 15'336 KB
+curlev               |  3.885 s |  0.002 s |  3.887 s |       97% | 15'512 KB
 
 For reference, the multi models of `curlcpp` and `cpr` were tested, and despite
 increasing the OS limits, it was not possible to go higher than 30K asynchronous calls:

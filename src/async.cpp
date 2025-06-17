@@ -761,13 +761,13 @@ size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nit
     return CURL_WRITEFUNC_ERROR;
   //
   auto protocol_headers = static_cast< std::map< std::string, std::string > * >( p_userdata );
-  auto line             = std::string( p_buffer, p_size * p_nitems );
+  auto line             = std::string_view( p_buffer, p_size * p_nitems );
   auto colon            = line.find( ':' );
   //
-  if ( colon != std::string::npos )
+  if ( colon != std::string_view::npos )
   {
-    std::string key   = trim( line.substr( 0, colon  ) ); // key
-    std::string value = trim( line.substr( colon + 1 ) ); // value
+    auto key   = std::string( trim( line.substr( 0, colon  ) ) ); // key
+    auto value = std::string( trim( line.substr( colon + 1 ) ) ); // value
     //
     if ( ! key.empty() )
       protocol_headers->insert_or_assign( std::move( key ), std::move( value ) );
