@@ -29,7 +29,7 @@ target_compile_options( curlev PRIVATE
 )
 
 if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-    target_compile_options( curlev PRIVATE -coverage )
+    target_compile_options( curlev PRIVATE -O0 --coverage )
 endif()
 
 # Installation
