@@ -84,7 +84,7 @@ class Wrapper: public WrapperBase
       if ( wrapper->m_curl == nullptr )
         throw bad_curl_easy_alloc();
       //
-      wrapper->m_self_weak      = wrapper; // used to create and pass a shared_ptr to ASync
+      wrapper->m_self_weak = wrapper; // used to create and pass a shared_ptr to ASync
       //
       return wrapper;
     }
@@ -102,7 +102,7 @@ class Wrapper: public WrapperBase
     // To ensure persistency, a new shared pointer is created and passed to ASync.
     // This increases the reference counter of the shared pointer, and thus the class continues
     // to exist even if the share pointer owned by the user goes out of scope and is reset.
-    Protocol & start( std::function<void( const Protocol & )> p_user_cb = nullptr )
+    Protocol & start( std::function< void( const Protocol & ) > p_user_cb = nullptr )
     {
       {
         std::lock_guard lock( m_exec_mutex );
@@ -204,11 +204,11 @@ class Wrapper: public WrapperBase
     long get_code( void ) const { return m_response_code; };
     //
   protected:
-    CURL *         m_curl = nullptr;
+    CURL *         m_curl          = nullptr;
+    long           m_response_code = c_success;
     Options        m_options;
     Authentication m_authentication;
     Certificates   m_certificates;
-    long           m_response_code = c_success;
     //
     // Reset the protocol before starting a new transfer
     void clear( void )
@@ -218,7 +218,7 @@ class Wrapper: public WrapperBase
         m_response_code    = c_success;
         m_user_cb_threaded = true;
         //
-        m_async.get_default( m_options, m_authentication, m_certificates ); // retrieve global default
+        m_async.get_default( m_options, m_authentication, m_certificates ); // retrieve global defaults
         //
         clear_protocol();
       }

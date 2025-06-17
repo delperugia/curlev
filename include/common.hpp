@@ -13,7 +13,7 @@ namespace curlev
 {
 
 // Wrapper around the libcurl setops function, returning true upon success
-#define easy_setopt( handle, opt, param )  ( CURLE_OK   == curl_easy_setopt( handle, opt, param )  )
+#define easy_setopt(  handle, opt, param ) ( CURLE_OK   == curl_easy_setopt ( handle, opt, param ) )
 #define share_setopt( handle, opt, param ) ( CURLSHE_OK == curl_share_setopt( handle, opt, param ) )
 #define multi_setopt( handle, opt, param ) ( CURLM_OK   == curl_multi_setopt( handle, opt, param ) )
 

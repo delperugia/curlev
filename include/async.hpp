@@ -74,7 +74,7 @@ public:
   bool stop( unsigned p_timeout_s = 30 );
   //
   // Accessors
-  int peak_requests  ( void ) const { return m_multi_running_max; }
+  int peak_requests  ( void ) const { return m_multi_running_max;     }
   int active_requests( void ) const { return m_multi_running_current; }
   //
   // Setting defaults
@@ -89,10 +89,10 @@ protected:
   void get_default( Options & p_options, Authentication & p_authentication, Certificates & p_certificates ) const;
   //
   // Create a new easy handle that *must* be freed using return_handle
-  CURL * get_handle( void ) const;
+  [[nodiscard]] CURL * get_handle( void ) const;
   //
-  // Previously retrieved by get_handle, ok on nullptr
-  void return_handle( CURL * p_curl ) const; // cppcheck-suppress functionStatic
+  // Release a handle previously allocated by get_handle, ok on nullptr
+  void return_handle( CURL * & p_curl ) const; // cppcheck-suppress functionStatic
   //
   // Starts the transfer, ok on nullptr
   // If it fails the wrapper is notified with the curl result code
@@ -169,7 +169,7 @@ private:
   bool        uv_init( void );
   void        uv_clear( void );
   void        uv_run_accept_requests( std::unique_lock< std::mutex > & p_lock ) const;
-  void        uv_run_wait_requests  ( std::unique_lock< std::mutex > & p_lock );
+  void        uv_run_wait_requests  ( std::unique_lock< std::mutex > & p_lock ) const;
   static void uv_io_cb( uv_poll_t * p_handle, int p_status, int p_events );
   static void uv_timeout_cb( uv_timer_t * p_handle );
   //
@@ -181,7 +181,8 @@ private:
     curl_socket_t curl;
     uv_poll_t     poll;
     //
-    CurlContext( ASync & p_async, curl_socket_t p_curl ) : async( p_async ), curl( p_curl ) {}
+    CurlContext( ASync & p_async, curl_socket_t p_curl ) :
+      async( p_async ), curl( p_curl ){}
   };
   //
   CurlContext * create_curl_context ( curl_socket_t p_socket );
@@ -189,8 +190,8 @@ private:
   //
   // Callback thread
   //
-  using t_wrapper_shared_ptr_ptr = std::shared_ptr< WrapperBase > *;
-  using t_cb_job                 = std::tuple< t_wrapper_shared_ptr_ptr, long >;
+  using t_wrapper_shared_ptr_ptr = std::shared_ptr< WrapperBase > *;              // the Protocol object to call
+  using t_cb_job                 = std::tuple< t_wrapper_shared_ptr_ptr, long >;  // the Protocol and the result
   //
   mutable std::mutex              m_cb_mutex;
   mutable std::condition_variable m_cb_cv;

@@ -21,6 +21,9 @@ namespace curlev
 // A safety in case a notification is lost
 constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 1000 );
 
+// Some magic values: it is possible to start around 300req/ms in curl_multi_add_handle()
+constexpr auto c_requests_per_ms    = 300u;
+
 //--------------------------------------------------------------------
 ASync::ASync()
 {
@@ -113,7 +116,7 @@ void ASync::get_default( Options & p_options, Authentication & p_authentication,
 //--------------------------------------------------------------------
 // Create a new easy handle that *must* be freed using return_handle.
 // CURLOPT_WRITEDATA is properly set in the wrapper to one of its member.
-CURL * ASync::get_handle() const
+[[nodiscard]] CURL * ASync::get_handle() const
 {
   auto curl = curl_easy_init();
   bool ok   = true;
@@ -136,10 +139,11 @@ CURL * ASync::get_handle() const
 }
 
 //--------------------------------------------------------------------
-// Previously retrieved by get_handle, ok on nullptr
-void ASync::return_handle( CURL * p_curl ) const
+// Release a handle previously allocated by get_handle, ok on nullptr
+void ASync::return_handle( CURL * & p_curl ) const
 {
   curl_easy_cleanup( p_curl ); // ok on nullptr
+  p_curl = nullptr;
 }
 
 //--------------------------------------------------------------------
@@ -190,7 +194,7 @@ namespace
   // Retrieve the default CA path and file
   bool get_default_ca( std::string & p_info, std::string & p_path )
   {
-    if ( CURL * curl = curl_easy_init() )
+    if ( CURL * curl = curl_easy_init(); curl != nullptr )
     {
       char * cainfo = nullptr;
       char * capath = nullptr;
@@ -426,7 +430,7 @@ int ASync::multi_cb_socket(
     void *                  p_user_data,
     void *                  p_socket_data )
 {
-  auto self    = static_cast< ASync *       >( p_user_data );   // CURLMOPT_SOCKETDATA
+  auto self    = static_cast< ASync *       >( p_user_data   ); // CURLMOPT_SOCKETDATA
   auto context = static_cast< CurlContext * >( p_socket_data ); // curl_multi_assign
   //
   if ( self == nullptr ) // not possible
@@ -489,7 +493,7 @@ bool ASync::uv_init( void )
 {
   bool ok = true;
   //
-  ok = ok && m_uv_loop == nullptr;
+  ok = ok && m_uv_loop == nullptr; // already started
   ok = ok && ( m_uv_loop = new uv_loop_t ) != nullptr;
   ok = ok && 0 == uv_loop_init ( m_uv_loop );
   ok = ok && 0 == uv_timer_init( m_uv_loop, &m_uv_timer );
@@ -512,7 +516,7 @@ bool ASync::uv_init( void )
   }
   else
   {
-    uv_clear_loop( m_uv_loop );
+    uv_clear_loop( m_uv_loop ); // ok on nullptr
   }
   //
   return ok;
@@ -567,10 +571,7 @@ void ASync::uv_run_accept_requests( std::unique_lock< std::mutex > & p_lock ) co
   //
   p_lock.unlock();
   //
-  // Some magic values: it is possible to start around 300req/ms without the lock.
-  unsigned to_wait_ms = m_nb_waiting_requests / 300;
-  //
-  uv_sleep( to_wait_ms );
+  uv_sleep( m_nb_waiting_requests / c_requests_per_ms );
   //
   p_lock.lock();
 }
@@ -578,7 +579,7 @@ void ASync::uv_run_accept_requests( std::unique_lock< std::mutex > & p_lock ) co
 //--------------------------------------------------------------------
 // Called between uv_run by uv_init thread when there is no request executing.
 // unlock, wait for start_request, lock
-void ASync::uv_run_wait_requests( std::unique_lock< std::mutex > & p_lock )
+void ASync::uv_run_wait_requests( std::unique_lock< std::mutex > & p_lock ) const
 {
   m_uv_run_cv.wait_for( p_lock, c_event_wait_timeout );
 }
@@ -587,6 +588,7 @@ void ASync::uv_run_wait_requests( std::unique_lock< std::mutex > & p_lock )
 void ASync::multi_update_running_stats( int p_running_handles )
 {
   int previous = m_multi_running_max.load();
+  //
   while ( p_running_handles > previous &&
           ! m_multi_running_max.compare_exchange_strong( previous, p_running_handles ) )
     ;
@@ -600,10 +602,9 @@ void ASync::multi_update_running_stats( int p_running_handles )
 // m_uv_run_mutex is locked.
 void ASync::uv_io_cb( uv_poll_t * p_handle, [[maybe_unused]] int p_status, int p_events )
 {
-  auto * context = static_cast< CurlContext * >( p_handle->data );
-  //
-  if ( context == nullptr ) // not possible
+  if ( p_handle == nullptr || p_handle->data == nullptr ) // not possible
     return;
+  auto * context = static_cast< CurlContext * >( p_handle->data );
   //
   uv_timer_stop( &context->async.m_uv_timer );
   //
@@ -626,9 +627,9 @@ void ASync::uv_io_cb( uv_poll_t * p_handle, [[maybe_unused]] int p_status, int p
 // m_uv_run_mutex is locked.
 void ASync::uv_timeout_cb( uv_timer_t * p_handle )
 {
-  auto self = static_cast< ASync * >( p_handle->data );
-  if ( self == nullptr ) // not possible
+  if ( p_handle == nullptr || p_handle->data == nullptr ) // not possible
     return;
+  auto self = static_cast< ASync * >( p_handle->data );
   //
   // Inform multi that a timeout occurred
   int running_handles;
@@ -673,15 +674,14 @@ void ASync::destroy_curl_context( CurlContext * p_context ) const
   if ( p_context != nullptr )
   {
     uv_close(
-        reinterpret_cast<uv_handle_t *>( &p_context->poll ),
+        reinterpret_cast< uv_handle_t * >( &p_context->poll ),
         []( uv_handle_t * handle )
         {
-          if ( handle == nullptr ) // not possible
+          if ( handle == nullptr || handle->data == nullptr ) // not possible
             return;
           //
           auto context = static_cast< CurlContext * >( handle->data );
-          if ( context != nullptr ) // always true
-            delete context;
+          delete context;
         } );
   }
 }
@@ -694,22 +694,22 @@ bool ASync::cb_init( void )
   m_cb_worker  = std::thread(
       [ this ]
       {
-        std::unique_lock lock( m_cb_mutex );
+        std::unique_lock lock( m_cb_mutex );              // lock
         //
         while ( m_cb_running )
         {
-          while ( ! m_cb_queue.empty() )        // if some notifications are pending
+          while ( ! m_cb_queue.empty() )                  // if some notifications are pending
           {
             auto [ wrapper, p_result_code ] = m_cb_queue.front();
             m_cb_queue.pop_front();
-            lock.unlock();                      // retrieve the notification, unlock
+            lock.unlock();                                // retrieve the notification, unlock
             //
             invoke_wrapper( wrapper, p_result_code );
             //
-            lock.lock();                        // lock
+            lock.lock();                                  // lock
           }
           //
-          m_cb_cv.wait_for( lock, c_event_wait_timeout ); // unlock, wait, notify_wrapper, lock
+          m_cb_cv.wait_for( lock, c_event_wait_timeout ); // unlock, wait, lock
         }
       } );
   //
@@ -761,7 +761,7 @@ size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nit
     return CURL_WRITEFUNC_ERROR;
   //
   auto protocol_headers = static_cast< std::map< std::string, std::string > * >( p_userdata );
-  auto line             = trim( std::string( p_buffer, p_size * p_nitems ) );
+  auto line             = std::string( p_buffer, p_size * p_nitems );
   auto colon            = line.find( ':' );
   //
   if ( colon != std::string::npos )
@@ -770,7 +770,7 @@ size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nit
     std::string value = trim( line.substr( colon + 1 ) ); // value
     //
     if ( ! key.empty() )
-      protocol_headers->insert_or_assign( key, value );
+      protocol_headers->insert_or_assign( std::move( key ), std::move( value ) );
   }
   //
   return p_nitems * p_size;
@@ -819,7 +819,7 @@ void ASync::notify_wrapper( CURL * p_curl, long p_result_code )
     m_cb_queue.push_back( std::make_tuple( wrapper, p_result_code ) );
     m_cb_cv.notify_one();
   }
-  else // call it now and here (uv_run worker thread)
+  else // call it now and here (in uv_run worker thread)
   {
     invoke_wrapper( wrapper, p_result_code );
   }
@@ -829,7 +829,7 @@ void ASync::notify_wrapper( CURL * p_curl, long p_result_code )
 // Call the wrapper, delete the shared_ptr
 void ASync::invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code )
 {
-  if ( p_wrapper == nullptr || ! *p_wrapper ) // cannot happen
+  if ( p_wrapper == nullptr || ! ( *p_wrapper ) ) // cannot happen
     return;
   //
   ( *p_wrapper )->async_cb( p_result_code ); // call Protocol

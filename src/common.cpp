@@ -57,8 +57,6 @@ bool parse_cskv( const std::string &                                            
   //
   while ( std::getline( iss, token, ',' ) )
   {
-    token = trim( token );
-    //
     auto delimiter_pos = token.find( '=' );
     if ( delimiter_pos == std::string::npos )
       return false; // invalid format: no = sign
