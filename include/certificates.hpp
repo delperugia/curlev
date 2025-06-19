@@ -31,6 +31,13 @@ public:
   //
 private:
   std::map< std::string, std::string > m_parameters; // contains all configured keys
+  //
+  std::string m_ca_info; // default CURLINFO_CAINFO
+  std::string m_ca_path; // default CURLINFO_CAPATH
+  //
+  // Set individual options
+  bool setopt   ( CURL * p_curl, const char * p_key, CURLoption p_option );
+  bool setopt_ca( CURL * p_curl, const char * p_key, CURLoption p_option, const std::string & p_default );
 };
 
 } // namespace curlev

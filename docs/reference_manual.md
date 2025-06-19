@@ -167,6 +167,10 @@ separated string with the following keys available:
 For example:
  - sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret
 
+Note: before `libcurl` 7.84.0 it is not possible to reset Certificate Authorities to their default
+values. If one of the keys `cainfo`, `capath`, `proxy_cainfo` or `proxy_capath` is changed in a request,
+it must be changed for all the requests made using the same HTTP object.
+
 # Executing the request
 
 Once the request is ready, it has to be started using `start()`.

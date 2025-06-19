@@ -86,7 +86,7 @@ In order to compile `curlev` you will need the following:
  - cmake
  - pkg-config
  - a C++17 compiler
- - libcurl (>=7.61.1)
+ - libcurl (>=7.61.1, >=7.87.0 recommended)
  - libuv
 
 Here are the package name for some distribution:

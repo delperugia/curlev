@@ -189,9 +189,11 @@ void ASync::abort_request( CURL * p_curl )
 //--------------------------------------------------------------------
 // Number or curl_global_init() must match the number of curl_global_cleanup()
 
+#if LIBCURL_VERSION_NUM >= CURL_VERSION_BITS( 7, 84, 0 )
 namespace
 {
-  // Retrieve the default CA path and file
+  // Retrieve the default CA path and file.
+  // Before libcurl 7.84.0 it was not possible to retrieve them.
   bool get_default_ca( std::string & p_info, std::string & p_path )
   {
     if ( CURL * curl = curl_easy_init(); curl != nullptr )
@@ -218,6 +220,7 @@ namespace
     }
   }
 } // namespace
+#endif
 
 bool ASync::global_init( void )
 {
@@ -229,13 +232,12 @@ bool ASync::global_init( void )
   {
     ok = curl_global_init( CURL_GLOBAL_ALL ) == CURLE_OK;
     //
-    if ( ok )
-    {
-      ok = get_default_ca( m_global_ca_info, m_global_ca_path );
+#if LIBCURL_VERSION_NUM >= CURL_VERSION_BITS( 7, 84, 0 )
+    ok = ok && get_default_ca( m_global_ca_info, m_global_ca_path );
       //
       if ( ! ok )
         curl_global_cleanup();
-    }
+#endif
   }
   //
   if ( ok )
