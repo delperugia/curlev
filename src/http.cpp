@@ -23,7 +23,7 @@ HTTP & HTTP::GET( const std::string & p_url, const t_key_values & p_query_parame
   {
     clear();
     //
-    m_request_method = eGET;
+    m_request_method = Method::eGET;
     m_request_url    = p_url;
     m_request_query_parameters.insert( p_query_parameters.begin(), p_query_parameters.end() );
   }
@@ -39,7 +39,7 @@ HTTP & HTTP::DELETE( const std::string & p_url, const t_key_values & p_query_par
   {
     clear();
     //
-    m_request_method = eDELETE;
+    m_request_method = Method::eDELETE;
     m_request_url    = p_url;
     m_request_query_parameters.insert( p_query_parameters.begin(), p_query_parameters.end() );
   }
@@ -58,7 +58,7 @@ HTTP & HTTP::POST(
   {
     clear();
     //
-    m_request_method       = ePOST;
+    m_request_method       = Method::ePOST;
     m_request_url          = p_url;
     m_request_body         = p_body;
     m_request_content_type = p_content_type;
@@ -78,7 +78,7 @@ HTTP & HTTP::PUT(
   {
     clear();
     //
-    m_request_method       = ePUT;
+    m_request_method       = Method::ePUT;
     m_request_url          = p_url;
     m_request_body         = p_body;
     m_request_content_type = p_content_type;
@@ -98,7 +98,7 @@ HTTP & HTTP::PATCH(
   {
     clear();
     //
-    m_request_method       = ePATCH;
+    m_request_method       = Method::ePATCH;
     m_request_url          = p_url;
     m_request_body         = p_body;
     m_request_content_type = p_content_type;
@@ -115,7 +115,7 @@ HTTP & HTTP::POST( const std::string & p_url, const t_key_values & p_body_parame
   {
     clear();
     //
-    m_request_method = ePOST;
+    m_request_method = Method::ePOST;
     m_request_url    = p_url;
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
   }
@@ -131,7 +131,7 @@ HTTP & HTTP::PUT( const std::string & p_url, const t_key_values & p_body_paramet
   {
     clear();
     //
-    m_request_method = ePUT;
+    m_request_method = Method::ePUT;
     m_request_url    = p_url;
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
   }
@@ -147,7 +147,7 @@ HTTP & HTTP::PATCH( const std::string & p_url, const t_key_values & p_body_param
   {
     clear();
     //
-    m_request_method = ePATCH;
+    m_request_method = Method::ePATCH;
     m_request_url    = p_url;
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
   }
@@ -264,19 +264,19 @@ void HTTP::clear_protocol( void )
 {
     release_curl_extras();
     //
-    m_request_method = none;
-    m_request_url.clear();
+    m_request_method          = Method::none;
+    m_request_url             .clear();
     m_request_query_parameters.clear();
-    m_request_headers.clear();
-    m_request_content_type.clear();
-    m_request_body.clear();
-    m_request_body_parameters.clear();
-    m_request_mime.clear();
+    m_request_headers         .clear();
+    m_request_content_type    .clear();
+    m_request_body            .clear();
+    m_request_body_parameters .clear();
+    m_request_mime            .clear();
     //
-    m_response_headers.clear();
-    m_response_content_type.clear();
-    m_response_redirect_url.clear();
-    m_response_body.clear();
+    m_response_headers        .clear();
+    m_response_content_type   .clear();
+    m_response_redirect_url   .clear();
+    m_response_body           .clear();
 }
 
 //--------------------------------------------------------------------
@@ -298,13 +298,13 @@ bool HTTP::fill_method( void )
   switch ( m_request_method )
   {
     default:
-    case none   : m_response_code = c_error_http_method_set;
-                  return false;
-    case eGET   : method = "GET"   ; break;
-    case eDELETE: method = "DELETE"; break;
-    case ePOST  : method = "POST"  ; break;
-    case ePUT   : method = "PUT"   ; break;
-    case ePATCH : method = "PATCH" ; break;
+    case Method::none   : m_response_code = c_error_http_method_set;
+                          return false;
+    case Method::eGET   : method = "GET"   ; break;
+    case Method::eDELETE: method = "DELETE"; break;
+    case Method::ePOST  : method = "POST"  ; break;
+    case Method::ePUT   : method = "PUT"   ; break;
+    case Method::ePATCH : method = "PATCH" ; break;
   }
   //
   return easy_setopt( m_curl, CURLOPT_CUSTOMREQUEST, method ); // doesn't have to be persistent
@@ -324,7 +324,7 @@ bool HTTP::fill_headers( void )
   //
   ok = ok && easy_setopt( m_curl, CURLOPT_HTTPHEADER, m_curl_headers ); // must be persistent
   //
-  if ( ! ok )
+  if ( ! ok ) [[unlikely]]
   {
     curl_slist_free_all( m_curl_headers ); // ok on nullptr
     m_curl_headers  = nullptr;
@@ -341,7 +341,7 @@ bool HTTP::fill_body( void )
 {
   bool ok = true;
   //
-  if ( m_request_method == ePOST || m_request_method == ePUT || m_request_method == ePATCH )
+  if ( m_request_method == Method::ePOST || m_request_method == Method::ePUT || m_request_method == Method::ePATCH )
   {
     if ( ! m_request_mime.empty() ) // has precedence over m_request_body and m_request_body_parameters
       return fill_body_mime();      // set m_response_code on error
@@ -444,7 +444,7 @@ bool HTTP::fill_body_mime( void )
   //
   ok = ok && easy_setopt( m_curl, CURLOPT_MIMEPOST, m_curl_mime ); // must be persistent
   //
-  if ( ! ok )
+  if ( ! ok ) [[unlikely]]
   {
     curl_easy_setopt( m_curl, CURLOPT_MIMEPOST, nullptr );
     //

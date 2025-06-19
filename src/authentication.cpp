@@ -20,10 +20,10 @@ bool Authentication::set( const std::string& p_options )
     {
       if ( key == "mode" )
       {
-               if ( value == "none"   ) m_mode = none;
-          else if ( value == "basic"  ) m_mode = basic;
-          else if ( value == "digest" ) m_mode = digest;
-          else if ( value == "bearer" ) m_mode = bearer;
+               if ( value == "none"   ) m_mode = Mode::none;
+          else if ( value == "basic"  ) m_mode = Mode::basic;
+          else if ( value == "digest" ) m_mode = Mode::digest;
+          else if ( value == "bearer" ) m_mode = Mode::bearer;
           else
               return false;  // unhandled mode
       }
@@ -45,20 +45,20 @@ bool Authentication::apply( CURL * p_curl )
   //
   switch ( m_mode )
   {
-  case none:
+  case Mode::none:
     ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH, CURLAUTH_NONE );
     break;
-  case basic:
+  case Mode::basic:
     ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC );
     ok = ok && easy_setopt( p_curl, CURLOPT_USERNAME, m_user.c_str() );
     ok = ok && easy_setopt( p_curl, CURLOPT_PASSWORD, m_secret.c_str() );
     break;
-  case digest:
+  case Mode::digest:
     ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST );
     ok = ok && easy_setopt( p_curl, CURLOPT_USERNAME, m_user.c_str() );
     ok = ok && easy_setopt( p_curl, CURLOPT_PASSWORD, m_secret.c_str() );
     break;
-  case bearer:
+  case Mode::bearer:
     ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH      , CURLAUTH_BEARER );
     ok = ok && easy_setopt( p_curl, CURLOPT_XOAUTH2_BEARER, m_secret.c_str() );
     break;
@@ -74,9 +74,9 @@ bool Authentication::apply( CURL * p_curl )
 // Reset credential to its default value
 void Authentication::set_default( void )
 {
-  m_mode  = none;     // no authentication
-  m_user  .clear();   // user login
-  m_secret.clear();   // user password or access token
+  m_mode  = Mode::none; // no authentication
+  m_user  .clear();     // user login
+  m_secret.clear();     // user password or access token
 }
 
 } // namespace curlev

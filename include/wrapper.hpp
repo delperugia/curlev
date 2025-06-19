@@ -35,8 +35,8 @@ constexpr long c_error_http_mime_set         = -10; // bad MIME value
 class WrapperBase
 {
 public:
-  explicit WrapperBase() {};
-  virtual ~WrapperBase() {};
+  explicit WrapperBase() = default;
+  virtual ~WrapperBase() = default;
   //
 protected:
   friend class ASync;
@@ -67,12 +67,16 @@ class Wrapper: public WrapperBase
 {
   private:
     // Used to access the protected constructor of Protocol
-    struct ProtocolPublic: public Protocol
+    struct ProtocolPublic : public Protocol
     {
-        explicit ProtocolPublic( ASync & p_async ): Protocol( p_async ) {}
+      explicit ProtocolPublic( ASync & p_async ) : Protocol( p_async ) {}
+      virtual ~ProtocolPublic() = default;
     };
     //
   public:
+    explicit Wrapper( ASync & p_async ) : WrapperBase(), m_async( p_async ) {}
+    virtual ~Wrapper() { m_async.return_handle( m_curl ); }
+    //
     // The factory. The invoker takes the ownership of the new class, but
     // the class itself keeps a weak pointer to the return shared pointer.
     // It is used later to create extra shared pointers.
@@ -81,21 +85,12 @@ class Wrapper: public WrapperBase
       auto wrapper = std::make_shared< ProtocolPublic >( p_async ); // throw on memory error;
       //
       wrapper->m_curl = p_async.get_handle(); // allocate and configure the curl easy handle
-      if ( wrapper->m_curl == nullptr )
+      if ( wrapper->m_curl == nullptr ) [[unlikely]]
         throw bad_curl_easy_alloc();
       //
       wrapper->m_self_weak = wrapper; // used to create and pass a shared_ptr to ASync
       //
       return wrapper;
-    }
-    //
-    explicit Wrapper( ASync & p_async ): WrapperBase(), m_async( p_async )
-    { 
-    }
-    //
-    virtual ~Wrapper()
-    {
-        m_async.return_handle( m_curl );
     }
     //
     // To start a transfer asynchronously.
@@ -228,19 +223,19 @@ class Wrapper: public WrapperBase
     // It is guaranteed that there is no operation running.
     bool prepare_local( void )
     {
-      if ( ! m_options.apply( m_curl ) )
+      if ( ! m_options.apply( m_curl ) ) [[unlikely]]
       {
         m_response_code = c_error_options_set;
         return false;
       }
       //
-      if ( ! m_authentication.apply( m_curl ) )
+      if ( ! m_authentication.apply( m_curl ) ) [[unlikely]]
       {
         m_response_code = c_error_authentication_set;
         return false;
       }
       //
-      if ( ! m_certificates.apply( m_curl ) )
+      if ( ! m_certificates.apply( m_curl ) ) [[unlikely]]
       {
         m_response_code = c_error_certificates_set;
         return false;

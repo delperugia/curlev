@@ -41,7 +41,7 @@ public:
   using t_mime_part      = std::variant< t_mime_parameter, t_mime_file >;
   using t_mime_parts     = std::vector< t_mime_part >;
   //
-  ~HTTP();
+  virtual ~HTTP();
   //
   // The first step is to call one of theses method:
   //
@@ -97,8 +97,8 @@ protected:
   //
 private:
   // Data used when sending the request
-  enum { none, eGET, eDELETE, ePOST, ePUT, ePATCH }
-               m_request_method = none;
+  enum class Method { none, eGET, eDELETE, ePOST, ePUT, ePATCH }
+               m_request_method = Method::none;
   std::string  m_request_url;
   t_key_values m_request_query_parameters;
   t_key_values m_request_headers;

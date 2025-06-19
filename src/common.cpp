@@ -26,7 +26,7 @@ bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_stri
   //
   curl_slist * temp = curl_slist_append( p_list, p_string.c_str() );
   //
-  if ( temp == nullptr )
+  if ( temp == nullptr ) [[unlikely]]	
   {
     return false;
   }
@@ -47,7 +47,7 @@ long svtol( std::string_view p_string )
   //
   if ( result.ec == std::errc() && result.ptr == last ) // ok and no remaining character
     return value;
-  else
+  else [[unlikely]]	
     return 0;
 }
 
@@ -75,13 +75,13 @@ bool parse_cskv( const std::string &                                            
     std::string_view key_value = token;
     //
     auto delimiter_pos = key_value.find( '=' );
-    if ( delimiter_pos == std::string::npos )
+    if ( delimiter_pos == std::string::npos ) [[unlikely]]	
       return false; // invalid format: no = sign
     //
     auto key   = trim( key_value.substr( 0, delimiter_pos ) );
     auto value = trim( key_value.substr( delimiter_pos + 1 ) );
     //
-    if ( ! p_handler( key, value ) )
+    if ( ! p_handler( key, value ) ) [[unlikely]]	
       return false; // invalid option reported
   }
   //

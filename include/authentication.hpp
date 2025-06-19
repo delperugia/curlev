@@ -34,9 +34,10 @@ public:
   void set_default( void );
   //
 private:
-  enum { none, basic, digest, bearer } m_mode = none;
-  std::string                          m_user;
-  std::string                          m_secret;
+  enum class Mode { none, basic, digest, bearer }
+              m_mode = Mode::none;
+  std::string m_user;
+  std::string m_secret;
 };
 
 } // namespace curlev
