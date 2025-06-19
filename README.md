@@ -130,8 +130,7 @@ cmake --build    build/  --target clean
 ```
 
 Tested with:
- - g++                  7.5.0, 11.5 and 13.3.0
- - clang                14.0.0
- - libuv                1.42.0, 1.43.0, 1.44.2 and 1.48.0
- - libcurl4-gnutls-dev  7.81.0
- - libcurl4-openssl-dev 7.76.1 and 8.5.0
+ - g++        8.5.0   11.4.0          13.3.0 
+ - clang                      14.0.0
+ - libuv      1.41.1  1.43.0  1.43.0  1.48.0
+ - libcurl    7.61.1  7.81.0  7.81.0  8.5.0 

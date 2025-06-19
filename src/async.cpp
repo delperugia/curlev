@@ -166,7 +166,7 @@ bool ASync::start_request( CURL * p_curl, void * p_protocol_cb )
     m_uv_run_cv.notify_one();
     return true;
   }
-  else [[unlikely]]
+  else
   {
     m_nb_running_requests--;
     return false;
@@ -364,10 +364,10 @@ namespace
     {
       auto protocol_code = curl_easy_getinfo( p_message->easy_handle, CURLINFO_RESPONSE_CODE, &code );
       //
-      if ( protocol_code != CURLE_OK ) [[unlikely]] // failed to retrieve protocol code
+      if ( protocol_code != CURLE_OK ) // failed to retrieve protocol code
         code = protocol_code;
     }
-    else [[unlikely]]
+    else
     {
       code = p_message->data.result; // transfer failed
     }
@@ -435,7 +435,7 @@ int ASync::multi_cb_socket(
   auto self    = static_cast< ASync *       >( p_user_data   ); // CURLMOPT_SOCKETDATA
   auto context = static_cast< CurlContext * >( p_socket_data ); // curl_multi_assign
   //
-  if ( self == nullptr ) [[unlikely]] // not possible
+  if ( self == nullptr ) // not possible
     return -1;
   //
   bool ok     = true;
@@ -604,7 +604,7 @@ void ASync::multi_update_running_stats( int p_running_handles )
 // m_uv_run_mutex is locked.
 void ASync::uv_io_cb( uv_poll_t * p_handle, [[maybe_unused]] int p_status, int p_events )
 {
-  if ( p_handle == nullptr || p_handle->data == nullptr ) [[unlikely]] // not possible
+  if ( p_handle == nullptr || p_handle->data == nullptr ) // not possible
     return;
   auto * context = static_cast< CurlContext * >( p_handle->data );
   //
@@ -629,7 +629,7 @@ void ASync::uv_io_cb( uv_poll_t * p_handle, [[maybe_unused]] int p_status, int p
 // m_uv_run_mutex is locked.
 void ASync::uv_timeout_cb( uv_timer_t * p_handle )
 {
-  if ( p_handle == nullptr || p_handle->data == nullptr ) [[unlikely]] // not possible
+  if ( p_handle == nullptr || p_handle->data == nullptr ) // not possible
     return;
   auto self = static_cast< ASync * >( p_handle->data );
   //
@@ -679,7 +679,7 @@ void ASync::destroy_curl_context( CurlContext * p_context ) const
         reinterpret_cast< uv_handle_t * >( &p_context->poll ),
         []( uv_handle_t * handle )
         {
-          if ( handle == nullptr || handle->data == nullptr ) [[unlikely]] // not possible
+          if ( handle == nullptr || handle->data == nullptr ) // not possible
             return;
           //
           auto context = static_cast< CurlContext * >( handle->data );
@@ -735,7 +735,7 @@ void ASync::cb_clear( void )
 // m_uv_run_mutex is locked.
 size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, void * p_userdata )
 {
-  if ( p_userdata == nullptr ) [[unlikely]]
+  if ( p_userdata == nullptr )
     return CURL_WRITEFUNC_ERROR;
   //
   auto protocol_buffer = static_cast< std::string * >( p_userdata );
@@ -759,7 +759,7 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
 // m_uv_run_mutex is locked.
 size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nitems, void * p_userdata )
 {
-  if ( p_userdata == nullptr ) [[unlikely]]
+  if ( p_userdata == nullptr )
     return CURL_WRITEFUNC_ERROR;
   //
   auto protocol_headers = static_cast< std::map< std::string, std::string > * >( p_userdata );
@@ -806,13 +806,13 @@ void ASync::notify_wrapper( CURL * p_curl, long p_result_code )
 {
   void * cb_data = nullptr;
   if ( curl_easy_getinfo( p_curl, CURLINFO_PRIVATE, &cb_data ) != CURLE_OK ||
-       cb_data == nullptr ) [[unlikely]] // already notified
+       cb_data == nullptr ) // already notified
     return;
   //
   curl_easy_setopt( p_curl, CURLOPT_PRIVATE, nullptr ); // set when Wrapper start(), cleared here
   //
   auto wrapper = static_cast< t_wrapper_shared_ptr_ptr >( cb_data ); // allocated by Wrapper start()
-  if ( ! ( *wrapper ) ) [[unlikely]]                                 // cannot happen
+  if ( ! ( *wrapper ) )                                 // cannot happen
     return;
   //
   if ( ( *wrapper )->use_threaded_cb() ) // push it to CB queue
@@ -831,7 +831,7 @@ void ASync::notify_wrapper( CURL * p_curl, long p_result_code )
 // Call the wrapper, delete the shared_ptr
 void ASync::invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code )
 {
-  if ( p_wrapper == nullptr || ! ( *p_wrapper ) ) [[unlikely]] // cannot happen
+  if ( p_wrapper == nullptr || ! ( *p_wrapper ) ) // cannot happen
     return;
   //
   ( *p_wrapper )->async_cb( p_result_code ); // call Protocol

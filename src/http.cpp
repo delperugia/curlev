@@ -324,7 +324,7 @@ bool HTTP::fill_headers( void )
   //
   ok = ok && easy_setopt( m_curl, CURLOPT_HTTPHEADER, m_curl_headers ); // must be persistent
   //
-  if ( ! ok ) [[unlikely]]
+  if ( ! ok )
   {
     curl_slist_free_all( m_curl_headers ); // ok on nullptr
     m_curl_headers  = nullptr;
@@ -444,7 +444,7 @@ bool HTTP::fill_body_mime( void )
   //
   ok = ok && easy_setopt( m_curl, CURLOPT_MIMEPOST, m_curl_mime ); // must be persistent
   //
-  if ( ! ok ) [[unlikely]]
+  if ( ! ok )
   {
     curl_easy_setopt( m_curl, CURLOPT_MIMEPOST, nullptr );
     //

@@ -85,7 +85,7 @@ class Wrapper: public WrapperBase
       auto wrapper = std::make_shared< ProtocolPublic >( p_async ); // throw on memory error;
       //
       wrapper->m_curl = p_async.get_handle(); // allocate and configure the curl easy handle
-      if ( wrapper->m_curl == nullptr ) [[unlikely]]
+      if ( wrapper->m_curl == nullptr )
         throw bad_curl_easy_alloc();
       //
       wrapper->m_self_weak = wrapper; // used to create and pass a shared_ptr to ASync
@@ -223,19 +223,19 @@ class Wrapper: public WrapperBase
     // It is guaranteed that there is no operation running.
     bool prepare_local( void )
     {
-      if ( ! m_options.apply( m_curl ) ) [[unlikely]]
+      if ( ! m_options.apply( m_curl ) )
       {
         m_response_code = c_error_options_set;
         return false;
       }
       //
-      if ( ! m_authentication.apply( m_curl ) ) [[unlikely]]
+      if ( ! m_authentication.apply( m_curl ) )
       {
         m_response_code = c_error_authentication_set;
         return false;
       }
       //
-      if ( ! m_certificates.apply( m_curl ) ) [[unlikely]]
+      if ( ! m_certificates.apply( m_curl ) )
       {
         m_response_code = c_error_certificates_set;
         return false;
