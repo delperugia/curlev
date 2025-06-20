@@ -38,7 +38,9 @@ bool Authentication::set( const std::string& p_options )
 //--------------------------------------------------------------------
 // Apply credential to curl easy handle.
 // It returns false if any option fails to set.
-// AUTH_BEARER is only fully functional starting with v7.69 (issue #5901).
+// AUTH_BEARER:
+//  - is only fully functional starting with v7.69 (issue #5901).
+//  - has memory leak with v<7.84 (issues #8841)
 bool Authentication::apply( CURL * p_curl )
 {
   bool ok = true;

@@ -141,7 +141,7 @@ TEST( http_advanced, post_json )
 }
 
 //--------------------------------------------------------------------
-// Memory leak with mode=bearer with libcurl<7.84.0 (issues 8841)
+// Memory leak with mode=bearer with libcurl<7.84.0 (issues #8841)
 TEST( http_advanced, auth )
 {
   ASync async;

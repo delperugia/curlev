@@ -119,6 +119,9 @@ safe, not allowing to add easy handle while another thread loops on perform
 [restclient-cpp](https://github.com/mrtazz/restclient-cpp) doesn't have
 asynchronous functions.
 
+[Async++ CURL](https://github.com/asyncpp/asyncpp-curl) is not really
+asynchronous, and has a limited documentation.
+
 ## Performances
 
 The following table shows the timing of an application starting
@@ -127,10 +130,11 @@ code and incrementing two atomic counters:
 
 Config               | Starting | Waiting  |    Total | CPU usage | RSS
 ---------------------|----------|----------|----------|-----------|-----------
-cpr [8 threads]      |  0.079 s |  2.957 s |  3.036 s |      405% | 29'577 KB
-cpr 1 thread         |  0.029 s | 12.993 s | 13.021 s |       75% | 27'352 KB
-curlev unthreaded CB |  3.186 s |  0.001 s |  3.187 s |       90% | 15'177 KB
-curlev               |  3.885 s |  0.002 s |  3.887 s |       97% | 15'512 KB
+cpr [8 threads]      |  0.079 s |  2.957 s |  3.036 s |      405% |  29'577 KB
+cpr 1 thread         |  0.029 s | 12.993 s | 13.021 s |       75% |  27'352 KB
+curlev unthreaded CB |  3.186 s |  0.001 s |  3.187 s |       90% |  15'177 KB
+curlev               |  3.885 s |  0.002 s |  3.887 s |       97% |  15'512 KB
+asyncpp-curl         |  6.536 s |  0.061 s |  6.597 s |      122% | 363'860 KB
 
 For reference, the multi models of `curlcpp` and `cpr` were tested, and despite
 increasing the OS limits, it was not possible to go higher than 30K asynchronous calls:
