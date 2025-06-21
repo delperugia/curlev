@@ -10,14 +10,14 @@ curlev
 
 A C++ HTTP library providing a flexible and easy-to-use interface for making HTTP requests.
 It combines the power of `libcurl` for HTTP operations with `libuv` for asynchronous I/O,
-offering both synchronous and asynchronous request handling using a limited overhead.
+offering both synchronous and asynchronous request handling with minimal overhead.
 
 Key features:
 
-- Event driven (4 times less CPU and 2 times less RAM used in some cases)
+- Event driven (uses 4 times less CPU and 2 times less RAM in some [cases](docs/internals.md#performances))
 - Synchronous and asynchronous requests with callback support
-- All standard HTTP methods (GET, POST, PUT, PATCH, DELETE)
-- Query parameters, form data and MIME handling
+- Supports all standard HTTP methods (GET, POST, PUT, PATCH, DELETE)
+- Handles query parameters, form data, MIME handling, and raw bodies
 - Custom headers and authentication
 - Method chaining
 
@@ -86,10 +86,10 @@ In order to compile `curlev` you will need the following:
  - cmake
  - pkg-config
  - a C++17 compiler
- - libcurl (>=7.61.1, >=7.87.0 recommended)
+ - libcurl (>=7.61.1 with possible memory leaks and config problems, >=7.87.0 recommended)
  - libuv
 
-Here are the package name for some distribution:
+Here are the package names for some distributions:
 
 Distribution | packages
 -------------|-----------------------
@@ -97,7 +97,7 @@ Ubuntu       | git, cmake, pkg-config, g++ or clang, libcurl4-openssl-dev or lib
 Suse         | git, cmake, pkg-config, gcc-c++ or clang, libcurl-devel, libuv-devel
 Oracle       | git, cmake, pkgconf-pkg-config, g++, libcurl-devel, libuv-devel
 
-In a console, execute the following:
+In a terminal, execute the following commands:
 
 ```sh
 git clone https://github.com/delperugia/curlev
@@ -109,7 +109,7 @@ sudo cmake --install  build/
 
 # Testing and debugging
 
-For testing and debugging, the following extra packages must be installed:
+For testing and debugging, you must also install the following packages:
 
  - gtest
  - nlohmann-json
@@ -130,7 +130,7 @@ cmake --build    build/  --target clean
 ```
 
 Tested with:
- - g++        8.5.0   11.4.0          13.3.0 
- - clang                      14.0.0
- - libuv      1.41.1  1.43.0  1.43.0  1.48.0
- - libcurl    7.61.1  7.81.0  7.81.0  8.5.0 
+ - g++:       8.5.0   11.4.0          13.3.0 
+ - clang:                     14.0.0
+ - libuv:     1.41.1  1.43.0  1.43.0  1.48.0
+ - libcurl:   7.61.1  7.81.0  7.81.0  8.5.0 

@@ -120,32 +120,43 @@ safe, not allowing to add easy handle while another thread loops on perform
 asynchronous functions.
 
 [Async++ CURL](https://github.com/asyncpp/asyncpp-curl) is not really
-asynchronous, and has a limited documentation.
+asynchronous, is coroutine based, and has a limited documentation.
+Its multi interface doesn't allow to add handle while it run (marked TODO).
+
+[curl-multi-asio](https://github.com/MrElectrify/curl-multi-asio) doesn't
+really support asynchronous operations, as it "don'ts like adding an
+easy handle while it's already processing".
 
 ## Performances
 
 The following table shows the timing of an application starting
 50K asynchronous calls, each with a callback checking the result
-code and incrementing two atomic counters:
+code and incrementing two atomic counters (on a 4c8t CPU):
 
-Config               | Starting | Waiting  |    Total | CPU usage | RSS
----------------------|----------|----------|----------|-----------|-----------
-cpr [8 threads]      |  0.079 s |  2.957 s |  3.036 s |      405% |  29'577 KB
-cpr 1 thread         |  0.029 s | 12.993 s | 13.021 s |       75% |  27'352 KB
-curlev unthreaded CB |  3.186 s |  0.001 s |  3.187 s |       90% |  15'177 KB
-curlev               |  3.885 s |  0.002 s |  3.887 s |       97% |  15'512 KB
-asyncpp-curl         |  6.536 s |  0.061 s |  6.597 s |      122% | 363'860 KB
+Config                 | Starting | Waiting  |    Total | CPU usage | RSS
+-----------------------|----------|----------|----------|-----------|-----------
+asyncpp-curl           |  6.536 s |  0.061 s |  6.597 s |      122% | 363'860 KB
+cpr                    |  0.079 s |  2.957 s |  3.036 s |      405% |  29'577 KB
+cpr [1 thread]         |  0.029 s | 12.993 s | 13.021 s |       75% |  27'352 KB
+curlev                 |  3.488 s |  0.002 s |  3.490 s |       97% |  15'512 KB
+curlev [unthreaded CB] |  3.186 s |  0.001 s |  3.187 s |       90% |  15'177 KB
 
-For reference, the multi models of `curlcpp` and `cpr` were tested, and despite
-increasing the OS limits, it was not possible to go higher than 30K asynchronous calls:
+`curlev` was doing around 75 simultaneous requests, and `cpr` 80.
+
+For reference, the multi models of `curlcpp`, `curl-multi-asio` and `cpr` were
+tested, and despite increasing the OS limits, it was not possible to go higher
+than 30K asynchronous calls:
 
 Config               | Starting |  Waiting  |   Total | CPU usage | RSS
 ---------------------|----------|-----------|---------|-----------|-----------
-curlcpp              |  0.381 s |  44.966 s |  45.347 |       99% | 625'204 KB
 cpr multi            |  0.170 s | 163.301 s | 163.471 |      100% | 550'320 KB
+curl-multi-asio      |  0.116 s |  99.986 s | 100.102 |       99% | 538'164 KB
+curlcpp              |  0.381 s |  44.966 s |  45.347 |       99% | 625'204 KB
 
-The slowest part in curlev is the `start()` function because ASync::start_request()
-needs to wait `m_uv_run_mutex` which is only unlocked for 0ms by `uv_run()` time to time.
+The slowest part in `curlev` was the `start()` function because ASync::start_request()
+needs to wait `m_uv_run_mutex` which is only unlocked for a short period of time
+by `uv_run()`. This bottleneck was removed by increasing the delay depending on
+the number of pending request.
 
 # References
 

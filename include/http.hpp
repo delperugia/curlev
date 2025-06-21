@@ -108,14 +108,14 @@ private:
   t_mime_parts m_request_mime;            // has precedence over m_request_body and m_request_body_parameters
   //
   // Data retrieved from the request response
-  t_key_values m_response_headers;      // must be persistent (CURLOPT_HEADERDATA)
+  t_key_values m_response_headers;        // must be persistent (CURLOPT_HEADERDATA)
   std::string  m_response_redirect_url;
   std::string  m_response_content_type;
-  std::string  m_response_body;         // must be persistent (CURLOPT_WRITEDATA)
+  std::string  m_response_body;           // must be persistent (CURLOPT_WRITEDATA)
   //
   // Extra curl handles used when sending the request
-  curl_slist * m_curl_headers = nullptr; // must be persistent (CURLOPT_HTTPHEADER)
-  curl_mime *  m_curl_mime    = nullptr; // must be persistent (CURLOPT_MIMEPOST)
+  curl_slist * m_curl_headers = nullptr;  // must be persistent (CURLOPT_HTTPHEADER)
+  curl_mime *  m_curl_mime    = nullptr;  // must be persistent (CURLOPT_MIMEPOST)
   //
   // Release extra curl handles that were used during the operation
   void release_curl_extras( void );

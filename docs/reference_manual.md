@@ -173,16 +173,16 @@ it must be changed for all the requests made using the same HTTP object.
 
 # Executing the request
 
-Once the request is ready, it has to be started using `start()`.
-The request run then asynchronously. This method accepts a callback function
+Once the request is ready, it must be started using `start()`.
+The request then runs asynchronously. This method accepts a callback function
 that will be called once the request is finished, successfully or not.
 Then call `join()` to wait for asynchronous request completion.
 
-The convenient method `exec()` execute the request synchronously.
+The convenient method `exec()` executes the request synchronously.
 
 By default the callback is invoked from a separate thread. This prevents
-the main IO thread to be blocked while processing the callback but
-add an extra overhead. As all callbacks, it must return quickly.
+the main IO thread from being blocked while processing the callback, but
+adds an extra overhead. As with all callbacks, it must return quickly.
 
 If the callback is known to be very fast, it is possible to invoke it
 directly from the IO thread by changing the default mode
@@ -200,12 +200,12 @@ While a request is running, all methods except `join()` and `exec()` are ignored
 
 # Retrieving the response
 
-Once the request is finished, the
-- `get_code()`:         get HTTP response code, or one of the libcurl error code
+Once the request is finished, you can use:
+- `get_code()`:         get HTTP response code, or one of the libcurl error codes
 - `get_body()`:         get response body
 - `get_headers()`:      get all response headers as a map
 - `get_content_type()`: get the received `Content-Type` header
-- `get_redirect_url()`: get the received `Location header` header
+- `get_redirect_url()`: get the received `Location` header
 
 # Aborting a request
 
