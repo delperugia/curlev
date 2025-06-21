@@ -203,7 +203,7 @@ While a request is running, all methods except `join()` and `exec()` are ignored
 Once the request is finished, you can use:
 - `get_code()`:         get HTTP response code, or one of the libcurl error codes
 - `get_body()`:         get response body
-- `get_headers()`:      get all response headers as a map
+- `get_headers()`:      get all response headers as a map with case insensitive keys
 - `get_content_type()`: get the received `Content-Type` header
 - `get_redirect_url()`: get the received `Location` header
 

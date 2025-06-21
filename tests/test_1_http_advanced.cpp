@@ -86,10 +86,14 @@ TEST( http_advanced, headers )
     //
     ASSERT_EQ( code, 200 );
     //
-    EXPECT_TRUE( http->get_headers().count( "X-Tst-31" ) == 1 &&
+    EXPECT_TRUE( http->get_headers().count( "X-Tst-31" ) == 1    &&
                  http->get_headers().at   ( "X-Tst-31" ) == "41" );
-    EXPECT_TRUE( http->get_headers().count( "X-Tst-32" ) == 1 &&
-                 http->get_headers().at   ( "X-Tst-32" ) == "42" );
+    EXPECT_TRUE( http->get_headers().count( "X-Tst-32" ) == 1    &&
+                 http->get_headers().at   ( "X-Tst-32" ) == "42" &&
+                 http->get_headers().count( "x-tst-32" ) == 1    &&
+                 http->get_headers().at   ( "x-tst-32" ) == "42" &&
+                 http->get_headers().count( "X-TST-32" ) == 1    &&
+                 http->get_headers().at   ( "X-TST-32" ) == "42" );
   }
   //
   async.stop();
