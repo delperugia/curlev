@@ -28,7 +28,7 @@ public:
   bool set( const std::string & p_options );
   //
   // Apply credential to curl easy handle
-  bool apply( CURL * p_curl );
+  bool apply( CURL * p_curl ) const;
   //
   // Reset credential to their default values
   void set_default( void );

@@ -29,7 +29,8 @@ bool Authentication::set( const std::string& p_options )
       }
       else if ( key == "user"   ) m_user   = value;
       else if ( key == "secret" ) m_secret = value;
-      // ignore unknown keys for forward compatibility
+      else
+          return false;  // unhandled key
       //
       return true;
     } );
@@ -41,7 +42,7 @@ bool Authentication::set( const std::string& p_options )
 // AUTH_BEARER:
 //  - is only fully functional starting with v7.69 (issue #5901).
 //  - has memory leak with v<7.84 (issues #8841)
-bool Authentication::apply( CURL * p_curl )
+bool Authentication::apply( CURL * p_curl ) const
 {
   bool ok = true;
   //

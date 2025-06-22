@@ -27,7 +27,8 @@ bool Options::set( const std::string & p_options )
       else if ( key == "proxy"              )  m_proxy              = value;
       else if ( key == "timeout"            )  m_timeout            = svtol( value );
       else if ( key == "verbose"            )  m_verbose            = ( value == "1" );
-      // no error on unknown key to ensure forward compatibility
+      else
+          return false;  // unhandled key
       //
       return true;
     } );
@@ -36,7 +37,7 @@ bool Options::set( const std::string & p_options )
 //--------------------------------------------------------------------
 // Apply the configured options to the given CURL easy handle.
 // It returns false if any option fails to set.
-bool Options::apply( CURL * p_curl )
+bool Options::apply( CURL * p_curl ) const
 {
   bool ok = true;
   //

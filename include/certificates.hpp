@@ -24,20 +24,30 @@ public:
   bool set( const std::string & p_options );
   //
   // Apply credential to curl easy handle
-  bool apply( CURL * p_curl );
+  bool apply( CURL * p_curl ) const;
   //
   // Reset credential to their default values
   void set_default( const std::string & p_ca_info, const std::string & p_ca_path );
   //
 private:
-  std::map< std::string, std::string > m_parameters; // contains all configured keys
+  std::string m_engine;
+  std::string m_sslcert;
+  std::string m_sslcerttype;
+  std::string m_sslkey;
+  std::string m_sslkeytype;
+  std::string m_keypasswd;
+  std::string m_cainfo;
+  std::string m_capath;
+  std::string m_proxy_sslcert;
+  std::string m_proxy_sslcerttype;
+  std::string m_proxy_sslkey;
+  std::string m_proxy_sslkeytype;
+  std::string m_proxy_keypasswd;
+  std::string m_proxy_cainfo;
+  std::string m_proxy_capath;
   //
-  std::string m_ca_info; // default CURLINFO_CAINFO
-  std::string m_ca_path; // default CURLINFO_CAPATH
-  //
-  // Set individual options
-  bool setopt   ( CURL * p_curl, const char * p_key, CURLoption p_option );
-  bool setopt_ca( CURL * p_curl, const char * p_key, CURLoption p_option, const std::string & p_default );
+  std::string m_ca_info_default; // default CURLINFO_CAINFO
+  std::string m_ca_path_default; // default CURLINFO_CAPATH
 };
 
 } // namespace curlev

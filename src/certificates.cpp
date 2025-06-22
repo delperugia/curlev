@@ -18,8 +18,24 @@ bool Certificates::set( const std::string & p_options )
     p_options,
     [ this ]( std::string_view key, std::string_view value )
     {
-      // no error on unknown key to ensure forward compatibility
-      m_parameters[ std::string( key ) ] = value;
+           if ( key == "engine"            ) m_engine            = value;  
+      else if ( key == "sslcert"           ) m_sslcert           = value;    
+      else if ( key == "sslcerttype"       ) m_sslcerttype       = value;        
+      else if ( key == "sslkey"            ) m_sslkey            = value;  
+      else if ( key == "sslkeytype"        ) m_sslkeytype        = value;      
+      else if ( key == "keypasswd"         ) m_keypasswd         = value;      
+      else if ( key == "cainfo"            ) m_cainfo            = value;  
+      else if ( key == "capath"            ) m_capath            = value;  
+      else if ( key == "proxy_sslcert"     ) m_proxy_sslcert     = value;          
+      else if ( key == "proxy_sslcerttype" ) m_proxy_sslcerttype = value;              
+      else if ( key == "proxy_sslkey"      ) m_proxy_sslkey      = value;        
+      else if ( key == "proxy_sslkeytype"  ) m_proxy_sslkeytype  = value;            
+      else if ( key == "proxy_keypasswd"   ) m_proxy_keypasswd   = value;            
+      else if ( key == "proxy_cainfo"      ) m_proxy_cainfo      = value;        
+      else if ( key == "proxy_capath"      ) m_proxy_capath      = value;        
+      else
+          return false;  // unhandled key
+      //
       return true;
     } );
 }
@@ -27,25 +43,57 @@ bool Certificates::set( const std::string & p_options )
 //--------------------------------------------------------------------
 // Apply credential to curl easy handle.
 // It returns false if any option fails to set.
-bool Certificates::apply( CURL * p_curl )
+namespace
+{
+  // If a parameter is not set, reset its value to the default by using nullptr
+  bool easy_setopt_std( CURL * p_curl, CURLoption p_option, const std::string & p_value )
+  {
+    if ( p_value.empty() )                                     // set to empty
+      return easy_setopt( p_curl, p_option, nullptr );         // reset to default
+    else
+      return easy_setopt( p_curl, p_option, p_value.c_str() ); // set the value
+  }
+
+  // For CA it is not possible to reset to default. Either the default is passed
+  // and is used, or (for libcurl <7.84.0) nothing is done.
+  bool easy_setopt_ca(
+      CURL *              p_curl,
+      CURLoption          p_option,
+      const std::string & p_value,
+      const std::string & p_default )
+  {
+    if ( p_value.empty() ) // set to empty
+    {
+      if ( p_default.empty() )
+        return true; // do nothing
+      else
+        return easy_setopt( p_curl, p_option, p_default.c_str() ); // reset known default
+    }
+    else
+      return easy_setopt( p_curl, p_option, p_value.c_str() ); // set the value
+  }
+}; // namespace
+
+bool Certificates::apply( CURL * p_curl ) const
 {
   bool ok = true;
   //
-  ok = ok && setopt   ( p_curl, "engine"            , CURLOPT_SSLENGINE         );
-  ok = ok && setopt   ( p_curl, "sslcert"           , CURLOPT_SSLCERT           );
-  ok = ok && setopt   ( p_curl, "sslcerttype"       , CURLOPT_SSLCERTTYPE       );
-  ok = ok && setopt   ( p_curl, "sslkey"            , CURLOPT_SSLKEY            );
-  ok = ok && setopt   ( p_curl, "sslkeytype"        , CURLOPT_SSLKEYTYPE        );
-  ok = ok && setopt   ( p_curl, "keypasswd"         , CURLOPT_KEYPASSWD         );
-  ok = ok && setopt_ca( p_curl, "cainfo"            , CURLOPT_CAINFO            , m_ca_info );
-  ok = ok && setopt_ca( p_curl, "capath"            , CURLOPT_CAPATH            , m_ca_path );
-  ok = ok && setopt   ( p_curl, "proxy_sslcert"     , CURLOPT_PROXY_SSLCERT     );
-  ok = ok && setopt   ( p_curl, "proxy_sslcerttype" , CURLOPT_PROXY_SSLCERTTYPE );
-  ok = ok && setopt   ( p_curl, "proxy_sslkey"      , CURLOPT_PROXY_SSLKEY      );
-  ok = ok && setopt   ( p_curl, "proxy_sslkeytype"  , CURLOPT_PROXY_SSLKEYTYPE  );
-  ok = ok && setopt   ( p_curl, "proxy_keypasswd"   , CURLOPT_PROXY_KEYPASSWD   );
-  ok = ok && setopt_ca( p_curl, "proxy_cainfo"      , CURLOPT_PROXY_CAINFO      , m_ca_info );
-  ok = ok && setopt_ca( p_curl, "proxy_capath"      , CURLOPT_PROXY_CAPATH      , m_ca_path );
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_SSLENGINE        , m_engine                          );
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_SSLCERT          , m_sslcert                         );
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_SSLCERTTYPE      , m_sslcerttype                     );
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_SSLKEY           , m_sslkey                          );
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_SSLKEYTYPE       , m_sslkeytype                      );
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_KEYPASSWD        , m_keypasswd                       );
+  ok = ok && easy_setopt_ca ( p_curl, CURLOPT_CAINFO           , m_cainfo      , m_ca_info_default );
+  ok = ok && easy_setopt_ca ( p_curl, CURLOPT_CAPATH           , m_capath      , m_ca_path_default );
+  //
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_PROXY_SSLCERT    , m_proxy_sslcert                   );
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_PROXY_SSLCERTTYPE, m_proxy_sslcerttype               );
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_PROXY_SSLKEY     , m_proxy_sslkey                    );
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_PROXY_SSLKEYTYPE , m_proxy_sslkeytype                );
+  ok = ok && easy_setopt_std( p_curl, CURLOPT_PROXY_KEYPASSWD  , m_proxy_keypasswd                 );
+  ok = ok && easy_setopt_ca ( p_curl, CURLOPT_PROXY_CAINFO     , m_proxy_cainfo, m_ca_info_default );
+  ok = ok && easy_setopt_ca ( p_curl, CURLOPT_PROXY_CAPATH     , m_proxy_capath, m_ca_path_default );
   //
   return ok;
 }
@@ -57,39 +105,24 @@ bool Certificates::apply( CURL * p_curl )
 // Before libcurl 7.84.0 it was not possible to retrieve them. 
 void Certificates::set_default( const std::string & p_ca_info, const std::string & p_ca_path )
 {
-  m_parameters.clear();
+  m_engine           .clear();                                    
+  m_sslcert          .clear();                       
+  m_sslcerttype      .clear();                           
+  m_sslkey           .clear();                    
+  m_sslkeytype       .clear();                        
+  m_keypasswd        .clear();                         
+  m_cainfo           .clear();                    
+  m_capath           .clear();                    
+  m_proxy_sslcert    .clear();                             
+  m_proxy_sslcerttype.clear();                                 
+  m_proxy_sslkey     .clear();                          
+  m_proxy_sslkeytype .clear();                              
+  m_proxy_keypasswd  .clear();                               
+  m_proxy_cainfo     .clear();                          
+  m_proxy_capath     .clear();                          
   //
-  m_ca_info = p_ca_info;
-  m_ca_path = p_ca_path;
-}
-
-//--------------------------------------------------------------------
-// Set a standard option. If not set by the user, or set to empty, reset to the
-// default value by using nullptr.
-bool Certificates::setopt( CURL * p_curl, const char * p_key, CURLoption p_option )
-{
-  if ( const auto iter = m_parameters.find( p_key );
-       iter == m_parameters.end() || iter->second.empty() )       // not configured or set to empty
-    return easy_setopt( p_curl, p_option, nullptr );              // set default
-  else
-    return easy_setopt( p_curl, p_option, iter->second.c_str() ); // set the value
-}
-
-//--------------------------------------------------------------------
-// For CA it is not possible to reset to default. Either the default is passed
-// and is used, or (for libcurl <7.84.0) nothing is done.
-bool Certificates::setopt_ca( CURL * p_curl, const char * p_key, CURLoption p_option, const std::string & p_default )
-{
-  if ( const auto iter = m_parameters.find( p_key );
-       iter == m_parameters.end() || iter->second.empty() )       // not configured or set to empty
-  {
-    if ( p_default.empty() )
-      return true;                                                // do nothing
-    else
-      return easy_setopt( p_curl, p_option, p_default.c_str() );  // reset known default
-  }
-  else
-    return easy_setopt( p_curl, p_option, iter->second.c_str() ); // set the value
+  m_ca_info_default = p_ca_info;
+  m_ca_path_default = p_ca_path;
 }
 
 } // namespace curlev
