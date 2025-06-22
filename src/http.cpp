@@ -207,10 +207,10 @@ HTTP & HTTP::add_mime_parameters( const t_mime_parts & p_mime_parts )
 
 //--------------------------------------------------------------------
 // Accessors to be used after a request
-HTTP::t_ikey_values HTTP::get_headers     ( void ) const { return is_running() ? t_ikey_values() : m_response_headers;      }
-std::string         HTTP::get_content_type( void ) const { return is_running() ? ""              : m_response_content_type; }
-std::string         HTTP::get_redirect_url( void ) const { return is_running() ? ""              : m_response_redirect_url; }
-std::string         HTTP::get_body        ( void ) const { return is_running() ? ""              : m_response_body;         }
+t_key_values_ci HTTP::get_headers     ( void ) const { return is_running() ? t_key_values_ci() : m_response_headers;      }
+std::string     HTTP::get_content_type( void ) const { return is_running() ? ""                : m_response_content_type; }
+std::string     HTTP::get_redirect_url( void ) const { return is_running() ? ""                : m_response_redirect_url; }
+std::string     HTTP::get_body        ( void ) const { return is_running() ? ""                : m_response_body;         }
 
 //--------------------------------------------------------------------
 // Called by Wrapper before starting a request.

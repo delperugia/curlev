@@ -72,7 +72,7 @@ namespace
     else
       return easy_setopt( p_curl, p_option, p_value.c_str() ); // set the value
   }
-}; // namespace
+} // namespace
 
 bool Certificates::apply( CURL * p_curl ) const
 {

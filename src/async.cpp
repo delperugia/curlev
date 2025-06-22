@@ -762,7 +762,7 @@ size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nit
   if ( p_userdata == nullptr )
     return CURL_WRITEFUNC_ERROR;
   //
-  auto protocol_headers = static_cast< std::map< std::string, std::string > * >( p_userdata );
+  auto protocol_headers = static_cast< t_key_values_ci * >( p_userdata );
   auto line             = std::string_view( p_buffer, p_size * p_nitems );
   auto colon            = line.find( ':' );
   //

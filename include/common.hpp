@@ -7,10 +7,22 @@
 
 #include <curl/curl.h>
 #include <functional>
+#include <unordered_map>
 #include <string>
 
 namespace curlev
 {
+
+// Case insensitive operations for the std::unordered_map of t_key_values_ci
+struct t_ci
+{
+  std::size_t operator()( const std::string & p_key ) const;
+  bool        operator()( const std::string & p_a, const std::string & p_b ) const;
+};
+//
+// Used to convey parameters or headers (unordered_map are almost twice as fast as map)
+using t_key_values    = std::unordered_map< std::string, std::string >;             // used for sent parameters and headers
+using t_key_values_ci = std::unordered_map< std::string, std::string, t_ci, t_ci >; // used for received headers, case insensitive keys
 
 // Wrapper around the libcurl setops function, returning true upon success
 #define easy_setopt(  handle, opt, param ) ( CURLE_OK   == curl_easy_setopt ( handle, opt, param ) )

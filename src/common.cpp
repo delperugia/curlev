@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <charconv>
+#include <cstring>
 #include <functional>
 #include <sstream>
 
@@ -12,6 +13,29 @@
 
 namespace curlev
 {
+
+//--------------------------------------------------------------------
+// Calculate a case insensitive hash optimized for HTTP header keys
+// (2 to 30 characters, a-z and - characters, limited number of headers).
+// For the 50 most common headers there is no collision
+std::size_t t_ci::operator()( const std::string & p_key ) const
+{
+  std::size_t hash = 0;
+  //
+  for ( char c : p_key )
+    hash = 31 * hash + tolower( c ); // cppcheck-suppress useStlAlgorithm
+  //
+  return hash;
+}
+
+//--------------------------------------------------------------------
+// std::lexicographical_compare is usually used but here
+// when only deal with US-ASCII (HTTP header keys) and
+// strcasecmp is ~5 times faster
+bool t_ci::operator()( const std::string & p_a, const std::string & p_b ) const
+{
+  return strcasecmp( p_a.c_str(), p_b.c_str() ) == 0;
+}
 
 //--------------------------------------------------------------------
 // Start with p_list set to nullptr, then add string, p_list is updated

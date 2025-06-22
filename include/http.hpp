@@ -6,9 +6,7 @@
 #pragma once
 
 #include <cstddef>
-#include <cstring>
 #include <curl/curl.h>
-#include <map>
 #include <string>
 #include <variant>
 #include <vector>
@@ -25,27 +23,10 @@ namespace curlev
 //  - encoded parameters (content type application/x-www-form-urlencoded)
 //  - a MIME document of parameters and documents
 // Headers can be added if needed.
-// Class must be cleared between requests.
 
 class HTTP : public Wrapper< HTTP >
 {
 public:
-  // Case insensitive comparison for the receive headers
-  // std::lexicographical_compare is usually used but here
-  // when only deal with US-ASCII (HTTP header keys) and
-  // strcasecmp is ~5 times faster
-  struct iCompare
-  {
-    bool operator()( const std::string & a, const std::string & b ) const
-    {
-      return strcasecmp( a.c_str(), b.c_str() ) < 0;
-    }
-  };
-  //
-  // Used to convey parameters or headers
-  using t_key_values  = std::map< std::string, std::string >;             // used for sent parameters and headers
-  using t_ikey_values = std::map< std::string, std::string, iCompare >;   // used for received headers, case insensitive keys
-  //
   // When sending a MIME document. MIME body can contain a list of regular parameters
   // (key / value) or files. t_mime_parts is a vector of variants. Each variant
   // represents either a parameter or a file. If filename of t_mime_file is not set,
@@ -91,10 +72,10 @@ public:
   HTTP & add_mime_parameters( const t_mime_parts & p_mime_parts );
   //
   // Accessors to be used after a request
-  t_ikey_values get_headers     ( void ) const;
-  std::string   get_content_type( void ) const;
-  std::string   get_redirect_url( void ) const;
-  std::string   get_body        ( void ) const;
+  t_key_values_ci get_headers     ( void ) const;
+  std::string     get_content_type( void ) const;
+  std::string     get_redirect_url( void ) const;
+  std::string     get_body        ( void ) const;
   //
 protected:
   // Prevent creating directly an instance of the class, the Wrapper::create() method must be used
@@ -112,24 +93,24 @@ protected:
 private:
   // Data used when sending the request
   enum class Method { none, eGET, eDELETE, ePOST, ePUT, ePATCH }
-                m_request_method = Method::none;
-  std::string   m_request_url;
-  t_key_values  m_request_query_parameters;
-  t_key_values  m_request_headers;
-  std::string   m_request_content_type;
-  std::string   m_request_body;            // must be persistent (CURLOPT_POSTFIELDS)
-  t_key_values  m_request_body_parameters; // has precedence over m_request_body
-  t_mime_parts  m_request_mime;            // has precedence over m_request_body and m_request_body_parameters
+                  m_request_method = Method::none;
+  std::string     m_request_url;
+  t_key_values    m_request_query_parameters;
+  t_key_values    m_request_headers;
+  std::string     m_request_content_type;
+  std::string     m_request_body;            // must be persistent (CURLOPT_POSTFIELDS)
+  t_key_values    m_request_body_parameters; // has precedence over m_request_body
+  t_mime_parts    m_request_mime;            // has precedence over m_request_body and m_request_body_parameters
   //
   // Data retrieved from the request response
-  t_ikey_values m_response_headers;        // must be persistent (CURLOPT_HEADERDATA)
-  std::string   m_response_redirect_url;
-  std::string   m_response_content_type;
-  std::string   m_response_body;           // must be persistent (CURLOPT_WRITEDATA)
+  t_key_values_ci m_response_headers;        // must be persistent (CURLOPT_HEADERDATA)
+  std::string     m_response_redirect_url;
+  std::string     m_response_content_type;
+  std::string     m_response_body;           // must be persistent (CURLOPT_WRITEDATA)
   //
   // Extra curl handles used when sending the request
-  curl_slist *  m_curl_headers = nullptr;  // must be persistent (CURLOPT_HTTPHEADER)
-  curl_mime *   m_curl_mime    = nullptr;  // must be persistent (CURLOPT_MIMEPOST)
+  curl_slist *    m_curl_headers = nullptr;  // must be persistent (CURLOPT_HTTPHEADER)
+  curl_mime *     m_curl_mime    = nullptr;  // must be persistent (CURLOPT_MIMEPOST)
   //
   // Release extra curl handles that were used during the operation
   void release_curl_extras( void );
