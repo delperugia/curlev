@@ -11,6 +11,7 @@
 #include <variant>
 #include <vector>
 
+#include "common.hpp"
 #include "wrapper.hpp"
 
 namespace curlev
