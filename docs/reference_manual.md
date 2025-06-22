@@ -173,12 +173,15 @@ it must be changed for all the requests made using the same HTTP object.
 
 # Executing the request
 
-Once the request is ready, it must be started using `start()`.
+Once the request is ready, it can be started using `start()`.
 The request then runs asynchronously. This method accepts a callback function
 that will be called once the request is finished, successfully or not.
 Then call `join()` to wait for asynchronous request completion.
 
-The convenient method `exec()` executes the request synchronously.
+Or the request can be started using the convenient method `exec()`,
+which executes the request synchronously (`start()` + `join()`).
+
+The callback is invoked before the `join()` is released.
 
 By default the callback is invoked from a separate thread. This prevents
 the main IO thread from being blocked while processing the callback, but

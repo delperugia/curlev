@@ -102,7 +102,7 @@ class Wrapper: public WrapperBase
       {
         std::lock_guard lock( m_exec_mutex );
         //
-        if ( ! m_exec_running && m_response_code == c_success )
+        if ( m_exec_state == State::idle && m_response_code == c_success )
         {
           m_user_cb = p_user_cb; // will be cleared by cb_protocol (below or in async_cb) 
           //
@@ -110,13 +110,13 @@ class Wrapper: public WrapperBase
           {
             if ( auto self = m_self_weak.lock() )       // must succeed since we are invoked
             {
-              auto cb_data   = new std::shared_ptr< Protocol >( self ); // a new shared_ptr for ASync, deleted by ASync
-              m_exec_running = true;                                    // will be cleared in async_cb called by ASync
+              auto cb_data = new std::shared_ptr< Protocol >( self ); // a new shared_ptr for ASync, deleted by ASync
+              m_exec_state = State::running;                          // will be cleared in async_cb called by ASync
               //
-              if ( m_async.start_request( m_curl, cb_data ) )           // ASync processing starts here
+              if ( m_async.start_request( m_curl, cb_data ) )         // ASync processing starts here
                   return static_cast< Protocol & >( *this );
               //
-              m_exec_running  = false;                                  // ASync failed
+              m_exec_state    = State::idle;                          // ASync failed
               m_response_code = c_error_start;
               delete cb_data;
             }
@@ -135,7 +135,7 @@ class Wrapper: public WrapperBase
       {
         std::unique_lock lock( m_exec_mutex );
         //
-        if ( m_exec_running )
+        if ( m_exec_state != State::idle )
           m_exec_cv.wait( lock ); // wait for the end of the async processing
       }
       //
@@ -208,7 +208,7 @@ class Wrapper: public WrapperBase
     // Reset the protocol before starting a new transfer
     void clear( void )
     {
-      if ( ! m_exec_running )
+      if ( is_idle() )
       {
         m_response_code    = c_success;
         m_user_cb_threaded = true;
@@ -248,19 +248,22 @@ class Wrapper: public WrapperBase
     // LCOV_EXCL_START - template virtual not detected by coverage, called by ASync for all requests
     void async_cb( long p_result ) override
     {
-      m_response_code = p_result;
+      m_response_code = p_result; // before finalize, in case the Protocol needs it
       //
-      finalize_protocol(); // call Protocol to retrieve protocol related details
+      finalize_protocol(); // calls Protocol to retrieve protocol related details
       //
-      // First the notification (release the join()): transfer is finished
       {
         std::lock_guard lock( m_exec_mutex );
-        //
-        m_exec_running = false;
-        m_exec_cv.notify_one();
+        m_exec_state = State::finished; // transfer is now finished, received data can be read
       }
       //
-      cb_protocol( static_cast< Protocol & >( *this ) ); // invoke user's callback, clear m_user_cb
+      cb_protocol( static_cast< Protocol & >( *this ) ); // invokes user's callback, clear m_user_cb
+      //
+      {
+        std::lock_guard lock( m_exec_mutex );
+        m_exec_state = State::idle;
+        m_exec_cv.notify_one(); // releases the join(): request is now terminated
+      }
     }
     // LCOV_EXCL_STOP
     //
@@ -301,23 +304,35 @@ class Wrapper: public WrapperBase
     }
     // LCOV_EXCL_STOP
     //
-    // Return true is the request is executing, used to prevent modifications
-    // of the persistent data used by libcurl.
+    // Request is just created or terminated
+    bool is_idle( void ) const
+    {
+      std::lock_guard lock( m_exec_mutex );
+      //
+      return m_exec_state == State::idle;
+    }
+    //
+    // Transfer is active
     bool is_running( void ) const
     {
       std::lock_guard lock( m_exec_mutex );
       //
-      return m_exec_running;
+      return m_exec_state == State::running;
     }
     //
   private:
     ASync &                   m_async;
     //
     mutable std::mutex        m_exec_mutex;
-    std::condition_variable   m_exec_cv;              // used by join() 
-    bool                      m_exec_running = false; // when a requested is executing
+    std::condition_variable   m_exec_cv; // used by join()
+    enum class State
+    {
+      idle,     // just created or terminated
+      running,  // actively running
+      finished  // transfer is finished but post processing is still taking place
+    }                         m_exec_state = State::idle;
     //
-    std::weak_ptr< Protocol > m_self_weak;            // set on self at creation, used to create and pass a shared_ptr to ASync
+    std::weak_ptr< Protocol > m_self_weak; // set on self at creation, used to create and pass a shared_ptr to ASync
     //
     // Optional user CB invoked from async_cb
     bool                                      m_user_cb_threaded = true;

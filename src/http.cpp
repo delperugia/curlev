@@ -19,7 +19,7 @@ HTTP::~HTTP()
 // Calling using a GET
 HTTP & HTTP::GET( const std::string & p_url, const t_key_values & p_query_parameters )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     clear();
     //
@@ -35,7 +35,7 @@ HTTP & HTTP::GET( const std::string & p_url, const t_key_values & p_query_parame
 // Calling using a DELETE
 HTTP & HTTP::DELETE( const std::string & p_url, const t_key_values & p_query_parameters )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     clear();
     //
@@ -54,7 +54,7 @@ HTTP & HTTP::POST(
     const std::string & p_content_type,
     const std::string & p_body )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     clear();
     //
@@ -74,7 +74,7 @@ HTTP & HTTP::PUT(
     const std::string & p_content_type,
     const std::string & p_body )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     clear();
     //
@@ -94,7 +94,7 @@ HTTP & HTTP::PATCH(
     const std::string & p_content_type,
     const std::string & p_body )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     clear();
     //
@@ -111,7 +111,7 @@ HTTP & HTTP::PATCH(
 // Sending url encoded parameters in the body using POST
 HTTP & HTTP::POST( const std::string & p_url, const t_key_values & p_body_parameter )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     clear();
     //
@@ -127,7 +127,7 @@ HTTP & HTTP::POST( const std::string & p_url, const t_key_values & p_body_parame
 // Sending url encoded parameters in the body using PUT
 HTTP & HTTP::PUT( const std::string & p_url, const t_key_values & p_body_parameter )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     clear();
     //
@@ -143,7 +143,7 @@ HTTP & HTTP::PUT( const std::string & p_url, const t_key_values & p_body_paramet
 // Sending url encoded parameters in the body using PATCH
 HTTP & HTTP::PATCH( const std::string & p_url, const t_key_values & p_body_parameter )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     clear();
     //
@@ -159,7 +159,7 @@ HTTP & HTTP::PATCH( const std::string & p_url, const t_key_values & p_body_param
 // Add headers to the request
 HTTP & HTTP::add_headers( const t_key_values & p_headers )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     m_request_headers.insert( p_headers.begin(), p_headers.end() );
   }
@@ -171,7 +171,7 @@ HTTP & HTTP::add_headers( const t_key_values & p_headers )
 // Add query parameters to the request
 HTTP & HTTP::add_query_parameters( const t_key_values & p_query_parameters )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     m_request_query_parameters.insert( p_query_parameters.begin(), p_query_parameters.end() );
   }
@@ -184,7 +184,7 @@ HTTP & HTTP::add_query_parameters( const t_key_values & p_query_parameters )
 // Do not use with MIME nor raw body requests.
 HTTP & HTTP::add_body_parameters( const t_key_values & p_body_parameter )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
   }
@@ -197,7 +197,7 @@ HTTP & HTTP::add_body_parameters( const t_key_values & p_body_parameter )
 // Only for a request without a raw body or parameters.
 HTTP & HTTP::add_mime_parameters( const t_mime_parts & p_mime_parts )
 {
-  if ( ! is_running() )
+  if ( is_idle() )
   {
     m_request_mime.insert( m_request_mime.end(), p_mime_parts.begin(), p_mime_parts.end() );
   }

@@ -237,9 +237,9 @@ TEST( http_advanced, user_cb )
   async.start();
   //
   {
-    auto http    = HTTP::create( async );
-    long cb_code = 0;
     std::string cb_body;
+    auto        http    = HTTP::create( async );
+    long        cb_code = 0;
     auto        code =
         http->GET( c_server_httpbun + "get" )
             .start(
@@ -251,8 +251,6 @@ TEST( http_advanced, user_cb )
             .join()
             .get_code();
     ASSERT_EQ( code, 200 );
-    //
-    uv_sleep( 60 ); // because the join() is release before the CB by Wrapper
     //
     EXPECT_EQ( cb_code, code );
     EXPECT_EQ( cb_body, http->get_body() );
