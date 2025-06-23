@@ -104,10 +104,10 @@ to place in the MIME document that will be sent as the body of the request:
 The string expected by the `authentication()` is a key-value comma
 separated string with the following keys available:
 
-| Name   | Comment                               | libcurl
+| Name   | Comment                               | libcurl option
 |--------|---------------------------------------|--------------------
 | mode   | none, basic, digest or bearer         | CURLAUTH_NONE, CURLAUTH_BASIC, CURLAUTH_DIGEST or CURLAUTH_BEARER
-| user   | for basic and digest only: user login | CURLOPT_USERNAME       
+| user   | for basic and digest only: user login | CURLOPT_USERNAME
 | secret | password or token                     | CURLOPT_PASSWORD or CURLOPT_XOAUTH2_BEARER
 
 For example:
@@ -119,17 +119,17 @@ For example:
 The string expected by the `options()` is a key-value comma
 separated string with the following keys available:
 
-| Name               | Default | Unit         | Comment                             | libcurl
-|--------------------|---------|--------------|-------------------------------------|---------------------                             
-| accept_compression | 0       | 0 or 1       | activate compression                | CURLOPT_ACCEPT_ENCODING            
-| connect_timeout    | 30000   | milliseconds | connection timeout                  | CURLOPT_CONNECTTIMEOUT_MS           
-| cookies            | false   | 0 or 1       | receive and resend cookies          | CURLOPT_COOKIEFILE                   
+| Name               | Default | Unit         | Comment                             | libcurl option
+|--------------------|---------|--------------|-------------------------------------|---------------------
+| accept_compression | 0       | 0 or 1       | activate compression                | CURLOPT_ACCEPT_ENCODING
+| connect_timeout    | 30000   | milliseconds | connection timeout                  | CURLOPT_CONNECTTIMEOUT_MS
+| cookies            | false   | 0 or 1       | receive and resend cookies          | CURLOPT_COOKIEFILE
 | follow_location    | 0       | 0 or 1       | follow HTTP 3xx redirects           | CURLOPT_FOLLOWLOCATION
-| insecure           | 0       | 0 or 1       | disables certificate validation     | CURLOPT_SSL_VERIFYHOST and CURLOPT_SSL_VERIFYPEER                       
-| maxredirs          | 5       | count        | maximum number of redirects allowed | CURLOPT_MAXREDIRS                           
-| proxy              |         | string       | the SOCKS or HTTP URl to a proxy    | CURLOPT_PROXY                         
-| timeout            | 30000   | milliseconds | receive data timeout                | CURLOPT_TIMEOUT_MS             
-| verbose            | 0       | 0 or 1       | debug log on console                | CURLOPT_VERBOSE             
+| insecure           | 0       | 0 or 1       | disables certificate validation     | CURLOPT_SSL_VERIFYHOST and CURLOPT_SSL_VERIFYPEER
+| maxredirs          | 5       | count        | maximum number of redirects allowed | CURLOPT_MAXREDIRS
+| proxy              |         | string       | the SOCKS or HTTP URl to a proxy    | CURLOPT_PROXY
+| timeout            | 30000   | milliseconds | receive data timeout                | CURLOPT_TIMEOUT_MS
+| verbose            | 0       | 0 or 1       | debug log on console                | CURLOPT_VERBOSE
 
 For example:
 - follow_location=1,timeout=5000
@@ -146,23 +146,23 @@ Notes:
 The string expected by the `certificates()` is a key-value comma
 separated string with the following keys available:
 
-| Connection | Usage    | Key               | Comment                                        | libcurl                            
-|------------|----------|-------------------|------------------------------------------------|---------------------------                                                
-| -          | global   | engine            | engine or provider name                        | CURLOPT_SSLENGINE                                
-| direct     | public   | sslcert           | file                                           | CURLOPT_SSLCERT	                 
-| "          | "        | sslcerttype       | "PEM", "DER" or "P12", default "PEM"           | CURLOPT_SSLCERTTYPE                                              
-| "          | private  | sslkey            | file or id                                     | CURLOPT_SSLKEY	                     
-| "          | "        | sslkeytype        | "PEM", "DER", "ENG" or "PROV", default "PEM"   | CURLOPT_SSLKEYTYPE                                                       
-| "          | "        | keypasswd         | -                                              | CURLOPT_KEYPASSWD	           
-| "          | CA       | cainfo            | file                                           | CURLOPT_CAINFO	               
-| "          | "        | capath            | folder                                         | CURLOPT_CAPATH	                 
-| proxy      | public   | proxy_sslcert     | file                                           | CURLOPT_PROXY_SSLCERT	           
-| "          | "        | proxy_sslcerttype | "PEM", "DER" or "P12", default "PEM"           | CURLOPT_PROXY_SSLCERTTYPE                                        
-| "          | private  | proxy_sslkey      | file or id                                     | CURLOPT_PROXY_SSLKEY	               
-| "          | "        | proxy_sslkeytype  | "PEM", "DER", "ENG" or "PROV", default "PEM"   | CURLOPT_PROXY_SSLKEYTYPE                                                 
-| "          | "        | proxy_keypasswd   | -                                              | CURLOPT_PROXY_KEYPASSWD	     
-| "          | CA       | proxy_cainfo      | file                                           | CURLOPT_PROXY_CAINFO	         
-| "          | "        | proxy_capath      | folder                                         | CURLOPT_PROXY_CAPATH	           
+| Connection | Usage    | Key               | Comment                                        | libcurl option
+|------------|----------|-------------------|------------------------------------------------|---------------------------
+| -          | global   | engine            | engine or provider name                        | CURLOPT_SSLENGINE
+| direct     | public   | sslcert           | file                                           | CURLOPT_SSLCERT
+| "          | "        | sslcerttype       | "PEM", "DER" or "P12", default "PEM"           | CURLOPT_SSLCERTTYPE
+| "          | private  | sslkey            | file or id                                     | CURLOPT_SSLKEY
+| "          | "        | sslkeytype        | "PEM", "DER", "ENG" or "PROV", default "PEM"   | CURLOPT_SSLKEYTYPE
+| "          | "        | keypasswd         | -                                              | CURLOPT_KEYPASSWD
+| "          | CA       | cainfo            | file                                           | CURLOPT_CAINFO
+| "          | "        | capath            | folder                                         | CURLOPT_CAPATH
+| proxy      | public   | proxy_sslcert     | file                                           | CURLOPT_PROXY_SSLCERT
+| "          | "        | proxy_sslcerttype | "PEM", "DER" or "P12", default "PEM"           | CURLOPT_PROXY_SSLCERTTYPE
+| "          | private  | proxy_sslkey      | file or id                                     | CURLOPT_PROXY_SSLKEY
+| "          | "        | proxy_sslkeytype  | "PEM", "DER", "ENG" or "PROV", default "PEM"   | CURLOPT_PROXY_SSLKEYTYPE
+| "          | "        | proxy_keypasswd   | -                                              | CURLOPT_PROXY_KEYPASSWD
+| "          | CA       | proxy_cainfo      | file                                           | CURLOPT_PROXY_CAINFO
+| "          | "        | proxy_capath      | folder                                         | CURLOPT_PROXY_CAPATH
 
 For example:
  - sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret

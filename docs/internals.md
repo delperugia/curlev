@@ -1,7 +1,7 @@
 curlev - internals
 ==================
 
-This library is based on the `libcurl` example [multi-uv](https://curl.se/libcurl/c/multi-uv.html]).
+This library was inspired on the `libcurl` example [multi-uv](https://curl.se/libcurl/c/multi-uv.html).
 
 ```mermaid
 graph TD
@@ -49,14 +49,14 @@ L       m_nb_running_requests++
 L       curl_multi_add_handle  -------------------> multi_cb_timer
 L       ! notify_wrapper                 /              uv_timer_stop
 L       !     m_nb_running_requests--   /               uv_timer_start  -->>>
-                                       / 
-L   uv_run                            /      
+                                       /
+L   uv_run                            /
 L       uv_io_cb                     /
 L           curl_multi_socket_action  ------------> multi_cb_socket
 L                                                       curl_multi_assign
 L                                                       uv_poll_start
-L           multi_fetch_messages              
-L               curl_multi_info_read          
+L           multi_fetch_messages
+L               curl_multi_info_read
 L                   curl_multi_remove_handle
 L                   notify_wrapper
 L                       m_nb_running_requests--
@@ -153,16 +153,16 @@ cpr multi            |  0.170 s | 163.301 s | 163.471 |      100% | 550'320 KB
 curl-multi-asio      |  0.116 s |  99.986 s | 100.102 |       99% | 538'164 KB
 curlcpp              |  0.381 s |  44.966 s |  45.347 |       99% | 625'204 KB
 
-The slowest part in `curlev` was the `start()` function because ASync::start_request()
+The slowest part in `curlev` was the `start()` function because `ASync::start_request()`
 needs to wait `m_uv_run_mutex` which is only unlocked for a short period of time
 by `uv_run()`. This bottleneck was removed by increasing the delay depending on
-the number of pending request.
+the number of pending requests.
 
 # References
 
  - [libcurl](https://curl.se/libcurl/)
  - [libuv](https://libuv.org/)
- - libcurl example [multi-uv](https://curl.se/libcurl/c/multi-uv.html])
+ - libcurl example [multi-uv](https://curl.se/libcurl/c/multi-uv.html)
  - [GoogleTest](https://google.github.io/googletest/)
 
 # IA Reviews
@@ -171,42 +171,42 @@ the number of pending request.
 
 ### Ownership and Lifetime Flow
 
-1. **Creation in `Wrapper::create()`**  
-   A `std::shared_ptr<Protocol>` is created and returned to the user.  
+1. **Creation in `Wrapper::create()`**
+   A `std::shared_ptr<Protocol>` is created and returned to the user.
    `m_self_weak` is set to this shared pointer for later use.
 
-2. **Start of ASync Operation**  
-   In `Wrapper::start()`, a new `std::shared_ptr<Protocol>` is created from `m_self_weak.lock()` and heap-allocated:  
+2. **Start of ASync Operation**
+   In `Wrapper::start()`, a new `std::shared_ptr<Protocol>` is created from `m_self_weak.lock()` and heap-allocated:
    This pointer (`cb_data`) is passed to `ASync::start_request()` as the `CURLOPT_PRIVATE` data for the CURL handle.
 
-3. **ASync Receives and Stores Pointer**  
-   ASync never takes ownership of the `shared_ptr` itself, only the pointer to it (`cb_data`).  
+3. **ASync Receives and Stores Pointer**
+   ASync never takes ownership of the `shared_ptr` itself, only the pointer to it (`cb_data`).
    When the transfer completes, `ASync::notify_wrapper()` retrieves this pointer, and passes it to `invoke_wrapper()`.
 
-4. **Cleanup in `ASync::invoke_wrapper()`**  
-   `invoke_wrapper()` calls the protocol callback, then:  
+4. **Cleanup in `ASync::invoke_wrapper()`**
+   `invoke_wrapper()` calls the protocol callback, then:
    This ensures the `shared_ptr` is destroyed, and the Protocol object is deleted if no other references exist.
 
 ### Analysis
 
 #### Strengths
 
-- **Clear Ownership:**  
+- **Clear Ownership:**
   The heap-allocated `shared_ptr` ensures the Protocol object stays alive for the duration of the async operation, even if the user releases their copy.
 
-- **Safe Cleanup:**  
+- **Safe Cleanup:**
   The pointer is deleted only after the callback is invoked, and the `shared_ptr` is reset, ensuring no use-after-free.
 
 #### Potential Issues
 
-- **Manual `new`/`delete` for `shared_ptr`:**  
+- **Manual `new`/`delete` for `shared_ptr`:**
   This is safe here, but is a bit unusual. If any code path forgets to call `delete`, it will leak memory.
 
-- **Double Deletion Risk:**  
+- **Double Deletion Risk:**
   If `notify_wrapper()` is called more than once for the same CURL handle, it could double-delete the pointer.
   However, you clear `CURLOPT_PRIVATE` after use, which should prevent this.
 
-- **Thread Safety:**  
+- **Thread Safety:**
   The code appears to be thread-safe due to mutexes and condition variables.
 
 #### Alternatives
