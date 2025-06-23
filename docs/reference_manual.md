@@ -96,19 +96,19 @@ to place in the MIME document that will be sent as the body of the request:
 - `HTTP::t_mime_parameter{ key, value }` are simple standard parameters
 - `HTTP::t_mime_file{ key, content_type, data, filename }` are attachments where
   the uploaded data is associated to a file name (the data is not read from
-  the file, you have to provide the data to send). Even if data is a std::string
-  it can hold binary data such as images.
+  the file, you have to provide the data to send). data is a std::string but
+  can hold binary data such as images.
 
 # Adding authentication
 
 The string expected by the `authentication()` is a key-value comma
 separated string with the following keys available:
 
-| Name   | Comment                               | libcurl option
-|--------|---------------------------------------|--------------------
-| mode   | none, basic, digest or bearer         | CURLAUTH_NONE, CURLAUTH_BASIC, CURLAUTH_DIGEST or CURLAUTH_BEARER
-| user   | for basic and digest only: user login | CURLOPT_USERNAME
-| secret | password or token                     | CURLOPT_PASSWORD or CURLOPT_XOAUTH2_BEARER
+| Name   | Comment                                         | libcurl option
+|--------|-------------------------------------------------|--------------------
+| mode   | "none", "basic", "digest" or "bearer"           | CURLAUTH_NONE, CURLAUTH_BASIC, CURLAUTH_DIGEST or CURLAUTH_BEARER
+| user   | for "basic" and "digest" modes only: user login | CURLOPT_USERNAME
+| secret | password or token                               | CURLOPT_PASSWORD or CURLOPT_XOAUTH2_BEARER
 
 For example:
 - mode=basic,user=joe,secret=abc123
