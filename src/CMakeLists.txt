@@ -12,6 +12,16 @@ set( SRC_FILES
      options.cpp
 )
 
+# Check strcasecmp availability
+include( CheckFunctionExists )
+check_function_exists( strcasecmp HAVE_STRCASECMP )
+check_function_exists( _stricmp   HAVE__STRICMP   )
+if( NOT HAVE_STRCASECMP AND NOT HAVE__STRICMP )
+    add_definitions( -DNEED_PORTABLE_STRCASECMP )
+elseif( HAVE__STRICMP )
+    add_definitions( -Dstrcasecmp=_stricmp )
+endif()
+
 # The curlev library
 add_library               ( curlev STATIC ${SRC_FILES}                           )
 target_include_directories( curlev PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include )

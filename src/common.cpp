@@ -30,8 +30,23 @@ std::size_t t_ci::operator()( const std::string & p_key ) const
 
 //--------------------------------------------------------------------
 // std::lexicographical_compare is usually used but here
-// when only deal with US-ASCII (HTTP header keys) and
+// when only dealing with US-ASCII (HTTP header keys)
 // strcasecmp is ~5 times faster
+namespace
+{
+#ifdef NEED_PORTABLE_STRCASECMP
+  // Not a real replacement of strcasecmp: we just need the equality
+  int strcasecmp( const char * a, const char * b )
+  {
+    while ( *a && *b )
+      if ( tolower( *a++ ) != tolower( *b++ ) )
+        return -1;
+    //
+    return *a == *b ? 0 : -1;
+  }
+#endif
+} // namespace
+
 bool t_ci::operator()( const std::string & p_a, const std::string & p_b ) const
 {
   return strcasecmp( p_a.c_str(), p_b.c_str() ) == 0;
