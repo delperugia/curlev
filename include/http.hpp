@@ -17,14 +17,14 @@
 namespace curlev
 {
 
+//--------------------------------------------------------------------
 // A specialization of the Wrapper for the HTTP protocol.
 // It supports POST, PUT, PATCH, GET and DELETE methods, with parameters in query.
 // For POST, PUT, PATCH a body can be specified using one of:
 //  - a raw content type and body
 //  - encoded parameters (content type application/x-www-form-urlencoded)
 //  - a MIME document of parameters and documents
-// Headers can be added if needed.
-
+// Headers, parameters can be added if needed.
 class HTTP : public Wrapper< HTTP >
 {
 public:

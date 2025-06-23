@@ -7,9 +7,9 @@
 
 #include <array>
 #include <atomic>
-#include <deque>
 #include <condition_variable>
 #include <curl/curl.h>
+#include <deque>
 #include <mutex>
 #include <pthread.h>
 #include <shared_mutex>
@@ -26,11 +26,11 @@ namespace curlev
 class                                WrapperBase;
 template < typename Protocol > class Wrapper;
 
+//--------------------------------------------------------------------
 // Because it is not possible to mix lock/unlock and lock_shared/unlock_shared
 // in std::shared_mutex, and because libcurl CURLSHOPT_UNLOCKFUNC function
 // does not receive the access, C functions must be used. They are wrapped
 // here for conveniency (even if libcurl seldom use shared locks).
-
 class shared_mutex
 {
 public:
@@ -54,11 +54,11 @@ private:
   pthread_rwlock_t m_lock;
 };
 
+//--------------------------------------------------------------------
 // This class handles the communications between libcurl multi and libuv.
 // It is also here that libcurl easy handle are created.
 // Create a single instance of this class, and call start before passing it
 // to the various protocol creation functions.
-
 class ASync
 {
 public:

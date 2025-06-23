@@ -12,9 +12,9 @@
 namespace curlev
 {
 
+//--------------------------------------------------------------------
 // This class is used to set certificates for direct and proxy connections.
 // The finale configuration is then applied when performing the request.
-
 class Certificates
 {
 public:

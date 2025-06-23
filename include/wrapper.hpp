@@ -28,9 +28,7 @@ constexpr long c_error_http_headers_set      =  -8; // bad header
 constexpr long c_error_http_method_set       =  -9; // internal error
 constexpr long c_error_http_mime_set         = -10; // bad MIME value
 
-// The Wrapper class is used to handle all the common curl processing
-// and communication with ASync.
-
+//--------------------------------------------------------------------
 // The base class is the one known and called by ASync
 class WrapperBase
 {
@@ -52,6 +50,7 @@ protected:
   WrapperBase & operator=( const WrapperBase & ) = delete;
 };
 
+//--------------------------------------------------------------------
 // Exception thrown when the factory fails to create a new protocol class
 struct bad_curl_easy_alloc : public std::bad_alloc
 {
@@ -62,6 +61,9 @@ struct bad_curl_easy_alloc : public std::bad_alloc
   }
 };
 
+//--------------------------------------------------------------------
+// The Wrapper class is used to handle all the common curl processing
+// and communication with ASync.
 template< typename Protocol >
 class Wrapper: public WrapperBase
 {

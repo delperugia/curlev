@@ -160,9 +160,7 @@ HTTP & HTTP::PATCH( const std::string & p_url, const t_key_values & p_body_param
 HTTP & HTTP::add_headers( const t_key_values & p_headers )
 {
   if ( is_idle() )
-  {
     m_request_headers.insert( p_headers.begin(), p_headers.end() );
-  }
   //
   return *this;
 }
@@ -172,9 +170,7 @@ HTTP & HTTP::add_headers( const t_key_values & p_headers )
 HTTP & HTTP::add_query_parameters( const t_key_values & p_query_parameters )
 {
   if ( is_idle() )
-  {
     m_request_query_parameters.insert( p_query_parameters.begin(), p_query_parameters.end() );
-  }
   //
   return *this;
 }
@@ -185,9 +181,7 @@ HTTP & HTTP::add_query_parameters( const t_key_values & p_query_parameters )
 HTTP & HTTP::add_body_parameters( const t_key_values & p_body_parameter )
 {
   if ( is_idle() )
-  {
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
-  }
   //
   return *this;
 }
@@ -198,9 +192,7 @@ HTTP & HTTP::add_body_parameters( const t_key_values & p_body_parameter )
 HTTP & HTTP::add_mime_parameters( const t_mime_parts & p_mime_parts )
 {
   if ( is_idle() )
-  {
     m_request_mime.insert( m_request_mime.end(), p_mime_parts.begin(), p_mime_parts.end() );
-  }
   //
   return *this;
 }

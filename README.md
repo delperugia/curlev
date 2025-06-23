@@ -21,7 +21,7 @@ Key features:
 - Custom headers and authentication
 - Method chaining
 
-Example of a simple synchronous request:
+Example of a synchronous request:
 
 ```cpp
 #include <curlev/http.hpp>
@@ -45,7 +45,7 @@ int main( int argc, char ** argv )
 }
 ```
 
-And a simple asynchronous request with callback:
+An asynchronous request later joined:
 
 ```cpp
 #include <curlev/http.hpp>
@@ -59,9 +59,7 @@ int main( int argc, char ** argv )
   async.start();
   //
   auto http = HTTP::create( async );
-  http->GET( "http://www.httpbin.org/get",
-             { { "name", "Alice" },
-               { "role", "admin" } } )
+  http->GET( "http://www.httpbin.org/get", { { "id", "42" } } )
       .start();
   //
   int value;
@@ -70,6 +68,35 @@ int main( int argc, char ** argv )
   //
   auto code = http->join().get_code();
   std::cout << code << " " << http->get_body() << std::endl;
+}
+```
+
+A request with callback, running detached:
+
+```cpp
+#include <chrono>
+#include <curlev/http.hpp>
+#include <iostream>
+#include <thread>
+
+using namespace curlev;
+
+void f( ASync & async )
+{
+  auto http = HTTP::create( async );
+  http->GET( "http://www.httpbin.org/get" )
+      .start( []( const HTTP & http )
+              { std::cout << http.get_code() << " " << http.get_body() << std::endl; } );
+}
+
+int main( int argc, char ** argv )
+{
+  ASync async;
+  async.start();
+  //
+  f( async );
+  //
+  std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 }
 ```
 
@@ -86,7 +113,7 @@ In order to compile `curlev` you will need the following:
  - cmake
  - pkg-config
  - a C++17 compiler
- - libcurl (>=7.61.1 with possible memory leaks and config problems, >=7.87.0 recommended)
+ - libcurl (>=7.61.1 but with memory leaks and config problems, >=7.87.0 recommended)
  - libuv
 
 Here are the package names for some distributions:
