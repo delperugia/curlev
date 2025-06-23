@@ -9,6 +9,9 @@
 namespace curlev
 {
 
+// Some magic values: the average "parameter=value" length
+constexpr auto c_average_parameter_length = 32;
+
 //--------------------------------------------------------------------
 HTTP::~HTTP()
 {
@@ -454,6 +457,8 @@ std::string HTTP::encode_parameters( const t_key_values & p_parameters )
 {
   std::string encoded;
   //
+  encoded.reserve( p_parameters.size() * c_average_parameter_length );
+  //
   for ( const auto & [ key, value ] : p_parameters )
   {
     char * enc_key = curl_easy_escape( m_curl, key  .c_str(), 0 );
@@ -477,16 +482,16 @@ std::string HTTP::url_with_parameters(
     const std::string &  p_url,
     const t_key_values & p_parameters )
 {
+  if ( p_parameters.empty() )
+    return p_url;
+  //
   std::string new_url        = p_url;
   std::string url_parameters = encode_parameters( p_parameters );
   //
-  if ( ! url_parameters.empty() )
-  {
-    if ( size_t pos = p_url.find_last_of( '?' ); pos == std::string::npos )
-      new_url += "?" + url_parameters;
-    else
-      new_url += "&" + url_parameters;
-  }
+  if ( size_t pos = p_url.find_last_of( '?' ); pos == std::string::npos )
+    new_url += "?" + url_parameters;
+  else
+    new_url += "&" + url_parameters;
   //
   return new_url;
 }
