@@ -4,9 +4,9 @@
  ********************************************************************/
 
 #include <algorithm>
-#include <charconv>
 #include <cstring>
 #include <functional>
+#include <limits>
 #include <sstream>
 
 #include "common.hpp"
@@ -65,7 +65,7 @@ bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_stri
   //
   curl_slist * temp = curl_slist_append( p_list, p_string.c_str() );
   //
-  if ( temp == nullptr )	
+  if ( temp == nullptr )
   {
     return false;
   }
@@ -77,17 +77,35 @@ bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_stri
 }
 
 //--------------------------------------------------------------------
-// Converts a std::string_view to an long. Returns 0 on error.
-long svtol( std::string_view p_string )
+// Converts a std::string_view to a long. Returns false on error.
+bool svtol( std::string_view p_string, long & p_value )
 {
-  long value;
-  auto last   = p_string.data() + p_string.size();
-  auto result = std::from_chars( p_string.data(), last, value );
+  unsigned long value    = 0;
+  bool          negative = false;
+  auto          read     = p_string.data();
+  auto          last     = p_string.data() + p_string.size();
   //
-  if ( result.ec == std::errc() && result.ptr == last ) // ok and no remaining character
-    return value;
-  else
-    return 0;
+  if ( read < last && *read == '-' )
+  {
+    negative = true;
+    read++;
+  }
+  //
+  if ( read == last ) // p_string is "-" or ""
+    return false;
+  //
+  while ( read < last && isdigit( *read ) )
+  {
+    value = value * 10 + ( *read++ - '0' );
+    if ( value > std::numeric_limits< long >::max() )
+      return false; // overflow
+  }
+  //
+  if ( read < last ) // non digit found in p_string
+    return false;
+  //
+  p_value = negative ? -value : value;
+  return true;
 }
 
 //--------------------------------------------------------------------
@@ -114,7 +132,7 @@ bool parse_cskv( const std::string &                                            
     std::string_view key_value = token;
     //
     auto delimiter_pos = key_value.find( '=' );
-    if ( delimiter_pos == std::string::npos )	
+    if ( delimiter_pos == std::string::npos )
       return false; // invalid format: no = sign
     //
     auto key   = trim( key_value.substr( 0, delimiter_pos ) );

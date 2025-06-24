@@ -76,33 +76,37 @@ TEST( common, curl_slist_checked_append )
 //--------------------------------------------------------------------
 TEST( common, svtol )
 {
+  long v;
+
   // Basic numeric conversions
-  EXPECT_EQ( svtol( "0" ), 0 );
-  EXPECT_EQ( svtol( "42" ), 42 );
-  EXPECT_EQ( svtol( "-42" ), -42 );
-  EXPECT_EQ( svtol( "123456789" ), 123456789 );
+  EXPECT_TRUE( svtol( "0"        , v ) && v ==         0 );
+  EXPECT_TRUE( svtol( "42"       , v ) && v ==        42 );
+  EXPECT_TRUE( svtol( "-42"      , v ) && v ==       -42 );
+  EXPECT_TRUE( svtol( "123456789", v ) && v == 123456789 );
 
   // Leading and trailing space are not supported
-  EXPECT_EQ( svtol( "" ), 0 );
-  EXPECT_EQ( svtol( " " ), 0 );
-  EXPECT_EQ( svtol( "\t" ), 0 );
-  EXPECT_EQ( svtol( "  42  " ), 0 );
-  EXPECT_EQ( svtol( "\t-123\n" ), 0 );
+  EXPECT_FALSE( svtol( ""        , v ) );
+  EXPECT_FALSE( svtol( " "       , v ) );
+  EXPECT_FALSE( svtol( "\t"      , v ) );
+  EXPECT_FALSE( svtol( "  42  "  , v ) );
+  EXPECT_FALSE( svtol( "\t-123\n", v ) );
 
   // Leading zeros
-  EXPECT_EQ( svtol( "000" ), 0 );
-  EXPECT_EQ( svtol( "0042" ), 42 );
-  EXPECT_EQ( svtol( "-0042" ), -42 );
+  EXPECT_TRUE( svtol( "000"  , v ) && v ==   0 );
+  EXPECT_TRUE( svtol( "0042" , v ) && v ==  42 );
+  EXPECT_TRUE( svtol( "-0042", v ) && v == -42 );
 
   // Invalid input
-  EXPECT_EQ( svtol( "abc" ), 0 );
-  EXPECT_EQ( svtol( "12abc34" ), 0 );
-  EXPECT_EQ( svtol( "abc123" ), 0 );
+  EXPECT_FALSE( svtol( "abc"                , v ) );
+  EXPECT_FALSE( svtol( "12abc34"            , v ) );
+  EXPECT_FALSE( svtol( "abc123"             , v ) );
+  EXPECT_FALSE( svtol( "+42"                , v ) );
+  EXPECT_FALSE( svtol( "-"                  , v ) );
+  EXPECT_FALSE( svtol( "9999999999999999999", v ) );
 
   // Limits
-  EXPECT_EQ( svtol( "2147483647" ), 2147483647 );
-  EXPECT_EQ( svtol( "-2147483648" ), -2147483648 );
-  EXPECT_EQ( svtol( "99999999999999999999999999" ), 0 ); // Too large
+  EXPECT_TRUE( svtol( "2147483647" , v ) && v ==  2147483647 );
+  EXPECT_TRUE( svtol( "-2147483647", v ) && v == -2147483647 );
 }
 
 //--------------------------------------------------------------------
@@ -168,7 +172,7 @@ TEST( common, parse_cskv )
   // Missing equals sign
   EXPECT_FALSE( parse_cskv( "key1value1",
                             []( std::string_view key, std::string_view value ) { return true; } ) );
-  //                              
+  //
   // Invalid format
   EXPECT_FALSE( parse_cskv( "key1=value1,,key2=value2",
                             []( std::string_view key, std::string_view value ) { return true; } ) );

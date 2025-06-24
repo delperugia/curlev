@@ -34,8 +34,8 @@ using t_key_values_ci = std::unordered_map< std::string, std::string, t_ci, t_ci
 // p_string must not be empty.
 bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_string );
 
-// Converts a std::string_view to an long. Returns 0 on error.
-long svtol( std::string_view p_string );
+// Converts a std::string_view to a long. Returns false on error.
+bool svtol( std::string_view p_string, long & p_value );
 
 // Remove leading and trailing white spaces (space, tabulations...) from string
 std::string_view trim( std::string_view p_string );

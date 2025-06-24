@@ -18,19 +18,21 @@ bool Options::set( const std::string & p_options )
     p_options,
     [ this ]( std::string_view key, std::string_view value )
     {
+      bool ok = true;
+      //
            if ( key == "accept_compression" )  m_accept_compression = ( value == "1" );
-      else if ( key == "connect_timeout"    )  m_connect_timeout    = svtol( value );
+      else if ( key == "connect_timeout"    )  ok                   = svtol( value, m_connect_timeout );
       else if ( key == "cookies"            )  m_cookies            = ( value == "1" );
       else if ( key == "follow_location"    )  m_follow_location    = ( value == "1" );
       else if ( key == "insecure"           )  m_insecure           = ( value == "1" );
-      else if ( key == "maxredirs"          )  m_maxredirs          = svtol( value );
+      else if ( key == "maxredirs"          )  ok                   = svtol( value, m_maxredirs );
       else if ( key == "proxy"              )  m_proxy              = value;
-      else if ( key == "timeout"            )  m_timeout            = svtol( value );
+      else if ( key == "timeout"            )  ok                   = svtol( value, m_timeout );
       else if ( key == "verbose"            )  m_verbose            = ( value == "1" );
       else
           return false;  // unhandled key
       //
-      return true;
+      return ok;
     } );
 }
 

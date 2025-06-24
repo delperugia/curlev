@@ -89,10 +89,22 @@ TEST( http_basic, cskv_error )
     code = http->GET( c_server_httpbun + "get" ).options("").authentication("").exec().get_code();
     EXPECT_EQ( code, 200 );
     //
-    code = http->GET( c_server_httpbun + "get" ).options( "alpha" ).exec().get_code();
+    code = http->GET( c_server_httpbun + "get" ).options( "alpha" ).exec().get_code(); // unknown
     EXPECT_EQ( code, c_error_options_format );
     //
-    code = http->GET( c_server_httpbun + "get" ).authentication( "beta" ).exec().get_code();
+    code = http->GET( c_server_httpbun + "get" ).options( "maxredirs" ).exec().get_code(); // no =
+    EXPECT_EQ( code, c_error_options_format );
+    //
+    code = http->GET( c_server_httpbun + "get" ).options( "maxredirs=" ).exec().get_code(); // no value
+    EXPECT_EQ( code, c_error_options_format );
+    //
+    code = http->GET( c_server_httpbun + "get" ).options( "maxredirs=x" ).exec().get_code(); // invalid value
+    EXPECT_EQ( code, c_error_options_format );
+    //
+    code = http->GET( c_server_httpbun + "get" ).authentication( "beta" ).exec().get_code(); // unknown
+    EXPECT_EQ( code, c_error_authentication_format );
+    //
+    code = http->GET( c_server_httpbun + "get" ).authentication( "mode=x" ).exec().get_code(); // unknown mode
     EXPECT_EQ( code, c_error_authentication_format );
     //
     code = http->GET( c_server_httpbun + "get" ).options( "maxredirs=-5" ).exec().get_code();
@@ -179,7 +191,7 @@ TEST( http_basic, get )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 1 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 0 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );  
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.args.a"), "11" );
   }
@@ -191,7 +203,7 @@ TEST( http_basic, get )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 2 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 0 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.args.a"  ), "21" );
     EXPECT_EQ( json_extract( http->get_body(), "$.args.bb" ), "23" );
@@ -204,7 +216,7 @@ TEST( http_basic, get )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 2 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 0 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );  
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.args.ax"), "31" );
     EXPECT_EQ( json_extract( http->get_body(), "$.args.bx"), "32" );
@@ -236,7 +248,7 @@ TEST( http_basic, post )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 2 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.form.a" ), "1" );
     EXPECT_EQ( json_extract( http->get_body(), "$.form.b" ), "2" );
@@ -252,7 +264,7 @@ TEST( http_basic, post )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 2 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 0 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.args.a" ), "1"  );
     EXPECT_EQ( json_extract( http->get_body(), "$.args.b" ), "2" );
@@ -268,7 +280,7 @@ TEST( http_basic, post )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 1 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 1 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.form.a" ), "1" );
     EXPECT_EQ( json_extract( http->get_body(), "$.args.b" ), "2" );
@@ -285,7 +297,7 @@ TEST( http_basic, post )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 1 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 2 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.form.b1" ), "1" );
     EXPECT_EQ( json_extract( http->get_body(), "$.form.b2" ), "3" );
@@ -308,7 +320,7 @@ TEST( http_basic, put_patch )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 2 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.form.a" ), "a1" );
     EXPECT_EQ( json_extract( http->get_body(), "$.form.b" ), "a2" );
@@ -321,7 +333,7 @@ TEST( http_basic, put_patch )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 1 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.form.a" ), "u1" );
   }
