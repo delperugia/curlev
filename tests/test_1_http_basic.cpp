@@ -342,6 +342,10 @@ TEST( http_basic, put_patch )
 }
 
 //--------------------------------------------------------------------
+#ifndef PROJECT_ROOT_DIR
+  #define PROJECT_ROOT_DIR "tests/"
+#endif
+
 TEST( http_basic, post_mime )
 {
   ASync async;
@@ -405,9 +409,9 @@ TEST( http_basic, post_mime )
     auto http = HTTP::create( async );
     auto code =
         http->POST( c_server_httpbun + "post" )
-            .add_mime_parameters( { ( mime::parameter{ "m21", "51" } ),
-                                    ( mime::parameter{ "m22", "52" } ),
-                                    ( mime::data     { "f21", "World", "text/html", "f21.txt" } ) } )
+            .add_mime_parameters( { mime::parameter{ "m21", "51" },
+                                    mime::parameter{ "m22", "52" },
+                                    mime::file     { "f21", PROJECT_ROOT_DIR "/tests/data.txt", "text/html", "f21.txt" } } )
             .add_query_parameters( { { "q23", "33" } } )
             .exec()
             .get_code();
@@ -420,9 +424,27 @@ TEST( http_basic, post_mime )
     EXPECT_EQ( json_extract( http->get_body(), "$.args.q23" ), "33" );
     EXPECT_EQ( json_extract( http->get_body(), "$.form.m21" ), "51" );
     EXPECT_EQ( json_extract( http->get_body(), "$.form.m22" ), "52" );
-    EXPECT_EQ( json_extract( http->get_body(), "$.files.f21.content"              ), "World" );
+    EXPECT_EQ( json_extract( http->get_body(), "$.files.f21.content"              ), "abc123" );
     EXPECT_EQ( json_extract( http->get_body(), "$.files.f21.filename"             ), "f21.txt" );
     EXPECT_EQ( json_extract( http->get_body(), "$.files.f21.headers.Content-Type" ), "text/html" );
+  }
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code =
+        http->POST( c_server_httpbun + "payload" )
+            .add_mime_parameters( { mime::alternatives{
+                                      mime::data{ "", "text", "text/plain", ""},
+                                      mime::data{ "", "html", "text/html" , ""}, },
+                                    mime::file     { "f21", PROJECT_ROOT_DIR "/tests/data.txt", "text/html", "f21.txt" } } )
+            .exec()
+            .get_code();
+    ASSERT_EQ( code, 200 );
+    //
+    EXPECT_TRUE( http->get_body().find( "multipart/alternative" ) != std::string::npos );
+    EXPECT_TRUE( http->get_body().find( "text"                  ) != std::string::npos );
+    EXPECT_TRUE( http->get_body().find( "html"                  ) != std::string::npos );
+    EXPECT_TRUE( http->get_body().find( "abc123"                ) != std::string::npos );
   }
   //
   async.stop();
