@@ -6,6 +6,7 @@ The only header to include is `curlev/http.hpp`.
 
 # Quickstart guide
 
+ - Include <curlev/http.hpp>
  - Instantiate a global `ASync` object
  - To do a request:
    - create an `HTTP` object using `HTTP::create()`
@@ -90,14 +91,14 @@ are available:
 - `options( opt_string )`:          set options
 - `certificates()`:                 set SSL certificates
 
-The `add_mime_parameters` method expects a vector of parameters and files
-to place in the MIME document that will be sent as the body of the request:
-
-- `HTTP::t_mime_parameter{ key, value }` are simple standard parameters
-- `HTTP::t_mime_file{ key, content_type, data, filename }` are attachments where
-  the uploaded data is associated to a file name (the data is not read from
-  the file, you have to provide the data to send). data is a std::string but
-  can hold binary data such as images.
+The `add_mime_parameters` method expects a vector of MIME parts:
+- `mime::parameter` to add a simple name/value parameter
+  - fields are: `name`, `value`
+- `mime::data`      to add data part, with an optional Content-Type and remote file name
+  - fields are: `name`, `data`, `content_type`, `filename`
+- `mime::file`      to read data from a file as a part, with an optional Content-Type and remote file name
+  - fields are: `name`, `filedata`, `content_type`, `filename`
+  - default `filename` is the base name of `filedata`
 
 # Adding authentication
 
@@ -280,9 +281,9 @@ Posting a MIME document:
 std::string data = read_file( "alice.jpg" );
 auto        code =
     http->POST( "http://www.httpbin.org/post" )
-        .add_mime_parameters( { ( HTTP::t_mime_parameter{ "name", "Alice" } ),
-                                ( HTTP::t_mime_parameter{ "role", "admin" } ),
-                                ( HTTP::t_mime_file     { "picture", "image/jpeg", data, "alice.jpg" } ) } )
+        .add_mime_parameters( { mime::parameter{ "name", "Alice" },
+                                mime::parameter{ "role", "admin" },
+                                mime::file     { "picture", "img/69073875.jpg", "image/jpeg", "alice.jpg" } } )
         .exec()
         .get_code();
 std::cout << code << " " << http->get_body() << std::endl;

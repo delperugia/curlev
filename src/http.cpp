@@ -190,12 +190,12 @@ HTTP & HTTP::add_body_parameters( const t_key_values & p_body_parameter )
 }
 
 //--------------------------------------------------------------------
-// Add MIME parameters.
+// Add MIME parts to th ebody of the request.
 // Only for a request without a raw body or parameters.
-HTTP & HTTP::add_mime_parameters( const t_mime_parts & p_mime_parts )
+HTTP & HTTP::add_mime_parameters( const mime::parts & p_parts )
 {
   if ( is_idle() )
-    m_request_mime.insert( m_request_mime.end(), p_mime_parts.begin(), p_mime_parts.end() );
+    m_request_mime.add_parts( p_parts );
   //
   return *this;
 }
@@ -212,10 +212,10 @@ std::string     HTTP::get_body        ( void ) const { return is_running() ? "" 
 // It is guaranteed that there is no operation running.
 bool HTTP::prepare_protocol( void )
 {
-  m_response_headers.clear();
+  m_response_headers     .clear();
   m_response_redirect_url.clear();
   m_response_content_type.clear();
-  m_response_body.clear();     
+  m_response_body        .clear();
   //
   m_request_headers.insert_or_assign( "Expect", "" ); // to prevent libcurl to send Expect
   //
@@ -255,7 +255,7 @@ void HTTP::finalize_protocol( void )
 //--------------------------------------------------------------------
 // Called by Wrapper when the user wants to reset the Protocol.
 // Clear all previous configuration before doing a new request.
-void HTTP::clear_protocol( void ) 
+void HTTP::clear_protocol( void )
 {
     release_curl_extras();
     //
@@ -279,7 +279,7 @@ void HTTP::clear_protocol( void )
 void HTTP::release_curl_extras( void )
 {
   curl_slist_free_all( m_curl_headers ); // ok on nullptr
-  curl_mime_free( m_curl_mime );         // ok on nullptr
+  curl_mime_free     ( m_curl_mime    ); // ok on nullptr
   m_curl_headers = nullptr;
   m_curl_mime    = nullptr;
 }
@@ -365,45 +365,6 @@ bool HTTP::fill_body( void )
 // Build the MIME body. MIME body can contain a list of regular parameters
 // (key / value) or files. p_mime_parameters contains a vector of variants.
 // Each variant represents either a parameter or a file.
-namespace
-{
-  // Add a MIME part containing a single parameter
-  bool add_mime_parameter( curl_mimepart * p_mime_part, const HTTP::t_mime_parameter & p_parameter )
-  {
-    const auto & [ name, value ] = p_parameter;
-    bool ok                      = true;
-    //
-    if ( ! name.empty() )
-      ok = ok && CURLE_OK == curl_mime_name( p_mime_part, name.c_str() );
-    //
-    if ( ! value.empty() )
-      ok = ok && CURLE_OK == curl_mime_data( p_mime_part, value.c_str(), value.length() );
-    //
-    return ok;
-  }
-
-  // Add a MIME part containing a document
-  bool add_mime_file( curl_mimepart * p_mime_part, const HTTP::t_mime_file & p_file )
-  {
-    const auto & [ name, type, data, filename ] = p_file;
-    bool ok                                     = true;
-    //
-    if ( ! name.empty() )
-      ok = ok && CURLE_OK == curl_mime_name    ( p_mime_part, name.c_str() );
-    //
-    if ( ! type.empty() )
-      ok = ok && CURLE_OK == curl_mime_type    ( p_mime_part, type.c_str() );
-    //
-    if ( ! data.empty() )
-      ok = ok && CURLE_OK == curl_mime_data    ( p_mime_part, data.data(), data.size() );
-    //
-    if ( ! filename.empty() )
-      ok = ok && CURLE_OK == curl_mime_filename( p_mime_part, filename.c_str() );
-    //
-    return ok;
-  }
-} // namespace
-
 bool HTTP::fill_body_mime( void )
 {
   curl_mime_free( m_curl_mime );
@@ -412,31 +373,7 @@ bool HTTP::fill_body_mime( void )
   bool ok = true;
   //
   ok = ok && m_curl_mime != nullptr;
-  //
-  if ( ok )
-  {
-    for ( const auto & parameter : m_request_mime )
-    {
-      curl_mimepart * mime_part = curl_mime_addpart( m_curl_mime );
-      //
-      ok = ok && mime_part != nullptr;
-      //
-      std::visit(
-          [ &ok, &mime_part ]( auto && part )
-          {
-            using T = std::decay_t< decltype( part ) >;
-            //
-            if constexpr ( std::is_same_v< T, t_mime_file > )
-              ok = ok && add_mime_file( mime_part, part );
-            else if constexpr ( std::is_same_v< T, t_mime_parameter > )
-              ok = ok && add_mime_parameter( mime_part, part );
-            else
-              ok = false;
-          },
-          parameter );
-    }
-  }
-  //
+  ok = ok && m_request_mime.apply( m_curl, m_curl_mime );
   ok = ok && easy_setopt( m_curl, CURLOPT_MIMEPOST, m_curl_mime ); // must be persistent
   //
   if ( ! ok )

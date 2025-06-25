@@ -351,7 +351,7 @@ TEST( http_basic, post_mime )
     auto http = HTTP::create( async );
     auto code =
         http->POST( c_server_httpbun + "post" )
-            .add_mime_parameters( { HTTP::t_mime_parameter{ "m1", "40" } } )
+            .add_mime_parameters( { mime::parameter{ "m1", "40" } } )
             .exec()
             .get_code();
     ASSERT_EQ( code, 200 );
@@ -367,8 +367,8 @@ TEST( http_basic, post_mime )
     auto http = HTTP::create( async );
     auto code =
         http->POST( c_server_httpbun + "post" )
-            .add_mime_parameters( { ( HTTP::t_mime_parameter{ "m2", "42" } ),
-                                    ( HTTP::t_mime_parameter{ "m3", "43" } ) } )
+            .add_mime_parameters( { mime::parameter{ "m2", "42" },
+                                    mime::parameter{ "m3", "43" } } )
             .add_query_parameters( { { "q4", "44" } } )
             .exec()
             .get_code();
@@ -387,7 +387,7 @@ TEST( http_basic, post_mime )
     auto http = HTTP::create( async );
     auto code =
         http->POST( c_server_httpbun + "post" )
-            .add_mime_parameters( { HTTP::t_mime_file{ "f1", "text/plain", "Hello!", "f1.txt" } } )
+            .add_mime_parameters( { mime::data{ "f1", "Hello!", "text/plain", "f1.txt" } } )
             .exec()
             .get_code();
     ASSERT_EQ( code, 200 );
@@ -405,9 +405,9 @@ TEST( http_basic, post_mime )
     auto http = HTTP::create( async );
     auto code =
         http->POST( c_server_httpbun + "post" )
-            .add_mime_parameters( { ( HTTP::t_mime_parameter{ "m21", "51" } ),
-                                    ( HTTP::t_mime_parameter{ "m22", "52" } ),
-                                    ( HTTP::t_mime_file     { "f21", "text/html", "World", "f21.txt" } ) } )
+            .add_mime_parameters( { ( mime::parameter{ "m21", "51" } ),
+                                    ( mime::parameter{ "m22", "52" } ),
+                                    ( mime::data     { "f21", "World", "text/html", "f21.txt" } ) } )
             .add_query_parameters( { { "q23", "33" } } )
             .exec()
             .get_code();

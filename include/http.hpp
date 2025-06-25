@@ -8,10 +8,9 @@
 #include <cstddef>
 #include <curl/curl.h>
 #include <string>
-#include <variant>
-#include <vector>
 
 #include "common.hpp"
+#include "mime.hpp"
 #include "wrapper.hpp"
 
 namespace curlev
@@ -28,15 +27,6 @@ namespace curlev
 class HTTP : public Wrapper< HTTP >
 {
 public:
-  // When sending a MIME document. MIME body can contain a list of regular parameters
-  // (key / value) or files. t_mime_parts is a vector of variants. Each variant
-  // represents either a parameter or a file. If filename of t_mime_file is not set,
-  // it behaves like a t_mime_parameter
-  using t_mime_parameter = std::tuple< std::string, std::string >; // name, value
-  using t_mime_file      = std::tuple< std::string, std::string, std::string, std::string >; // name, type, data, filename
-  using t_mime_part      = std::variant< t_mime_parameter, t_mime_file >;
-  using t_mime_parts     = std::vector< t_mime_part >;
-  //
   virtual ~HTTP();
   //
   // The first step is to call one of theses method:
@@ -69,8 +59,8 @@ public:
   // Add body parameters to the request. Only for requests [1] and [3]
   HTTP & add_body_parameters( const t_key_values & p_body_parameter );
   //
-  // Add MIME parameters. Only for requests [1]
-  HTTP & add_mime_parameters( const t_mime_parts & p_mime_parts );
+  // Add MIME part or parts. Only for requests [1]
+  HTTP & add_mime_parameters( const mime::parts & p_parts );
   //
   // Accessors to be used after a request
   t_key_values_ci get_headers     ( void ) const;
@@ -101,7 +91,7 @@ private:
   std::string     m_request_content_type;
   std::string     m_request_body;            // must be persistent (CURLOPT_POSTFIELDS)
   t_key_values    m_request_body_parameters; // has precedence over m_request_body
-  t_mime_parts    m_request_mime;            // has precedence over m_request_body and m_request_body_parameters
+  MIME            m_request_mime;            // has precedence over m_request_body and m_request_body_parameters
   //
   // Data retrieved from the request response
   t_key_values_ci m_response_headers;        // must be persistent (CURLOPT_HEADERDATA)

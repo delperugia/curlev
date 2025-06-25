@@ -34,7 +34,7 @@ template < typename Protocol > class Wrapper;
 class shared_mutex
 {
 public:
-  explicit shared_mutex() 
+  explicit shared_mutex()
   {
     m_initialized = pthread_rwlock_init( &m_lock, nullptr ) == 0;
   }
