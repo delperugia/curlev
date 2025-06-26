@@ -110,9 +110,11 @@ TEST( http_basic, cskv_error )
     code = http->GET( c_server_httpbun + "get" ).options( "maxredirs=-5" ).exec().get_code();
     EXPECT_EQ( code, c_error_options_set );
     //
+    #if LIBCURL_VERSION_NUM >= CURL_VERSION_BITS( 7, 65, 0 )
     std::string too_long = std::string( CURL_MAX_INPUT_LENGTH + 16, '*' );
     code = http->GET( c_server_httpbun + "get" ).authentication( "mode=basic,user=joe,secret="+too_long ).exec().get_code();
     EXPECT_EQ( code, c_error_authentication_set );
+    #endif
   }
   //
   async.stop();
