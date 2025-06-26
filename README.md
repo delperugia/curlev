@@ -71,6 +71,31 @@ int main( int argc, char ** argv )
 }
 ```
 
+The same using a `std::future`:
+
+```cpp
+#include <curlev/http.hpp>
+#include <iostream>
+
+using namespace curlev;
+
+int main( int argc, char ** argv )
+{
+  ASync async;
+  async.start();
+  //
+  auto future = HTTP::create( async )->GET( "http://www.httpbin.org/get", { { "id", "42" } } )
+                                      .launch();
+  //
+  int value;
+  std::cout << "Enter a number:" << std::endl;
+  std::cin >> value;
+  //
+  auto response = future.get();
+  std::cout << response.code << " " << response.body << std::endl;
+}
+```
+
 A request with callback, running detached:
 
 ```cpp

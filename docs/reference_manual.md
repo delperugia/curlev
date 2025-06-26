@@ -12,7 +12,7 @@ The only header to include is `curlev/http.hpp`.
    - create an `HTTP` object using `HTTP::create()`
    - call one of `GET()`, `DELETE()`, `POST()`, `PUT()` or `PATCH()`
    - optionally call `add_headers()`, `add_..._parameters()`, `options()`, `headers()`...
-   - call `exec()` (synchronous) or `start()`/`join()` (asynchronous)
+   - call `exec()` (synchronous), `start()`/`join()` (asynchronous), or `launch()` (future)
    - call the `get_...()` methods
 - Notes:
   - if used, the callback in `start()` must be as short as possible
@@ -182,7 +182,15 @@ Then call `join()` to wait for asynchronous request completion.
 Or the request can be started using the convenient method `exec()`,
 which executes the request synchronously (`start()` + `join()`).
 
-The callback is invoked before the `join()` is released.
+Or a `std::future` can be retrieved using `launch()`.
+
+While a request is running, all methods except `join()` are ignored
+(as a side effect `exec()` behaves like `join()`).
+
+## Callback
+
+If a callback is passed to `start()`, it is invoked before
+the `join()` is released.
 
 By default the callback is invoked from a separate thread. This prevents
 the main IO thread from being blocked while processing the callback, but
@@ -200,8 +208,6 @@ http->GET( "http://www.httpbin.org/get",
              ...
 ```
 
-While a request is running, all methods except `join()` and `exec()` are ignored.
-
 # Retrieving the response
 
 Once the request is finished, you can use:
@@ -210,6 +216,8 @@ Once the request is finished, you can use:
 - `get_headers()`:      get all response headers as a map with case insensitive keys
 - `get_content_type()`: get the received `Content-Type` header
 - `get_redirect_url()`: get the received `Location` header
+
+Or if a std::future was use, get() returns a structure with the same information.
 
 # Aborting a request
 
