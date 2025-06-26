@@ -47,7 +47,7 @@ bool Options::apply( CURL * p_curl ) const
   ok = ok && easy_setopt( p_curl, CURLOPT_CONNECTTIMEOUT_MS, m_connect_timeout                                );
   ok = ok && easy_setopt( p_curl, CURLOPT_COOKIEFILE       , m_cookies            ? "" : nullptr              );
   ok = ok && easy_setopt( p_curl, CURLOPT_FOLLOWLOCATION   , m_follow_location    ? 1L : 0L                   ); // follow 30x
-  ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYHOST   , m_insecure           ? 0L : 1L                   );
+  ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYHOST   , m_insecure           ? 0L : 2L                   );
   ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYPEER   , m_insecure           ? 0L : 1L                   );
   ok = ok && easy_setopt( p_curl, CURLOPT_MAXREDIRS        , m_maxredirs );
   ok = ok && easy_setopt( p_curl, CURLOPT_PROXY            , m_proxy.empty()      ? nullptr : m_proxy.c_str() );
