@@ -42,13 +42,13 @@ namespace
 {
   // The 4 functions to visit the variant mime::part and mime::alternative
 
-  bool read( CURL *, curl_mimepart * p_mime_part, const mime::parameter & p_parameter )
+  bool read_part( CURL *, curl_mimepart * p_mime_part, const mime::parameter & p_parameter )
   {
     return mime_name( p_mime_part, p_parameter.name  ) &&
            mime_data( p_mime_part, p_parameter.value );
   }
 
-  bool read( CURL *, curl_mimepart * p_mime_part, const mime::data & p_data )
+  bool read_part( CURL *, curl_mimepart * p_mime_part, const mime::data & p_data )
   {
     return mime_name    ( p_mime_part, p_data.name         ) &&
            mime_data    ( p_mime_part, p_data.data         ) &&
@@ -56,7 +56,7 @@ namespace
            mime_filename( p_mime_part, p_data.filename     );
   }
 
-  bool read( CURL *, curl_mimepart * p_mime_part, const mime::file & p_file )
+  bool read_part( CURL *, curl_mimepart * p_mime_part, const mime::file & p_file )
   {
     return mime_name    ( p_mime_part, p_file.name         ) &&
            mime_filedata( p_mime_part, p_file.filedata     ) &&
@@ -64,9 +64,9 @@ namespace
            mime_filename( p_mime_part, p_file.filename     );
   }
 
-  bool read( CURL * p_curl, curl_mimepart * p_mime_part, const mime::alternatives & parts )
+  bool read_part( CURL * p_curl, curl_mimepart * p_mime_part, const mime::alternatives & parts )
   {
-    curl_mime * alternative = curl_mime_init( p_curl );             // create a new alternative
+    curl_mime * alternative = curl_mime_init( p_curl );                 // create a new alternative
     //
     bool ok = true;
     //
@@ -74,12 +74,12 @@ namespace
     //
     for ( auto & part : parts )
     {
-      curl_mimepart * sub_part = curl_mime_addpart( alternative );  // add a part to the alternative
+      curl_mimepart * sub_part = curl_mime_addpart( alternative );      // add a part to the alternative
       //
       ok = ok && sub_part != nullptr;
       //
       std::visit( [ &ok, p_curl, sub_part ]( auto visited ) {
-                    ok = ok && read( p_curl, sub_part, visited );   // and read the part
+                    ok = ok && read_part( p_curl, sub_part, visited );  // and read the part
                   },
                   part );
     }
@@ -100,12 +100,12 @@ bool MIME::apply( CURL * p_curl, curl_mime * p_curl_mime ) const
   //
   for ( auto & part : m_parts )
   {
-    curl_mimepart * mime_part = curl_mime_addpart( p_curl_mime ); // create a part
+    curl_mimepart * mime_part = curl_mime_addpart( p_curl_mime );     // create a part
     //
     ok = ok && mime_part != nullptr;
     //
     std::visit( [ &ok, p_curl, mime_part ]( auto visited ) {
-                  ok = ok && read( p_curl, mime_part, visited );  // and read it
+                  ok = ok && read_part( p_curl, mime_part, visited ); // and read it
                 },
                 part );
   }

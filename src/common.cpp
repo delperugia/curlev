@@ -82,26 +82,26 @@ bool svtol( std::string_view p_string, long & p_value )
 {
   unsigned long value    = 0;
   bool          negative = false;
-  auto          read     = p_string.data();
+  auto          current  = p_string.data();
   auto          last     = p_string.data() + p_string.size();
   //
-  if ( read < last && *read == '-' )
+  if ( current < last && *current == '-' )
   {
     negative = true;
-    read++;
+    current++;
   }
   //
-  if ( read == last ) // p_string is "-" or ""
+  if ( current == last ) // p_string is "-" or ""
     return false;
   //
-  while ( read < last && isdigit( *read ) )
+  while ( current < last && isdigit( *current ) )
   {
-    value = value * 10 + ( *read++ - '0' );
+    value = value * 10 + ( *current++ - '0' );
     if ( value > std::numeric_limits< long >::max() )
       return false; // overflow
   }
   //
-  if ( read < last ) // non digit found in p_string
+  if ( current < last ) // non digit found in p_string
     return false;
   //
   p_value = negative ? -value : value;
