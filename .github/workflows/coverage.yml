@@ -20,26 +20,27 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-  
+
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake lcov \
                                   pkg-config libcurl4-openssl-dev libuv1-dev \
                                   libgtest-dev nlohmann-json3-dev
-  
+
       - name: Build
         run: |
           cmake -B         build/  -DCMAKE_BUILD_TYPE=Debug
           cmake --build    build/
-  
+
       - name: Test and coverage
         run: |
           ctest --test-dir build/ -T test -T coverage --output-on-failure
           lcov --capture \
                --directory build/src/ \
                --include '*/curlev/src/*' --include '*/curlev/include/*' \
-               --output-file build/coverage.info 
+               --exclude='*/curlev/include/wrapper.hpp' \
+               --output-file build/coverage.info
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5

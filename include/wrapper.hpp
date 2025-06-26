@@ -250,7 +250,6 @@ class Wrapper: public WrapperBase
     }
     //
     // Called by ASync when the asynchronous transfer is finished
-    // LCOV_EXCL_START - template virtual not detected by coverage, called by ASync for all requests
     void async_cb( long p_result ) override
     {
       m_response_code = p_result; // before finalize, in case the Protocol needs it
@@ -270,17 +269,14 @@ class Wrapper: public WrapperBase
         m_exec_cv.notify_one(); // releases the join(): request is now terminated
       }
     }
-    // LCOV_EXCL_STOP
     //
     // Is async_cb called in ASync uv thread (false) or a dedicated thread (true)
     // If there is no user CB (only our async_cb code), consider that it is fast
     // enough and don't use an extra thread.
-    // LCOV_EXCL_START - template virtual not detected by coverage, called by ASync for all requests
     bool use_threaded_cb( void ) const override
     {
       return m_user_cb_threaded && m_user_cb != nullptr;
     }
-    // LCOV_EXCL_STOP
     //
     // When starting, the Protocol configures the easy handle
     virtual bool prepare_protocol( void ) = 0;
@@ -292,7 +288,6 @@ class Wrapper: public WrapperBase
     virtual void clear_protocol( void ) = 0;
     //
     // Invoke the Protocol user's callback, clear m_user_cb
-    // LCOV_EXCL_START - template virtual not detected by coverage, called by async_cb() for all requests
     void cb_protocol( void )
     {
       try
@@ -307,7 +302,6 @@ class Wrapper: public WrapperBase
       {
       }
     }
-    // LCOV_EXCL_STOP
     //
     // Request is just created or terminated
     bool is_idle( void ) const
