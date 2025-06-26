@@ -296,3 +296,27 @@ TEST( http_complex, threaded_mode )
     EXPECT_TRUE( done );
   }
 }
+
+//--------------------------------------------------------------------
+// Validate the p_query_parameters handling in requests without body
+TEST( http_complex, two_start )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    bool cb1  = false;
+    bool cb2  = false;
+    auto http = HTTP::create( async );
+    //
+    http->GET( c_server_httpbun + "get" ).start( [ &cb1 ]( const auto & http ) { cb1 = true; } );
+    http->GET( c_server_httpbun + "get" ).start( [ &cb2 ]( const auto & http ) { cb2 = true; } );
+    //
+    http->join();
+    //
+    EXPECT_TRUE( cb1 );
+    EXPECT_FALSE( cb2 );
+  }
+  //
+  async.stop();
+}
