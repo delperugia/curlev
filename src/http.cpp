@@ -213,6 +213,7 @@ std::future< HTTP::Response > HTTP::launch( void )
   auto promise = std::make_shared< std::promise< HTTP::Response > >();
   auto future  = promise->get_future();
   //
+  threaded_callback( false ). // because the callback in start() is fast
   start(
       [ promise ]( const auto & http )
       {
