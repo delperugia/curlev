@@ -183,6 +183,8 @@ Or the request can be started using the convenient method `exec()`,
 which executes the request synchronously (`start()` + `join()`).
 
 Or a `std::future` can be retrieved using `launch()`.
+Note that because the response is copied to the future,
+it is less efficient than using `start()` + `join()` or `exec()`
 
 While a request is running, all methods except `join()` are ignored
 (as a side effect `exec()` behaves like `join()`).
