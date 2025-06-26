@@ -104,10 +104,13 @@ class Wrapper: public WrapperBase
       {
         std::lock_guard lock( m_exec_mutex );
         //
-        if ( m_exec_state == State::idle && m_response_code == c_success )
+        if ( m_exec_state != State::idle )              // already running: do nothing at all
+          return static_cast< Protocol & >( *this );
+        //
+        m_user_cb = p_user_cb;                          // will be cleared by cb_protocol (below or in async_cb)
+        //
+        if ( m_response_code == c_success )             // initialization succeeded
         {
-          m_user_cb = p_user_cb; // will be cleared by cb_protocol (below or in async_cb) 
-          //
           if ( prepare_protocol() && prepare_local() )  // set m_response_code on error
           {
             if ( auto self = m_self_weak.lock() )       // must succeed since we are invoked
@@ -126,7 +129,7 @@ class Wrapper: public WrapperBase
         }
       }
       //
-      cb_protocol( static_cast< Protocol & >( *this ) ); // invoke user's callback (outside of the lock), clear m_user_cb
+      cb_protocol(); // invoke user's callback (outside of the lock), clear m_user_cb
       //
       return static_cast< Protocol & >( *this );
     }
@@ -259,7 +262,7 @@ class Wrapper: public WrapperBase
         m_exec_state = State::finished; // transfer is now finished, received data can be read
       }
       //
-      cb_protocol( static_cast< Protocol & >( *this ) ); // invokes user's callback, clear m_user_cb
+      cb_protocol(); // invokes user's callback, clear m_user_cb
       //
       {
         std::lock_guard lock( m_exec_mutex );
@@ -288,15 +291,15 @@ class Wrapper: public WrapperBase
     // When doing a clear() to reset the Protocol options
     virtual void clear_protocol( void ) = 0;
     //
-    // Invoke the Protocol user's callback
+    // Invoke the Protocol user's callback, clear m_user_cb
     // LCOV_EXCL_START - template virtual not detected by coverage, called by async_cb() for all requests
-    void cb_protocol( const Protocol & p_protocol )
+    void cb_protocol( void )
     {
       try
       {
         if ( m_user_cb != nullptr )
         {
-          m_user_cb( p_protocol ); // pass as const: the user can't restart a transfer
+          m_user_cb( static_cast< const Protocol & >( *this ) ); // pass as const: the user can't restart a transfer
           m_user_cb = nullptr;
         }
       }
