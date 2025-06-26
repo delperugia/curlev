@@ -128,12 +128,6 @@ TEST( http_basic, method_equivalence )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->exec().get_code();
-    //
-    EXPECT_EQ( code, c_error_http_method_set );
-  }
-  {
-    auto http = HTTP::create( async );
     auto code = http->DELETE( c_server_httpbun + "delete" ).exec().get_code();
     //
     EXPECT_EQ( code, 200 );
@@ -445,6 +439,44 @@ TEST( http_basic, post_mime )
     EXPECT_TRUE( http->get_body().find( "text"                  ) != std::string::npos );
     EXPECT_TRUE( http->get_body().find( "html"                  ) != std::string::npos );
     EXPECT_TRUE( http->get_body().find( "abc123"                ) != std::string::npos );
+  }
+  //
+  async.stop();
+}
+
+//--------------------------------------------------------------------
+// Validate the p_query_parameters handling in requests without body
+TEST( http_basic, launch )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto future =
+        HTTP::create( async )->GET( c_server_httpbun + "get", { { "a", "11" } } )
+                              .launch();
+    //
+    auto response = future.get();
+    //
+    ASSERT_EQ( response.code, 200 );
+    EXPECT_EQ( json_extract( response.body, "$.args.a" ), "11" );
+  }
+  //
+  {
+    auto future1 =
+        HTTP::create( async )->GET( c_server_httpbun + "get", { { "a", "21" } } )
+                              .launch();
+    auto future2 =
+        HTTP::create( async )->GET( c_server_httpbun + "get", { { "a", "22" } } )
+                              .launch();
+    //
+    auto response2 = future2.get();
+    auto response1 = future1.get();
+    //
+    EXPECT_EQ( response1.code, 200 );
+    EXPECT_EQ( json_extract( response1.body, "$.args.a" ), "21" );
+    EXPECT_EQ( response2.code, 200 );
+    EXPECT_EQ( json_extract( response2.body, "$.args.a" ), "22" );
   }
   //
   async.stop();

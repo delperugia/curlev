@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <curl/curl.h>
+#include <future>
 #include <string>
 
 #include "common.hpp"
@@ -63,10 +64,24 @@ public:
   HTTP & add_mime_parameters( const mime::parts & p_parts );
   //
   // Accessors to be used after a request
-  t_key_values_ci get_headers     ( void ) const;
-  std::string     get_content_type( void ) const;
-  std::string     get_redirect_url( void ) const;
-  std::string     get_body        ( void ) const;
+  t_key_values_ci get_headers     ( void ) const noexcept;
+  std::string     get_content_type( void ) const noexcept;
+  std::string     get_redirect_url( void ) const noexcept;
+  std::string     get_body        ( void ) const noexcept;
+  //
+  // Convenient function starting the request and returning a future.
+  // If using launch(), the Wrapper functions start() and join() must not
+  // be used.
+  struct Response
+  {
+    long            code;
+    t_key_values_ci headers;
+    std::string     redirect_url;
+    std::string     content_type;
+    std::string     body;
+  };
+  //
+  std::future< Response > launch( void );
   //
 protected:
   // Prevent creating directly an instance of the class, the Wrapper::create() method must be used

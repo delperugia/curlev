@@ -21,6 +21,13 @@ TEST( http_advanced, results )
   //
   {
     auto http = HTTP::create( async );
+    auto code = http->exec().get_code();
+    //
+    EXPECT_EQ( code, c_error_http_method_set );
+  }
+  //
+  {
+    auto http = HTTP::create( async );
     auto code =
         http->GET( c_server_httpbun + "delay/2" )
             .options( "timeout=500" )
@@ -115,7 +122,7 @@ TEST( http_advanced, post_json )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 0 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.headers.Content-Type" ), "application/json" );
     EXPECT_EQ( json_extract( http->get_body(), "$.data" ), payload );
@@ -133,7 +140,7 @@ TEST( http_advanced, post_json )
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 2 );
     EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 0 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 ); 
+    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
     //
     EXPECT_EQ( json_extract( http->get_body(), "$.headers.Content-Type" ), "application/json" );
     EXPECT_EQ( json_extract( http->get_body(), "$.data" ), payload );
@@ -205,7 +212,7 @@ TEST( http_advanced, certificates )
   //
   async.stop();
 }
-  
+
 //--------------------------------------------------------------------
 // 2nd request attempted while the 1st is running
 TEST( http_advanced, while_running )

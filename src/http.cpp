@@ -202,10 +202,32 @@ HTTP & HTTP::add_mime_parameters( const mime::parts & p_parts )
 
 //--------------------------------------------------------------------
 // Accessors to be used after a request
-t_key_values_ci HTTP::get_headers     ( void ) const { return is_running() ? t_key_values_ci() : m_response_headers;      }
-std::string     HTTP::get_content_type( void ) const { return is_running() ? ""                : m_response_content_type; }
-std::string     HTTP::get_redirect_url( void ) const { return is_running() ? ""                : m_response_redirect_url; }
-std::string     HTTP::get_body        ( void ) const { return is_running() ? ""                : m_response_body;         }
+t_key_values_ci HTTP::get_headers     ( void ) const noexcept { return is_running() ? t_key_values_ci() : m_response_headers;      }
+std::string     HTTP::get_content_type( void ) const noexcept { return is_running() ? ""                : m_response_content_type; }
+std::string     HTTP::get_redirect_url( void ) const noexcept { return is_running() ? ""                : m_response_redirect_url; }
+std::string     HTTP::get_body        ( void ) const noexcept { return is_running() ? ""                : m_response_body;         }
+
+//--------------------------------------------------------------------
+std::future< HTTP::Response > HTTP::launch( void )
+{
+  auto promise = std::make_shared< std::promise< HTTP::Response > >();
+  auto future  = promise->get_future();
+  //
+  start(
+      [ promise ]( const auto & http )
+      {
+        Response response;
+        response.code         = http.get_code();
+        response.headers      = http.get_headers();
+        response.redirect_url = http.get_redirect_url();
+        response.content_type = http.get_content_type();
+        response.body         = http.get_body();
+        //
+        promise->set_value( response );
+      } );
+  //
+  return future;
+}
 
 //--------------------------------------------------------------------
 // Called by Wrapper before starting a request.
