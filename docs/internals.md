@@ -103,6 +103,10 @@ to retrieve protocol specific details.
 
 # Comparisons with other libraries
 
+[Async++ CURL](https://github.com/asyncpp/asyncpp-curl) is not really
+asynchronous, is coroutine based, and has a limited documentation.
+Its multi interface doesn't allow to add handle while it run (marked TODO).
+
 [cpr](https://github.com/libcpr/cpr) is succinct but uses std::async and a pool
 of threads for callbacks, which can lead to a large number of threads
 (number of cores by default).
@@ -110,22 +114,22 @@ The multi interface can only be used to run a batch of queries, it is not
 possible to add session while Perform is running, and the results are returned
 once all requests are terminated.
 
+[curl-multi-asio](https://github.com/MrElectrify/curl-multi-asio) doesn't
+really support asynchronous operations, as it "don'ts like adding an
+easy handle while it's already processing".
+
 [curlcpp](https://github.com/JosephP91/curlcpp) is exhaustive but low-level
 and verbose: a simple request requires numerous lines of call. There is
 no real asynchronous model and using the multi interface is not thread
 safe, not allowing to add easy handle while another thread loops on perform
 (beside the fact that you have to manage that thread and do the polling).
 
+[liblifthttp](https://github.com/jbaldwin/liblifthttp) has a nice API
+with both synchronous and asynchronous, detached asynchronous...
+but is slow and requests were failing when too numerous.
+
 [restclient-cpp](https://github.com/mrtazz/restclient-cpp) doesn't have
 asynchronous functions.
-
-[Async++ CURL](https://github.com/asyncpp/asyncpp-curl) is not really
-asynchronous, is coroutine based, and has a limited documentation.
-Its multi interface doesn't allow to add handle while it run (marked TODO).
-
-[curl-multi-asio](https://github.com/MrElectrify/curl-multi-asio) doesn't
-really support asynchronous operations, as it "don'ts like adding an
-easy handle while it's already processing".
 
 ## Performances
 
@@ -134,7 +138,7 @@ The following table shows the timing of an application starting
 code and incrementing two atomic counters (on a 4c8t CPU):
 
 Config                 | Starting | Waiting  |    Total | CPU usage | RSS
------------------------|----------|----------|----------|-----------|-----------
+-----------------------|---------:|---------:|---------:|----------:|----------:
 asyncpp-curl           |  6.536 s |  0.061 s |  6.597 s |      122% | 363'860 KB
 cpr                    |  0.079 s |  2.957 s |  3.036 s |      405% |  29'577 KB
 cpr [1 thread]         |  0.029 s | 12.993 s | 13.021 s |       75% |  27'352 KB
@@ -143,15 +147,18 @@ curlev [unthreaded CB] |  3.186 s |  0.001 s |  3.187 s |       90% |  15'177 KB
 
 `curlev` was doing around 75 simultaneous requests, and `cpr` 80.
 
-For reference, the multi models of `curlcpp`, `curl-multi-asio` and `cpr` were
-tested, and despite increasing the OS limits, it was not possible to go higher
+For reference,
+the multi models of `curlcpp`, `curl-multi-asio` and `cpr` were tested,
+and also the attempt with `liblifthttp`,
+but despite increasing the OS limits, it was not possible to go higher
 than 30K asynchronous calls:
 
-Config               | Starting |  Waiting  |   Total | CPU usage | RSS
----------------------|----------|-----------|---------|-----------|-----------
-cpr multi            |  0.170 s | 163.301 s | 163.471 |      100% | 550'320 KB
-curl-multi-asio      |  0.116 s |  99.986 s | 100.102 |       99% | 538'164 KB
-curlcpp              |  0.381 s |  44.966 s |  45.347 |       99% | 625'204 KB
+Config               | Starting |  Waiting  |     Total | CPU usage | RSS
+---------------------|---------:|----------:|----------:|----------:|----------:
+cpr multi            |  0.170 s | 163.301 s | 163.471 s |      100% | 550'320 KB
+curl-multi-asio      |  0.116 s |  99.986 s | 100.102 s |       99% | 538'164 KB
+curlcpp              |  0.381 s |  44.966 s |  45.347 s |       99% | 625'204 KB
+liblifthttp          |  0.024 s | 104.005 s | 104.029 s |       99% | 528'128 KB
 
 The slowest part in `curlev` was the `start()` function because `ASync::start_request()`
 needs to wait `m_uv_run_mutex` which is only unlocked for a short period of time
