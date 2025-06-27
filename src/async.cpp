@@ -834,7 +834,13 @@ void ASync::invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_
   if ( p_wrapper == nullptr || ! ( *p_wrapper ) ) // cannot happen
     return;
   //
-  ( *p_wrapper )->async_cb( p_result_code ); // call Protocol
+  try
+  {
+    ( *p_wrapper )->async_cb( p_result_code ); // call Protocol
+  }
+  catch ( ... )
+  {
+  }
   //
   m_nb_running_requests--;
   //
