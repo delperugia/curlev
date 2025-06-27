@@ -12,27 +12,27 @@ namespace curlev
 //--------------------------------------------------------------------
 // Expect a CSKV list of credential details. Example:
 //   sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret
-bool Certificates::set( const std::string & p_options )
+bool Certificates::set( const std::string & p_cskv )
 {
   return parse_cskv(
-    p_options,
+    p_cskv,
     [ this ]( std::string_view key, std::string_view value )
     {
-           if ( key == "engine"            ) m_engine            = value;  
-      else if ( key == "sslcert"           ) m_sslcert           = value;    
-      else if ( key == "sslcerttype"       ) m_sslcerttype       = value;        
-      else if ( key == "sslkey"            ) m_sslkey            = value;  
-      else if ( key == "sslkeytype"        ) m_sslkeytype        = value;      
-      else if ( key == "keypasswd"         ) m_keypasswd         = value;      
-      else if ( key == "cainfo"            ) m_cainfo            = value;  
-      else if ( key == "capath"            ) m_capath            = value;  
-      else if ( key == "proxy_sslcert"     ) m_proxy_sslcert     = value;          
-      else if ( key == "proxy_sslcerttype" ) m_proxy_sslcerttype = value;              
-      else if ( key == "proxy_sslkey"      ) m_proxy_sslkey      = value;        
-      else if ( key == "proxy_sslkeytype"  ) m_proxy_sslkeytype  = value;            
-      else if ( key == "proxy_keypasswd"   ) m_proxy_keypasswd   = value;            
-      else if ( key == "proxy_cainfo"      ) m_proxy_cainfo      = value;        
-      else if ( key == "proxy_capath"      ) m_proxy_capath      = value;        
+           if ( key == "engine"            ) m_engine            = value;
+      else if ( key == "sslcert"           ) m_sslcert           = value;
+      else if ( key == "sslcerttype"       ) m_sslcerttype       = value;
+      else if ( key == "sslkey"            ) m_sslkey            = value;
+      else if ( key == "sslkeytype"        ) m_sslkeytype        = value;
+      else if ( key == "keypasswd"         ) m_keypasswd         = value;
+      else if ( key == "cainfo"            ) m_cainfo            = value;
+      else if ( key == "capath"            ) m_capath            = value;
+      else if ( key == "proxy_sslcert"     ) m_proxy_sslcert     = value;
+      else if ( key == "proxy_sslcerttype" ) m_proxy_sslcerttype = value;
+      else if ( key == "proxy_sslkey"      ) m_proxy_sslkey      = value;
+      else if ( key == "proxy_sslkeytype"  ) m_proxy_sslkeytype  = value;
+      else if ( key == "proxy_keypasswd"   ) m_proxy_keypasswd   = value;
+      else if ( key == "proxy_cainfo"      ) m_proxy_cainfo      = value;
+      else if ( key == "proxy_capath"      ) m_proxy_capath      = value;
       else
           return false;  // unhandled key
       //
@@ -102,24 +102,24 @@ bool Certificates::apply( CURL * p_curl ) const
 // Reset credential to its default value
 // libcurl doesn't reset the CA keys to their default values when setting nullptr,
 // so we always restore the values captured during startup (by ASync).
-// Before libcurl 7.84.0 it was not possible to retrieve them. 
+// Before libcurl 7.84.0 it was not possible to retrieve them.
 void Certificates::set_default( const std::string & p_ca_info, const std::string & p_ca_path )
 {
-  m_engine           .clear();                                    
-  m_sslcert          .clear();                       
-  m_sslcerttype      .clear();                           
-  m_sslkey           .clear();                    
-  m_sslkeytype       .clear();                        
-  m_keypasswd        .clear();                         
-  m_cainfo           .clear();                    
-  m_capath           .clear();                    
-  m_proxy_sslcert    .clear();                             
-  m_proxy_sslcerttype.clear();                                 
-  m_proxy_sslkey     .clear();                          
-  m_proxy_sslkeytype .clear();                              
-  m_proxy_keypasswd  .clear();                               
-  m_proxy_cainfo     .clear();                          
-  m_proxy_capath     .clear();                          
+  m_engine           .clear();
+  m_sslcert          .clear();
+  m_sslcerttype      .clear();
+  m_sslkey           .clear();
+  m_sslkeytype       .clear();
+  m_keypasswd        .clear();
+  m_cainfo           .clear();
+  m_capath           .clear();
+  m_proxy_sslcert    .clear();
+  m_proxy_sslcerttype.clear();
+  m_proxy_sslkey     .clear();
+  m_proxy_sslkeytype .clear();
+  m_proxy_keypasswd  .clear();
+  m_proxy_cainfo     .clear();
+  m_proxy_capath     .clear();
   //
   m_ca_info_default = p_ca_info;
   m_ca_path_default = p_ca_path;

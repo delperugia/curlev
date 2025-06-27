@@ -89,18 +89,47 @@ are available:
 - `add_headers( headers )`:         add headers
 - `authentication( auth_string )`:  set authentication
 - `options( opt_string )`:          set options
-- `certificates()`:                 set SSL certificates
+- `certificates( cert_string )`:    set SSL certificates
+
+## Adding headers and parameters
+
+`add_headers()`, `add_query_parameters()` and `add_body_parameters()`
+expect an unordered map of keys/parameters and values: `std::unordered_map< std::string, std::string >`:
+
+```cpp
+add_headers( { { "Accept"         , "text/html" },
+               { "Accept-Language", "en-US"     } } ).
+add_query_parameters( { { "p1", "1" },
+                        { "p2", "2" } } )
+```
+
+`add_query_parameters()` will add them as query parameters in the URL,
+`add_body_parameters()` in the request body as `application/x-www-form-urlencoded`.
+
+## Adding MIME parts
 
 The `add_mime_parameters` method expects a vector of MIME parts:
 - `mime::parameter` to add a simple name/value parameter
   - fields are: `name`, `value`
+```cpp
+add_mime_parameters( { mime::parameter{ "p1", "1" },
+                       mime::parameter{ "p2", "2" } } )
+```
 - `mime::data`      to add data part, with an optional Content-Type and remote file name
   - fields are: `name`, `data`, `content_type`, `filename`
+```cpp
+add_mime_parameters( { mime::parameter{ "p1", "1" },
+                       mime::data     { "p2", "Hello, world!", "text/plain", "f.txt" } } )
+```
 - `mime::file`      to read data from a file as a part, with an optional Content-Type and remote file name
   - fields are: `name`, `filedata`, `content_type`, `filename`
   - default `filename` is the base name of `filedata`
+```cpp
+add_mime_parameters( { mime::parameter{ "p1", "1" },
+                       mime::file     { "p2", "/tmp/uZ7hHC2", "text/plain", "f.txt" } } )
+```
 
-# Adding authentication
+## Adding authentication
 
 The string expected by the `authentication()` is a key-value comma
 separated string with the following keys available:
@@ -115,7 +144,7 @@ For example:
 - mode=basic,user=joe,secret=abc123
 - mode=bearer,secret=ABCDEFHIJKLMNOQRSTUVWXYZ
 
-# Setting options
+## Setting options
 
 The string expected by the `options()` is a key-value comma
 separated string with the following keys available:
@@ -142,7 +171,7 @@ Notes:
 - cookies:            no initial file is specified when activated
 - proxy:              see https://curl.se/libcurl/c/CURLOPT_PROXY.html
 
-# Setting certificates
+## Setting certificates
 
 The string expected by the `certificates()` is a key-value comma
 separated string with the following keys available:
@@ -219,7 +248,7 @@ Once the request is finished, you can use:
 - `get_content_type()`: get the received `Content-Type` header
 - `get_redirect_url()`: get the received `Location` header
 
-Or if a std::future was use, get() returns a structure with the same information.
+Or if a `std::future` was used, `get()` returns a structure with the same information.
 
 # Aborting a request
 

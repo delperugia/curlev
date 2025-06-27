@@ -21,7 +21,7 @@ public:
   // Expect a CSKV list of certificate parameters. Example:
   //   sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret
   // See the reference manual for a complete description.
-  bool set( const std::string & p_options );
+  bool set( const std::string & p_cskv );
   //
   // Apply credential to curl easy handle
   bool apply( CURL * p_curl ) const;

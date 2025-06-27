@@ -12,10 +12,10 @@ namespace curlev
 //--------------------------------------------------------------------
 // Expect a CSKV list of options to set. Example:
 //   follow_location=1,insecure=1
-bool Options::set( const std::string & p_options )
+bool Options::set( const std::string & p_cskv )
 {
   return parse_cskv(
-    p_options,
+    p_cskv,
     [ this ]( std::string_view key, std::string_view value )
     {
       bool ok = true;

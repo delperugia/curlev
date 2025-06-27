@@ -33,7 +33,7 @@ public:
   //   proxy                       string        the SOCKS or HTTP URl to a proxy
   //   timeout            30000    milliseconds  receive data timeout
   //   verbose            false    0 or 1        debug log on console
-  bool set( const std::string & p_options );
+  bool set( const std::string & p_cskv );
   //
   // Apply options to curl easy handle
   bool apply( CURL * p_curl ) const;

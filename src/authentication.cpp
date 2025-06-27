@@ -12,10 +12,10 @@ namespace curlev
 //--------------------------------------------------------------------
 // Expect a CSKV list of credential details. Example:
 //   mode=basic,user=joe,secret=abc123
-bool Authentication::set( const std::string& p_options )
+bool Authentication::set( const std::string& p_cskv )
 {
   return parse_cskv(
-    p_options,
+    p_cskv,
     [ this ]( std::string_view key, std::string_view value )
     {
       if ( key == "mode" )

@@ -121,10 +121,11 @@ std::string_view trim( std::string_view p_string )
 //--------------------------------------------------------------------
 // Parse a key-value comma-separated string (CSKV) and call the handler for each pair.
 // The handler must return false if the key-value pair is invalid.
-bool parse_cskv( const std::string &                                                               p_options,
-                 const std::function< bool( std::string_view p_key, std::string_view p_value ) > & p_handler )
+bool parse_cskv(
+    const std::string &                                                               p_cskv,
+    const std::function< bool( std::string_view p_key, std::string_view p_value ) > & p_handler )
 {
-  std::istringstream iss( p_options );
+  std::istringstream iss( p_cskv );
   std::string        token;
   //
   while ( std::getline( iss, token, ',' ) )

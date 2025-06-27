@@ -25,7 +25,7 @@ public:
   //   mode       basic, digest or bearer
   //   user       for basic and digest only: user login
   //   secret     password or token
-  bool set( const std::string & p_options );
+  bool set( const std::string & p_cskv );
   //
   // Apply credential to curl easy handle
   bool apply( CURL * p_curl ) const;
