@@ -190,7 +190,7 @@ HTTP & HTTP::add_body_parameters( const t_key_values & p_body_parameter )
 }
 
 //--------------------------------------------------------------------
-// Add MIME parts to th ebody of the request.
+// Add MIME parts to the body of the request.
 // Only for a request without a raw body or parameters.
 HTTP & HTTP::add_mime_parameters( const mime::parts & p_parts )
 {
@@ -421,16 +421,19 @@ std::string HTTP::encode_parameters( const t_key_values & p_parameters )
   //
   for ( const auto & [ key, value ] : p_parameters )
   {
-    char * enc_key = curl_easy_escape( m_curl, key  .c_str(), 0 );
-    char * enc_val = curl_easy_escape( m_curl, value.c_str(), 0 );
+    char * enc_key = curl_easy_escape( m_curl, key  .c_str(), key  .length() );
+    char * enc_val = curl_easy_escape( m_curl, value.c_str(), value.length() );
     //
-    if ( ! encoded.empty() )
-      encoded += "&";
+    if ( enc_key != nullptr && enc_val != nullptr )
+    {
+      if ( ! encoded.empty() )
+        encoded += "&";
+      //
+      encoded += enc_key + std::string( "=" ) + enc_val;
+    }
     //
-    encoded += enc_key + std::string( "=" ) + enc_val;
-    //
-    curl_free( enc_key );
-    curl_free( enc_val );
+    curl_free( enc_key ); // ok on nullptr
+    curl_free( enc_val ); // ok on nullptr
   }
   //
   return encoded;
@@ -448,7 +451,7 @@ std::string HTTP::url_with_parameters(
   std::string new_url        = p_url;
   std::string url_parameters = encode_parameters( p_parameters );
   //
-  if ( size_t pos = p_url.find_last_of( '?' ); pos == std::string::npos )
+  if ( size_t pos = p_url.find( '?' ); pos == std::string::npos )
     new_url += "?" + url_parameters;
   else
     new_url += "&" + url_parameters;
