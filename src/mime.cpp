@@ -87,6 +87,9 @@ namespace
     ok = ok && CURLE_OK == curl_mime_type    ( p_mime_part, "multipart/alternative" );
     ok = ok && CURLE_OK == curl_mime_subparts( p_mime_part, alternative );
     //
+    if ( ! ok )
+      curl_mime_free( alternative ); // ok on nullptr
+    //
     return ok;
   }
 } // namespace
