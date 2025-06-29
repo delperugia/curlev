@@ -201,13 +201,15 @@ namespace
       char * cainfo = nullptr;
       char * capath = nullptr;
       //
-      bool ok = ( curl_easy_getinfo( curl, CURLINFO_CAINFO, &cainfo ) == CURLE_OK && cainfo ) &&
-                ( curl_easy_getinfo( curl, CURLINFO_CAPATH, &capath ) == CURLE_OK && capath );
+      // On Windows CURLINFO_CAPATH ( and possibly CURLINFO_CAINFO) may
+      // not be defined: curl_easy_getinfo returns CURLE_OK, but path remains NULL.
+      bool ok = ( curl_easy_getinfo( curl, CURLINFO_CAINFO, &cainfo ) == CURLE_OK ) &&
+                ( curl_easy_getinfo( curl, CURLINFO_CAPATH, &capath ) == CURLE_OK );
       //
       if ( ok )
       {
-        p_info = cainfo;
-        p_path = capath;
+        p_info = cainfo ? cainfo : "";
+        p_path = capath ? capath : "";
       }
       //
       curl_easy_cleanup( curl );
