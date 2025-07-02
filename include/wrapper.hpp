@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <condition_variable>
 #include <curl/curl.h>
 #include <functional>
@@ -210,18 +211,18 @@ class Wrapper: public WrapperBase
     Authentication m_authentication;
     Certificates   m_certificates;
     //
-    // Reset the protocol before starting a new transfer
+    // Reset the protocol before starting a new transfer.
+    // m_exec_state must be idle and m_exec_mutex locked (use do_if_idle).
     void clear( void )
     {
-      if ( is_idle() )
-      {
-        m_response_code    = c_success;
-        m_user_cb_threaded = true;
-        //
-        m_async.get_default( m_options, m_authentication, m_certificates ); // retrieve global defaults
-        //
-        clear_protocol();
-      }
+      assert( ! m_exec_mutex.try_lock() );
+      //
+      m_response_code    = c_success;
+      m_user_cb_threaded = true;
+      //
+      m_async.get_default( m_options, m_authentication, m_certificates ); // restore global defaults
+      //
+      clear_protocol();
     }
     //
     // When starting, applies the local configuration.
@@ -303,15 +304,22 @@ class Wrapper: public WrapperBase
       }
     }
     //
-    // Request is just created or terminated
-    bool is_idle( void ) const
+    // Execute an action if a request is just created or terminated.
+    // Returns true if is was executed
+    bool do_if_idle( std::function< void( void ) > p_action ) const // todo or template function
     {
       std::lock_guard lock( m_exec_mutex );
       //
-      return m_exec_state == State::idle;
+      if ( m_exec_state == State::idle )
+      {
+        p_action();
+        return true;
+      }
+      //
+      return false;
     }
     //
-    // Transfer is active
+    // Transfer is active (or was since the lock goes out of scope)
     bool is_running( void ) const
     {
       std::lock_guard lock( m_exec_mutex );

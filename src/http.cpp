@@ -22,14 +22,13 @@ HTTP::~HTTP()
 // Calling using a GET
 HTTP & HTTP::GET( const std::string & p_url, const t_key_values & p_query_parameters )
 {
-  if ( is_idle() )
-  {
-    clear();
+  do_if_idle( [ & ]() {
+    clear(); // clear Wrapper and HTTP
     //
     m_request_method = Method::eGET;
     m_request_url    = p_url;
     m_request_query_parameters.insert( p_query_parameters.begin(), p_query_parameters.end() );
-  }
+  } );
   //
   return *this;
 }
@@ -38,14 +37,13 @@ HTTP & HTTP::GET( const std::string & p_url, const t_key_values & p_query_parame
 // Calling using a DELETE
 HTTP & HTTP::DELETE( const std::string & p_url, const t_key_values & p_query_parameters )
 {
-  if ( is_idle() )
-  {
-    clear();
+  do_if_idle( [ & ]() {
+    clear(); // clear Wrapper and HTTP
     //
     m_request_method = Method::eDELETE;
     m_request_url    = p_url;
     m_request_query_parameters.insert( p_query_parameters.begin(), p_query_parameters.end() );
-  }
+  } );
   //
   return *this;
 }
@@ -57,15 +55,14 @@ HTTP & HTTP::POST(
     const std::string & p_content_type,
     const std::string & p_body )
 {
-  if ( is_idle() )
-  {
-    clear();
+  do_if_idle( [ & ]() {
+    clear(); // clear Wrapper and HTTP
     //
     m_request_method       = Method::ePOST;
     m_request_url          = p_url;
     m_request_body         = p_body;
     m_request_content_type = p_content_type;
-  }
+  } );
   //
   return *this;
 }
@@ -77,15 +74,14 @@ HTTP & HTTP::PUT(
     const std::string & p_content_type,
     const std::string & p_body )
 {
-  if ( is_idle() )
-  {
-    clear();
+  do_if_idle( [ & ]() {
+    clear(); // clear Wrapper and HTTP
     //
     m_request_method       = Method::ePUT;
     m_request_url          = p_url;
     m_request_body         = p_body;
     m_request_content_type = p_content_type;
-  }
+  } );
   //
   return *this;
 }
@@ -97,15 +93,14 @@ HTTP & HTTP::PATCH(
     const std::string & p_content_type,
     const std::string & p_body )
 {
-  if ( is_idle() )
-  {
-    clear();
+  do_if_idle( [ & ]() {
+    clear(); // clear Wrapper and HTTP
     //
     m_request_method       = Method::ePATCH;
     m_request_url          = p_url;
     m_request_body         = p_body;
     m_request_content_type = p_content_type;
-  }
+  } );
   //
   return *this;
 }
@@ -114,14 +109,13 @@ HTTP & HTTP::PATCH(
 // Sending url encoded parameters in the body using POST
 HTTP & HTTP::POST( const std::string & p_url, const t_key_values & p_body_parameter )
 {
-  if ( is_idle() )
-  {
-    clear();
+  do_if_idle( [ & ]() {
+    clear(); // clear Wrapper and HTTP
     //
     m_request_method = Method::ePOST;
     m_request_url    = p_url;
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
-  }
+  } );
   //
   return *this;
 }
@@ -130,14 +124,13 @@ HTTP & HTTP::POST( const std::string & p_url, const t_key_values & p_body_parame
 // Sending url encoded parameters in the body using PUT
 HTTP & HTTP::PUT( const std::string & p_url, const t_key_values & p_body_parameter )
 {
-  if ( is_idle() )
-  {
-    clear();
+  do_if_idle( [ & ]() {
+    clear(); // clear Wrapper and HTTP
     //
     m_request_method = Method::ePUT;
     m_request_url    = p_url;
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
-  }
+  } );
   //
   return *this;
 }
@@ -146,14 +139,13 @@ HTTP & HTTP::PUT( const std::string & p_url, const t_key_values & p_body_paramet
 // Sending url encoded parameters in the body using PATCH
 HTTP & HTTP::PATCH( const std::string & p_url, const t_key_values & p_body_parameter )
 {
-  if ( is_idle() )
-  {
-    clear();
+  do_if_idle( [ & ]() {
+    clear(); // clear Wrapper and HTTP
     //
     m_request_method = Method::ePATCH;
     m_request_url    = p_url;
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
-  }
+  } );
   //
   return *this;
 }
@@ -162,8 +154,9 @@ HTTP & HTTP::PATCH( const std::string & p_url, const t_key_values & p_body_param
 // Add headers to the request
 HTTP & HTTP::add_headers( const t_key_values & p_headers )
 {
-  if ( is_idle() )
+  do_if_idle( [ & ]() {
     m_request_headers.insert( p_headers.begin(), p_headers.end() );
+  } );
   //
   return *this;
 }
@@ -172,8 +165,9 @@ HTTP & HTTP::add_headers( const t_key_values & p_headers )
 // Add query parameters to the request
 HTTP & HTTP::add_query_parameters( const t_key_values & p_query_parameters )
 {
-  if ( is_idle() )
+  do_if_idle( [ & ]() {
     m_request_query_parameters.insert( p_query_parameters.begin(), p_query_parameters.end() );
+  } );
   //
   return *this;
 }
@@ -183,8 +177,9 @@ HTTP & HTTP::add_query_parameters( const t_key_values & p_query_parameters )
 // Do not use with MIME nor raw body requests.
 HTTP & HTTP::add_body_parameters( const t_key_values & p_body_parameter )
 {
-  if ( is_idle() )
+  do_if_idle( [ & ]() {
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
+  } );
   //
   return *this;
 }
@@ -194,18 +189,24 @@ HTTP & HTTP::add_body_parameters( const t_key_values & p_body_parameter )
 // Only for a request without a raw body or parameters.
 HTTP & HTTP::add_mime_parameters( const mime::parts & p_parts )
 {
-  if ( is_idle() )
+  do_if_idle( [ & ]() {
     m_request_mime.add_parts( p_parts );
+  } );
   //
   return *this;
 }
 
 //--------------------------------------------------------------------
-// Accessors to be used after a request
-t_key_values_ci HTTP::get_headers     ( void ) const noexcept { return is_running() ? t_key_values_ci() : m_response_headers;      }
-std::string     HTTP::get_content_type( void ) const noexcept { return is_running() ? ""                : m_response_content_type; }
-std::string     HTTP::get_redirect_url( void ) const noexcept { return is_running() ? ""                : m_response_redirect_url; }
-std::string     HTTP::get_body        ( void ) const noexcept { return is_running() ? ""                : m_response_body;         }
+// These accessors return references for efficiency, directly exposing the object's
+// internal. They must only be used after the request has fully completed to ensure data
+// consistency and avoid unstable values during ongoing operations.
+static std::string     empty_string;
+static t_key_values_ci empty_key_values_ci;
+
+const t_key_values_ci & HTTP::get_headers     ( void ) const noexcept { return is_running() ? empty_key_values_ci : m_response_headers;      }
+const std::string     & HTTP::get_content_type( void ) const noexcept { return is_running() ? empty_string        : m_response_content_type; }
+const std::string     & HTTP::get_redirect_url( void ) const noexcept { return is_running() ? empty_string        : m_response_redirect_url; }
+const std::string     & HTTP::get_body        ( void ) const noexcept { return is_running() ? empty_string        : m_response_body;         }
 
 //--------------------------------------------------------------------
 std::future< HTTP::Response > HTTP::launch( void )
@@ -276,7 +277,7 @@ void HTTP::finalize_protocol( void )
 }
 
 //--------------------------------------------------------------------
-// Called by Wrapper when the user wants to reset the Protocol.
+// Called by Wrapper::clear() when the user wants to reset the Protocol.
 // Clear all previous configuration before doing a new request.
 void HTTP::clear_protocol( void )
 {

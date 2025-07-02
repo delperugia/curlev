@@ -63,11 +63,13 @@ public:
   // Add MIME part or parts. Only for requests [1]
   HTTP & add_mime_parameters( const mime::parts & p_parts );
   //
-  // Accessors to be used after a request
-  t_key_values_ci get_headers     ( void ) const noexcept;
-  std::string     get_content_type( void ) const noexcept;
-  std::string     get_redirect_url( void ) const noexcept;
-  std::string     get_body        ( void ) const noexcept;
+  // These accessors return references for efficiency, directly exposing the object's
+  // internal. They must only be used after the request has fully completed to ensure data
+  // consistency and avoid unstable values during ongoing operations.
+  const t_key_values_ci & get_headers     ( void ) const noexcept;
+  const std::string     & get_content_type( void ) const noexcept;
+  const std::string     & get_redirect_url( void ) const noexcept;
+  const std::string     & get_body        ( void ) const noexcept;
   //
   // Convenient function starting the request and returning a future.
   // If using launch(), the Wrapper functions start() and join() must not

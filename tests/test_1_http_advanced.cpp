@@ -314,7 +314,7 @@ TEST( http_advanced, compression )
     //
     ASSERT_EQ( code, 200 );
     //
-    EXPECT_TRUE( http->get_headers()["content-encoding"].empty() );
+    EXPECT_TRUE( http->get_headers().count("content-encoding") == 0 );
   }
   //
   {
@@ -326,7 +326,7 @@ TEST( http_advanced, compression )
     //
     ASSERT_EQ( code, 200 );
     //
-    EXPECT_FALSE( http->get_headers()["content-encoding"].empty() );
+    EXPECT_TRUE( http->get_headers().count("content-encoding") > 0 );
   }
   //
   async.stop();
