@@ -248,7 +248,13 @@ Once the request is finished, you can use:
 - `get_content_type()`: get the received `Content-Type` header
 - `get_redirect_url()`: get the received `Location` header
 
+Note: do not call these accessors (or use previously obtained references) while
+the request is running, as this may cause undefined behavior.
+
 Or if a `std::future` was used, `get()` returns a structure with the same information.
+
+Note: because the data are copied into the promise, this approach may be slightly
+less efficient than the other methods.
 
 # Aborting a request
 
