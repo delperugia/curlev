@@ -49,6 +49,25 @@ HTTP & HTTP::DELETE( const std::string & p_url, const t_key_values & p_query_par
 }
 
 //--------------------------------------------------------------------
+// Sending a raw body using PATCH
+HTTP & HTTP::PATCH(
+    const std::string & p_url,
+    const std::string & p_content_type,
+    const std::string & p_body )
+{
+  do_if_idle( [ & ]() {
+    clear(); // clear Wrapper and HTTP
+    //
+    m_request_method       = Method::ePATCH;
+    m_request_url          = p_url;
+    m_request_body         = p_body;
+    m_request_content_type = p_content_type;
+  } );
+  //
+  return *this;
+}
+
+//--------------------------------------------------------------------
 // Sending a raw body using POST
 HTTP & HTTP::POST(
     const std::string & p_url,
@@ -86,69 +105,6 @@ HTTP & HTTP::PUT(
   return *this;
 }
 
-//--------------------------------------------------------------------
-// Sending a raw body using PATCH
-HTTP & HTTP::PATCH(
-    const std::string & p_url,
-    const std::string & p_content_type,
-    const std::string & p_body )
-{
-  do_if_idle( [ & ]() {
-    clear(); // clear Wrapper and HTTP
-    //
-    m_request_method       = Method::ePATCH;
-    m_request_url          = p_url;
-    m_request_body         = p_body;
-    m_request_content_type = p_content_type;
-  } );
-  //
-  return *this;
-}
-
-//--------------------------------------------------------------------
-// Sending url encoded parameters in the body using POST
-HTTP & HTTP::POST( const std::string & p_url, const t_key_values & p_body_parameter )
-{
-  do_if_idle( [ & ]() {
-    clear(); // clear Wrapper and HTTP
-    //
-    m_request_method = Method::ePOST;
-    m_request_url    = p_url;
-    m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
-  } );
-  //
-  return *this;
-}
-
-//--------------------------------------------------------------------
-// Sending url encoded parameters in the body using PUT
-HTTP & HTTP::PUT( const std::string & p_url, const t_key_values & p_body_parameter )
-{
-  do_if_idle( [ & ]() {
-    clear(); // clear Wrapper and HTTP
-    //
-    m_request_method = Method::ePUT;
-    m_request_url    = p_url;
-    m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
-  } );
-  //
-  return *this;
-}
-
-//--------------------------------------------------------------------
-// Sending url encoded parameters in the body using PATCH
-HTTP & HTTP::PATCH( const std::string & p_url, const t_key_values & p_body_parameter )
-{
-  do_if_idle( [ & ]() {
-    clear(); // clear Wrapper and HTTP
-    //
-    m_request_method = Method::ePATCH;
-    m_request_url    = p_url;
-    m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
-  } );
-  //
-  return *this;
-}
 
 //--------------------------------------------------------------------
 // Add headers to the request

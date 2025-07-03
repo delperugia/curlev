@@ -43,20 +43,20 @@ public:
   HTTP & GET   ( const std::string & p_url, const t_key_values & p_query_parameters = {} );
   HTTP & DELETE( const std::string & p_url, const t_key_values & p_query_parameters = {} );
   //
-  // [1] Requests with a body possibly added later
+  // [1] Empty requests
+  HTTP & PATCH( const std::string & p_url ) { return PATCH( p_url, "", "" ); }
   HTTP & POST ( const std::string & p_url ) { return POST ( p_url, "", "" ); }
   HTTP & PUT  ( const std::string & p_url ) { return PUT  ( p_url, "", "" ); }
-  HTTP & PATCH( const std::string & p_url ) { return PATCH( p_url, "", "" ); }
   //
   // [2] Requests with a raw body
+  HTTP & PATCH( const std::string & p_url, const std::string & p_content_type, const std::string & p_body );
   HTTP & POST ( const std::string & p_url, const std::string & p_content_type, const std::string & p_body );
   HTTP & PUT  ( const std::string & p_url, const std::string & p_content_type, const std::string & p_body );
-  HTTP & PATCH( const std::string & p_url, const std::string & p_content_type, const std::string & p_body );
   //
   // [3] Requests with a body made of url encoded parameters
-  HTTP & POST ( const std::string & p_url, const t_key_values & p_body_parameter );
-  HTTP & PUT  ( const std::string & p_url, const t_key_values & p_body_parameter );
-  HTTP & PATCH( const std::string & p_url, const t_key_values & p_body_parameter );
+  HTTP & PATCH( const std::string & p_url, const t_key_values & p_body_parameter ) { return PATCH( p_url ).add_body_parameters( p_body_parameter ); }
+  HTTP & POST ( const std::string & p_url, const t_key_values & p_body_parameter ) { return POST ( p_url ).add_body_parameters( p_body_parameter ); }
+  HTTP & PUT  ( const std::string & p_url, const t_key_values & p_body_parameter ) { return PUT  ( p_url ).add_body_parameters( p_body_parameter ); }
   //
   // Add headers to the request
   HTTP & add_headers( const t_key_values & p_headers );
