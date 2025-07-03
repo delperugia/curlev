@@ -20,6 +20,7 @@ Key features:
 - Handles query parameters, form data, MIME handling, and raw bodies
 - Custom headers and authentication
 - Method chaining
+- REST functions using common JSON parsers
 
 Example of a synchronous request:
 
@@ -140,6 +141,7 @@ In order to compile `curlev` you will need the following:
  - a C++17 compiler
  - libcurl (>=7.61.1 but with memory leaks and config problems, >=7.87.0 recommended)
  - libuv
+ - optionally: RapidJSON or nlohmann/json
 
 Here are the package names for some distributions:
 
@@ -158,6 +160,9 @@ cmake      -B         build/  -DCMAKE_BUILD_TYPE=Release
 cmake      --build    build/  -j
 sudo cmake --install  build/
 ```
+
+If `RapidJSON` or `nlohmann/json` are installed, the extra methods `REST`
+will be available in `HTTP`.
 
 # Testing and debugging
 

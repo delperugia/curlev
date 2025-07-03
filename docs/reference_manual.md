@@ -10,7 +10,7 @@ The only header to include is `curlev/http.hpp`.
  - Instantiate a global `ASync` object
  - To do a request:
    - create an `HTTP` object using `HTTP::create()`
-   - call one of `GET()`, `DELETE()`, `POST()`, `PUT()` or `PATCH()`
+   - call one of `GET()`, `DELETE()`, `POST()`, `PUT()` or `PATCH()` (or `REST()`)
    - optionally call `add_headers()`, `add_..._parameters()`, `options()`, `headers()`...
    - call `exec()` (synchronous), `start()`/`join()` (asynchronous), or `launch()` (future)
    - call the `get_...()` methods
@@ -69,7 +69,7 @@ auto http = HTTP::create( async );  // async is the instance of ASync
 
 # Building the request
 
-On the HTTP object, you first have to call one of the HTTP methods.
+On the `HTTP` object, you first have to call one of the HTTP methods.
 This will restart a new request sessions.
 Available methods are `GET()`, `DELETE()`, `POST()`, `PUT()` and `PATCH()`.
 
@@ -90,6 +90,15 @@ are available:
 - `authentication( auth_string )`:  set authentication
 - `options( opt_string )`:          set options
 - `certificates( cert_string )`:    set SSL certificates
+
+## REST
+
+If `curlev` was compiled with RapidJSON or nlohmann/json, the `HTTP` object
+has an extra method `REST()`.
+
+`REST()` has two forms:
+1. URI, verb (any of 'GET', 'DELETE', 'PATCH', 'POST' or 'PUT')
+2. URI, verb (only 'PATCH', 'POST' or 'PUT') and a JSON object (a `rapidjson::Document` or a `nlohmann::json`)
 
 ## Adding headers and parameters
 
@@ -255,6 +264,14 @@ Or if a `std::future` was used, `get()` returns a structure with the same inform
 
 Note: because the data are copied into the promise, this approach may be slightly
 less efficient than the other methods.
+
+## REST
+
+If `curlev` was compiled with RapidJSON or nlohmann/json, the `HTTP` object
+has an extra method `get_json()`, which retrieve either a `rapidjson::Document`
+or a `nlohmann::json`.
+
+This method returns false if the parsing of the received by fails.
 
 # Aborting a request
 
