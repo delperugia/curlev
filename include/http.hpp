@@ -10,6 +10,13 @@
 #include <future>
 #include <string>
 
+#if __has_include( <nlohmann/json.hpp> )
+  #include <nlohmann/json.hpp>
+#endif
+#if __has_include( <rapidjson/document.h> )
+  #include <rapidjson/document.h>
+#endif
+
 #include "common.hpp"
 #include "mime.hpp"
 #include "wrapper.hpp"
@@ -85,6 +92,30 @@ public:
   //
   std::future< Response > launch( void );
   //
+  // REST functions using external JSON parsers
+  //
+  // For nlohmann/json parser
+  #if __has_include( <nlohmann/json.hpp> )
+    HTTP & REST( const std::string &    p_uri,
+                 const std::string &    p_verb,
+                 const nlohmann::json & p_json );
+    //
+    bool   get_json( nlohmann::json &   p_json );
+  #endif
+  //
+  // For RapidJSON parser
+  #if __has_include( <rapidjson/document.h> )
+    HTTP & REST( const std::string &          p_uri,
+                 const std::string &          p_verb,
+                 const rapidjson::Document &  p_json );
+    //
+    bool   get_json( rapidjson::Document &    p_json );
+  #endif
+  //
+  // To uniformize syntax with idempotent verbs
+  HTTP & REST( const std::string & p_uri,
+               const std::string & p_verb );
+  //
 protected:
   // Prevent creating directly an instance of the class, the Wrapper::create() method must be used
   explicit HTTP( ASync & p_async ) : Wrapper< HTTP >( p_async ) {};
@@ -140,6 +171,9 @@ private:
   //
   // Add parameters as query parameters to the given URL
   std::string url_with_parameters( const std::string & p_url, const t_key_values & p_parameters );
+  //
+  // When using external JSON parser, once the JSON text is generated, prepare the query
+  HTTP & REST( const std::string & p_uri, const std::string & p_verb, const std::string && p_body );
 };
 
 } // namespace curlev

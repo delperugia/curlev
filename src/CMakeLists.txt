@@ -9,6 +9,7 @@ set( SRC_FILES
      certificates.cpp
      common.cpp
      http.cpp
+     http_json.cpp
      mime.cpp
      options.cpp
 )
