@@ -29,13 +29,12 @@ HTTP &
   else if ( p_verb == "PATCH"  ) method = Method::ePATCH; // bad practice since there is no body
   else                           method = Method::none;
   //
-  if ( is_idle() )
-  {
+  do_if_idle( [ & ]() {
     clear();
     //
     m_request_method = method;
     m_request_url    = p_uri;
-  }
+  } );
   //
   return *this;
 }
@@ -55,15 +54,14 @@ HTTP &
   else if ( p_verb == "PATCH" ) method = Method::ePATCH;
   else                          method = Method::none;
   //
-  if ( is_idle() )
-  {
+  do_if_idle( [ & ]() {
     clear();
     //
     m_request_method       = method;
     m_request_url          = p_uri;
     m_request_body         = std::move( p_body );
     m_request_content_type = "application/json";
-  }
+  } );
   //
   return *this;
 }
