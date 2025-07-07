@@ -82,24 +82,25 @@ HTTP & HTTP::REST(
 }
 
 //--------------------------------------------------------------------
-bool HTTP::get_json( nlohmann::json & p_json )
+bool HTTP::get_json( nlohmann::json & p_json ) const noexcept
 {
   if ( is_running() )
     return false;
   //
-  try
-  {
-    p_json = nlohmann::json::parse( m_response_body );
-    return true;
-  }
-  catch ( const std::exception & e )
-  {
-  }
+  p_json = nlohmann::json::parse( m_response_body, nullptr, false ); // no exception
   //
-  return false;
+  return ! p_json.is_discarded();
 }
 
 #endif
+
+//--------------------------------------------------------------------
+bool HTTP::Response::get_json( nlohmann::json & p_json ) const noexcept
+{
+  p_json = nlohmann::json::parse( body, nullptr, false ); // no exception
+  //
+  return ! p_json.is_discarded();
+}
 
 //--------------------------------------------------------------------
 // JSON convenient functions for nlohmann/json
@@ -129,20 +130,18 @@ HTTP & HTTP::REST(
 }
 
 //--------------------------------------------------------------------
-bool HTTP::get_json( rapidjson::Document & p_json )
+bool HTTP::get_json( rapidjson::Document & p_json ) const noexcept
 {
   if ( is_running() )
     return false;
   //
-  try
-  {
-    return ! p_json.Parse( m_response_body.c_str() ).HasParseError();
-  }
-  catch ( const std::exception & e )
-  {
-  }
-  //
-  return false;
+  return ! p_json.Parse( m_response_body.c_str() ).HasParseError();
+}
+
+//--------------------------------------------------------------------
+bool HTTP::Response::get_json( rapidjson::Document & p_json ) const noexcept
+{
+  return ! p_json.Parse( body.c_str() ).HasParseError();
 }
 
 #endif

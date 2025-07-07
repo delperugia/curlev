@@ -58,6 +58,17 @@ public:
   HTTP & POST ( const std::string & p_url, const t_key_values & p_body_parameter ) { return POST ( p_url ).add_body_parameters( p_body_parameter ); }
   HTTP & PUT  ( const std::string & p_url, const t_key_values & p_body_parameter ) { return PUT  ( p_url ).add_body_parameters( p_body_parameter ); }
   //
+  // Working with REST (JSON PATCH, POST and PUT requests)
+  #if __has_include( <nlohmann/json.hpp> )
+    HTTP & REST( const std::string & p_uri, const std::string & p_verb, const nlohmann::json & p_json );
+  #endif
+  #if __has_include( <rapidjson/document.h> )
+    HTTP & REST( const std::string & p_uri, const std::string & p_verb, const rapidjson::Document & p_json );
+  #endif
+  //
+  // To uniformize syntax with idempotent verbs (GET, DELETE)
+  HTTP & REST( const std::string & p_uri, const std::string & p_verb );
+  //
   // Add headers to the request
   HTTP & add_headers( const t_key_values & p_headers );
   //
@@ -78,6 +89,13 @@ public:
   const std::string     & get_redirect_url( void ) const noexcept;
   const std::string     & get_body        ( void ) const noexcept;
   //
+  #if __has_include( <nlohmann/json.hpp> )
+    bool get_json( nlohmann::json & p_json ) const noexcept;
+  #endif
+  #if __has_include( <rapidjson/document.h> )
+    bool get_json( rapidjson::Document & p_json ) const noexcept;
+  #endif
+  //
   // Convenient function starting the request and returning a future.
   // If using launch(), the Wrapper functions start() and join() must not
   // be used.
@@ -89,34 +107,15 @@ public:
     std::string     content_type;
     std::string     body;
     //
-    // Future: add json
+    #if __has_include( <nlohmann/json.hpp> )
+      bool get_json( nlohmann::json & p_json ) const noexcept;
+    #endif
+    #if __has_include( <rapidjson/document.h> )
+      bool get_json( rapidjson::Document & p_json ) const noexcept;
+    #endif
   };
   //
   std::future< Response > launch( void );
-  //
-  // REST functions using external JSON parsers
-  //
-  // For nlohmann/json parser
-  #if __has_include( <nlohmann/json.hpp> )
-    HTTP & REST( const std::string &    p_uri,
-                 const std::string &    p_verb,
-                 const nlohmann::json & p_json );
-    //
-    bool   get_json( nlohmann::json &   p_json );
-  #endif
-  //
-  // For RapidJSON parser
-  #if __has_include( <rapidjson/document.h> )
-    HTTP & REST( const std::string &          p_uri,
-                 const std::string &          p_verb,
-                 const rapidjson::Document &  p_json );
-    //
-    bool   get_json( rapidjson::Document &    p_json );
-  #endif
-  //
-  // To uniformize syntax with idempotent verbs
-  HTTP & REST( const std::string & p_uri,
-               const std::string & p_verb );
   //
 protected:
   // Prevent creating directly an instance of the class, the Wrapper::create() method must be used
