@@ -172,16 +172,21 @@ std::future< HTTP::Response > HTTP::launch( void )
   //
   threaded_callback( false ). // because the callback in start() is fast
   start(
-      [ promise ]( const auto & http )
+      [ promise ]( const HTTP & p_http )
       {
+        // Tricky part: we are certain of the mutability of HTTP, the transfer
+        // is guaranteed to be finished, join() is not yet released. state is
+        // either idle or finished.
+        auto & http = const_cast< HTTP & >( p_http );
+        //
         Response response;
         response.code         = http.get_code();
-        response.headers      = http.get_headers();
-        response.redirect_url = http.get_redirect_url();
-        response.content_type = http.get_content_type();
-        response.body         = http.get_body();
+        response.headers      = std::move( http.m_response_headers      );
+        response.redirect_url = std::move( http.m_response_redirect_url );
+        response.content_type = std::move( http.m_response_content_type );
+        response.body         = std::move( http.m_response_body         );
         //
-        promise->set_value( response );
+        promise->set_value( std::move( response ) );
       } );
   //
   return future;

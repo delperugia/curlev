@@ -454,14 +454,14 @@ TEST( http_basic, launch )
   async.start();
   //
   {
-    auto future =
-        HTTP::create( async )->GET( c_server_httpbun + "get", { { "a", "11" } } )
-                              .launch();
+    auto http   = HTTP::create( async );
+    auto future = http->GET( c_server_httpbun + "get", { { "a", "11" } } ).launch();
     //
     auto response = future.get();
     //
     ASSERT_EQ( response.code, 200 );
     EXPECT_EQ( json_extract( response.body, "$.args.a" ), "11" );
+    EXPECT_TRUE( http->get_body().empty() ); // since it was moved to the std::future
   }
   //
   {
