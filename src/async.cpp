@@ -743,6 +743,8 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
   auto protocol_buffer = static_cast< std::string * >( p_userdata );
   auto to_add          = p_size * p_nmemb;
   //
+  // Future: add a hard limit on total received body size
+  //
   try
   {
     protocol_buffer->append( p_ptr, to_add );
@@ -775,6 +777,8 @@ size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nit
     //
     if ( ! key.empty() )
       protocol_headers->insert_or_assign( std::move( key ), std::move( value ) );
+    //
+    // Future: capture Content-Size to pre-alloc curl_cb_write body size
   }
   //
   return p_nitems * p_size;

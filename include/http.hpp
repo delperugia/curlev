@@ -88,6 +88,8 @@ public:
     std::string     redirect_url;
     std::string     content_type;
     std::string     body;
+    //
+    // Future: add json
   };
   //
   std::future< Response > launch( void );

@@ -248,6 +248,8 @@ http->GET( "http://www.httpbin.org/get",
              ...
 ```
 
+The callback receives as parameter a const reference on the HTTP object.
+
 # Retrieving the response
 
 Once the request is finished, you can use:

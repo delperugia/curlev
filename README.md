@@ -161,8 +161,8 @@ cmake      --build    build/  -j
 sudo cmake --install  build/
 ```
 
-If `RapidJSON` or `nlohmann/json` are installed, the extra methods `REST`
-will be available in `HTTP`.
+If `RapidJSON` or `nlohmann/json` are installed, extra `REST` methods
+will be available in the HTTP client.
 
 # Testing and debugging
 
