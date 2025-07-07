@@ -306,7 +306,8 @@ class Wrapper: public WrapperBase
     //
     // Execute an action if a request is just created or terminated.
     // Returns true if is was executed
-    bool do_if_idle( std::function< void( void ) > p_action ) const // todo or template function
+    template< typename action >
+    bool do_if_idle( action p_action ) const
     {
       std::lock_guard lock( m_exec_mutex );
       //
