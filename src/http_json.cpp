@@ -16,18 +16,18 @@ namespace curlev
 //--------------------------------------------------------------------
 // When using REST functions using external JSON parsers, this function
 // allows to uniformize syntax for idempotent verbs
+// NOLINTBEGIN(readability-misleading-indentation)
 HTTP &
   HTTP::REST( const std::string & p_uri,
               const std::string & p_verb )
 {
-  HTTP::Method method;
+  HTTP::Method method = method = Method::none;
   //
        if ( p_verb == "GET"    ) method = Method::eGET;
   else if ( p_verb == "DELETE" ) method = Method::eDELETE;
   else if ( p_verb == "POST"   ) method = Method::ePOST;
   else if ( p_verb == "PUT"    ) method = Method::ePUT;
   else if ( p_verb == "PATCH"  ) method = Method::ePATCH; // bad practice since there is no body
-  else                           method = Method::none;
   //
   do_if_idle( [ & ]() {
     clear();
@@ -38,21 +38,22 @@ HTTP &
   //
   return *this;
 }
+// NOLINTEND(readability-misleading-indentation)
 
 //--------------------------------------------------------------------
 // When using external JSON parser, once the JSON text is generated, prepare the query
+// NOLINTBEGIN(readability-misleading-indentation)
 HTTP &
     HTTP::REST( const std::string &  p_uri,
                 const std::string &  p_verb,
-                const std::string && p_body )
+                std::string &&       p_body )
 {
-  HTTP::Method method;
+  HTTP::Method method = method = Method::none;
   //
   // GET and DELETE can't have body
        if ( p_verb == "POST"  ) method = Method::ePOST;
   else if ( p_verb == "PUT"   ) method = Method::ePUT;
   else if ( p_verb == "PATCH" ) method = Method::ePATCH;
-  else                          method = Method::none;
   //
   do_if_idle( [ & ]() {
     clear();
@@ -65,6 +66,7 @@ HTTP &
   //
   return *this;
 }
+// NOLINTEND(readability-misleading-indentation)
 
 //--------------------------------------------------------------------
 // JSON convenient functions for nlohmann/json

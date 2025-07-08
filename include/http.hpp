@@ -174,7 +174,7 @@ private:
   std::string url_with_parameters( const std::string & p_url, const t_key_values & p_parameters );
   //
   // When using external JSON parser, once the JSON text is generated, prepare the query
-  HTTP & REST( const std::string & p_uri, const std::string & p_verb, const std::string && p_body );
+  HTTP & REST( const std::string & p_uri, const std::string & p_verb, std::string && p_body );
 };
 
 } // namespace curlev

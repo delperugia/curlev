@@ -8,11 +8,11 @@
 
 namespace curlev
 {
-// NOLINTBEGIN(readability-misleading-indentation)
 
 //--------------------------------------------------------------------
 // Expect a CSKV list of credential details. Example:
 //   mode=basic,user=joe,secret=abc123
+// NOLINTBEGIN(readability-misleading-indentation)
 bool Authentication::set( const std::string& p_cskv )
 {
   return parse_cskv(
@@ -36,6 +36,7 @@ bool Authentication::set( const std::string& p_cskv )
       return true;
     } );
 }
+// NOLINTEND(readability-misleading-indentation)
 
 //--------------------------------------------------------------------
 // Apply credential to curl easy handle.
@@ -83,5 +84,4 @@ void Authentication::set_default( void )
   m_secret.clear();     // user password or access token
 }
 
-// NOLINTEND(readability-misleading-indentation)
 } // namespace curlev

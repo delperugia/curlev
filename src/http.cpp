@@ -217,10 +217,7 @@ bool HTTP::prepare_protocol( void )
   ok = ok && fill_body();    // must be called before fill_headers(), set m_response_code on error
   ok = ok && fill_headers(); // set m_curl_headers, m_response_code on error
   //
-  if ( ok )
-    return true;
-  //
-  return false;
+  return ok;
 }
 
 //--------------------------------------------------------------------
@@ -228,7 +225,7 @@ bool HTTP::prepare_protocol( void )
 // Release extra curl handles that were used during the operation.
 void HTTP::finalize_protocol( void )
 {
-  char * value;
+  char * value = nullptr;
   //
   if ( curl_easy_getinfo( m_curl, CURLINFO_CONTENT_TYPE, &value ) == CURLE_OK && value != nullptr )
     m_response_content_type = value;
@@ -377,6 +374,18 @@ bool HTTP::fill_body_mime( void )
 
 //--------------------------------------------------------------------
 // Encode parameters into a application/x-www-form-urlencoded string
+
+namespace
+{
+  // Retrieve the length of a string as an int, limiting it to the maximum int value
+  inline int safe_length( const std::string & p_string ) noexcept
+  {
+    constexpr size_t max_int = std::numeric_limits< int >::max();
+    //
+    return p_string.length() > max_int ? max_int : static_cast< int >( p_string.length() ); // NOLINT(bugprone-narrowing-conversions)
+  }
+}
+
 std::string HTTP::encode_parameters( const t_key_values & p_parameters )
 {
   std::string encoded;
@@ -385,8 +394,8 @@ std::string HTTP::encode_parameters( const t_key_values & p_parameters )
   //
   for ( const auto & [ key, value ] : p_parameters )
   {
-    char * enc_key = curl_easy_escape( m_curl, key  .c_str(), key  .length() );
-    char * enc_val = curl_easy_escape( m_curl, value.c_str(), value.length() );
+    char * enc_key = curl_easy_escape( m_curl, key  .c_str(), safe_length( key   ) );
+    char * enc_val = curl_easy_escape( m_curl, value.c_str(), safe_length( value ) );
     //
     if ( enc_key != nullptr && enc_val != nullptr )
     {

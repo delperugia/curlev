@@ -8,11 +8,11 @@
 
 namespace curlev
 {
-// NOLINTBEGIN(readability-misleading-indentation)
 
 //--------------------------------------------------------------------
 // Expect a CSKV list of credential details. Example:
 //   sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret
+// NOLINTBEGIN(readability-misleading-indentation)
 bool Certificates::set( const std::string & p_cskv )
 {
   return parse_cskv(
@@ -40,6 +40,7 @@ bool Certificates::set( const std::string & p_cskv )
       return true;
     } );
 }
+// NOLINTEND(readability-misleading-indentation)
 
 //--------------------------------------------------------------------
 // Apply credential to curl easy handle.
@@ -128,5 +129,4 @@ void Certificates::set_default( const std::string & p_ca_info, const std::string
   m_ca_path_default = p_ca_path;
 }
 
-// NOLINTEND(readability-misleading-indentation)
 } // namespace curlev
