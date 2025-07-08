@@ -42,13 +42,13 @@ namespace
 {
   // The 4 functions to visit the variant mime::part and mime::alternative
 
-  bool read_part( CURL *, curl_mimepart * p_mime_part, const mime::parameter & p_parameter )
+  bool read_part( [[maybe_unused]] CURL * p_curl, curl_mimepart * p_mime_part, const mime::parameter & p_parameter )
   {
     return mime_name( p_mime_part, p_parameter.name  ) &&
            mime_data( p_mime_part, p_parameter.value );
   }
 
-  bool read_part( CURL *, curl_mimepart * p_mime_part, const mime::data & p_data )
+  bool read_part( [[maybe_unused]] CURL * p_curl, curl_mimepart * p_mime_part, const mime::data & p_data )
   {
     return mime_name    ( p_mime_part, p_data.name         ) &&
            mime_data    ( p_mime_part, p_data.data         ) &&
@@ -56,7 +56,7 @@ namespace
            mime_filename( p_mime_part, p_data.filename     );
   }
 
-  bool read_part( CURL *, curl_mimepart * p_mime_part, const mime::file & p_file )
+  bool read_part( [[maybe_unused]] CURL * p_curl, curl_mimepart * p_mime_part, const mime::file & p_file )
   {
     return mime_name    ( p_mime_part, p_file.name         ) &&
            mime_filedata( p_mime_part, p_file.filedata     ) &&
@@ -72,7 +72,7 @@ namespace
     //
     ok = ok && alternative != nullptr;
     //
-    for ( auto & part : parts )
+    for ( const auto & part : parts )
     {
       curl_mimepart * sub_part = curl_mime_addpart( alternative );      // add a part to the alternative
       //
@@ -101,7 +101,7 @@ bool MIME::apply( CURL * p_curl, curl_mime * p_curl_mime ) const
 {
   bool ok = true;
   //
-  for ( auto & part : m_parts )
+  for ( const auto & part : m_parts )
   {
     curl_mimepart * mime_part = curl_mime_addpart( p_curl_mime );     // create a part
     //

@@ -21,8 +21,8 @@ namespace curlev
 // For the 50 most common headers there is no collision
 std::size_t t_ci::operator()( const std::string & p_key ) const
 {
-  constexpr size_t multiplier = 31;
-  std::size_t      hash       = 0;
+  constexpr std::size_t multiplier = 31;
+  std::size_t           hash       = 0;
   //
   for ( char c : p_key )
     hash = multiplier * hash + tolower( c ); // cppcheck-suppress useStlAlgorithm
@@ -85,11 +85,11 @@ namespace
 
 bool svtol( std::string_view p_string, long & p_value )
 {
-  constexpr unsigned long base     = 10;
-  unsigned long           value    = 0;
-  bool                    negative = false;
-  const auto *            current  = p_string.data();
-  const auto *            last     = p_string.data() + p_string.size();
+  constexpr auto base     = 10U;
+  unsigned long  value    = 0;
+  bool           negative = false;
+  const auto *   current  = p_string.data();
+  const auto *   last     = p_string.data() + p_string.size();
   //
   if ( current < last && *current == '-' )
   {

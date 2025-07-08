@@ -9,9 +9,16 @@
 namespace curlev
 {
 
+// Default network timeout
+constexpr auto c_timeout_ms = 30000L;
+
+// Default maximum number of network redirect
+constexpr auto c_max_redirect = 5L;
+
 //--------------------------------------------------------------------
 // Expect a CSKV list of options to set. Example:
 //   follow_location=1,insecure=1
+// NOLINTBEGIN(readability-misleading-indentation)
 bool Options::set( const std::string & p_cskv )
 {
   return parse_cskv(
@@ -35,6 +42,7 @@ bool Options::set( const std::string & p_cskv )
       return ok;
     } );
 }
+// NOLINTEND(readability-misleading-indentation)
 
 //--------------------------------------------------------------------
 // Apply the configured options to the given CURL easy handle.
@@ -61,15 +69,15 @@ bool Options::apply( CURL * p_curl ) const
 // Reset options to their default values
 void Options::set_default( void )
 {
-  m_accept_compression = false ;  // activate compression if true
-  m_connect_timeout    = 30000 ;  // in milliseconds
-  m_cookies            = false ;  // receive and resend cookies
-  m_follow_location    = false ;  // follow HTTP 3xx redirects
-  m_insecure           = false ;  // disables certificate validation
-  m_maxredirs          = 5     ;  // maximum number of redirects allowed
-  m_proxy              .clear();  // the SOCKS or HTTP URl to a proxy
-  m_timeout            = 30000 ;  // in milliseconds
-  m_verbose            = false ;  // debug log on console
+  m_accept_compression = false ;          // activate compression if true
+  m_connect_timeout    = c_timeout_ms ;   // in milliseconds
+  m_cookies            = false ;          // receive and resend cookies
+  m_follow_location    = false ;          // follow HTTP 3xx redirects
+  m_insecure           = false ;          // disables certificate validation
+  m_maxredirs          = c_max_redirect;  // maximum number of redirects allowed
+  m_proxy              .clear();          // the SOCKS or HTTP URl to a proxy
+  m_timeout            = c_timeout_ms ;   // in milliseconds
+  m_verbose            = false ;          // debug log on console
 }
 
 } // namespace curlev

@@ -380,7 +380,7 @@ namespace
   // Retrieve the length of a string as an int, limiting it to the maximum int value
   inline int safe_length( const std::string & p_string ) noexcept
   {
-    constexpr size_t max_int = std::numeric_limits< int >::max();
+    constexpr auto max_int = std::numeric_limits< int >::max();
     //
     return p_string.length() > max_int ? max_int : static_cast< int >( p_string.length() ); // NOLINT(bugprone-narrowing-conversions)
   }

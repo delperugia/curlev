@@ -21,7 +21,7 @@ HTTP &
   HTTP::REST( const std::string & p_uri,
               const std::string & p_verb )
 {
-  HTTP::Method method = method = Method::none;
+  HTTP::Method method = Method::none;
   //
        if ( p_verb == "GET"    ) method = Method::eGET;
   else if ( p_verb == "DELETE" ) method = Method::eDELETE;
@@ -48,7 +48,7 @@ HTTP &
                 const std::string &  p_verb,
                 std::string &&       p_body )
 {
-  HTTP::Method method = method = Method::none;
+  HTTP::Method method = Method::none;
   //
   // GET and DELETE can't have body
        if ( p_verb == "POST"  ) method = Method::ePOST;
