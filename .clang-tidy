@@ -1,0 +1,21 @@
+# cmake      -B build/ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+# clang-tidy -p build/ src/async.cpp
+
+Checks: >
+  clang-analyzer-*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  performance-*,
+  readability-*,
+  -readability-braces-around-statements,
+  -readability-identifier-length,
+  modernize-*,
+  -modernize-redundant-void-arg,
+  -modernize-use-trailing-return-type,
+  cppcoreguidelines-avoid-magic-numbers,
+  cppcoreguidelines-init-variables,
+  cppcoreguidelines-pro-type-static-cast-downcast,
+  misc-unused-parameters
+
+HeaderFilterRegex: '.*/curlev/include/.*'
+WarningsAsErrors:  ''

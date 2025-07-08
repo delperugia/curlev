@@ -17,17 +17,18 @@
 namespace curlev
 {
 
-constexpr long c_success                     =   0;
-constexpr long c_error_start                 =  -1; // internal error
-constexpr long c_error_options_format        =  -2; // bad options format string
-constexpr long c_error_authentication_format =  -3; // bad authentication format string
-constexpr long c_error_certificates_format   =  -4; // bad certificates format string
-constexpr long c_error_options_set           =  -5; // bad option value
-constexpr long c_error_authentication_set    =  -6; // bad authentication value
-constexpr long c_error_certificates_set      =  -7; // bad certificates value
-constexpr long c_error_http_headers_set      =  -8; // bad header
-constexpr long c_error_http_method_set       =  -9; // internal error
-constexpr long c_error_http_mime_set         = -10; // bad MIME value
+constexpr long c_success                          =   0;
+constexpr long c_error_authentication_format      =  -1; // bad authentication format string
+constexpr long c_error_authentication_set         =  -2; // bad authentication value
+constexpr long c_error_certificates_format        =  -3; // bad certificates format string
+constexpr long c_error_certificates_set           =  -4; // bad certificates value
+constexpr long c_error_options_format             =  -5; // bad options format string
+constexpr long c_error_options_set                =  -6; // bad option value
+constexpr long c_error_internal_protocol_crashed  =  -7; // protocol crashed whiled invoked by ASync
+constexpr long c_error_internal_start             =  -8; // internal error
+constexpr long c_error_http_headers_set           =  -9; // bad header
+constexpr long c_error_http_method_set            = -10; // internal error
+constexpr long c_error_http_mime_set              = -11; // bad MIME value
 
 //--------------------------------------------------------------------
 // The base class is the one known and called by ASync
@@ -123,7 +124,7 @@ class Wrapper: public WrapperBase
                   return static_cast< Protocol & >( *this );
               //
               m_exec_state    = State::idle;                          // ASync failed
-              m_response_code = c_error_start;
+              m_response_code = c_error_internal_start;
               delete cb_data;
             }
           }

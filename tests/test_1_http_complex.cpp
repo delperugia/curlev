@@ -36,6 +36,7 @@ TEST( http_complex, simultaneous )
     //
     EXPECT_EQ( async.peak_requests(), codes.size() );
     EXPECT_EQ( async.active_requests(), 0 );
+    EXPECT_FALSE( async.protocol_crashed() );
   }
   //
   async.stop();

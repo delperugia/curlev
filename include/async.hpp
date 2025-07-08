@@ -69,13 +69,14 @@ public:
   bool start( void );
   //
   // Must be called at least when the program stops.
-  // Waits a maximum of p_timeout_s seconds before forcefully stopping,
+  // Waits a maximum of p_timeout_ms milliseconds before forcefully stopping,
   // returns true if stopping was forced.
-  bool stop( unsigned p_timeout_s = 30 );
+  bool stop( unsigned p_timeout_ms = 30000 );
   //
   // Accessors
-  int peak_requests  ( void ) const { return m_multi_running_max;     }
-  int active_requests( void ) const { return m_multi_running_current; }
+  int  peak_requests   ( void ) const { return m_multi_running_max;     }
+  int  active_requests ( void ) const { return m_multi_running_current; }
+  bool protocol_crashed( void ) const { return m_protocol_has_crashed;  }
   //
   // Setting defaults
   bool options       ( const std::string & p_options );
@@ -92,7 +93,8 @@ protected:
   [[nodiscard]] CURL * get_handle( void ) const;
   //
   // Release a handle previously allocated by get_handle, ok on nullptr
-  void return_handle( CURL * & p_curl ) const; // cppcheck-suppress functionStatic
+  static
+  void return_handle( CURL * & p_curl );
   //
   // Starts the transfer, ok on nullptr
   // If it fails the wrapper is notified with the curl result code
@@ -108,6 +110,9 @@ private:
   //
   // Number of currently running (including waiting) requests, from start_request to post Wrapper notification
   std::atomic_long m_nb_running_requests = 0;
+  //
+  // If crashes occurred while invoking protocol's callback
+  std::atomic_bool m_protocol_has_crashed = false;
   //
   // Used by protocol classes as default values
   mutable std::shared_mutex m_default_locks;
@@ -170,7 +175,7 @@ private:
   void        uv_clear( void );
   void        uv_run_accept_requests( std::unique_lock< std::mutex > & p_lock ) const;
   void        uv_run_wait_requests  ( std::unique_lock< std::mutex > & p_lock ) const;
-  static void uv_io_cb( uv_poll_t * p_handle, int p_status, int p_events );
+  static void uv_io_cb     ( uv_poll_t * p_handle, int p_status, int p_events );
   static void uv_timeout_cb( uv_timer_t * p_handle );
   //
   // Context shared between multi and uv
@@ -186,7 +191,8 @@ private:
   };
   //
   CurlContext * create_curl_context ( curl_socket_t p_socket );
-  void          destroy_curl_context( CurlContext * p_context ) const; // cppcheck-suppress functionStatic
+  static
+  void          destroy_curl_context( CurlContext * p_context ); // cppcheck-suppress functionStatic
   //
   // Callback thread
   //
@@ -209,7 +215,7 @@ private:
   static size_t curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nitems, void * p_userdata );
   //
   // Wait for all pending requests to finish
-  bool wait_pending_requests( unsigned p_timeout_s ) const;
+  bool wait_pending_requests( unsigned p_timeout_ms ) const;
   //
   // Returns the operation outcome to the wrapper, immediately or delayed
   void notify_wrapper( CURL * p_curl, long p_result_code );
