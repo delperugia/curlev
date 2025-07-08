@@ -29,8 +29,8 @@ using t_key_values_ci = std::unordered_map< std::string, std::string, t_ci, t_ci
 #define share_setopt( handle, opt, param ) ( CURLSHE_OK == curl_share_setopt( handle, opt, param ) )
 #define multi_setopt( handle, opt, param ) ( CURLM_OK   == curl_multi_setopt( handle, opt, param ) )
 
-// Start with p_list set to nullptr, then add string, p_list is updated
-// and must be freed using curl_slist_free_all.
+// Start with p_list set to nullptr, then add string.
+// p_list is updated and must be freed using curl_slist_free_all.
 // p_string must not be empty.
 bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_string );
 

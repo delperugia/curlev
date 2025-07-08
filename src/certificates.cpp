@@ -8,6 +8,7 @@
 
 namespace curlev
 {
+// NOLINTBEGIN(readability-misleading-indentation)
 
 //--------------------------------------------------------------------
 // Expect a CSKV list of credential details. Example:
@@ -48,10 +49,12 @@ namespace
   // If a parameter is not set, reset its value to the default by using nullptr
   bool easy_setopt_std( CURL * p_curl, CURLoption p_option, const std::string & p_value )
   {
-    if ( p_value.empty() )                                     // set to empty
-      return easy_setopt( p_curl, p_option, nullptr );         // reset to default
-    else
-      return easy_setopt( p_curl, p_option, p_value.c_str() ); // set the value
+    return easy_setopt(
+      p_curl,
+      p_option,
+      p_value.empty() ?    // if set to empty
+        nullptr :          //   reset to default
+        p_value.c_str() ); //   else set the value
   }
 
   // For CA it is not possible to reset to default. Either the default is passed
@@ -62,15 +65,15 @@ namespace
       const std::string & p_value,
       const std::string & p_default )
   {
-    if ( p_value.empty() ) // set to empty
+    if ( p_value.empty() ) // try to reset default
     {
       if ( p_default.empty() )
         return true; // do nothing
-      else
-        return easy_setopt( p_curl, p_option, p_default.c_str() ); // reset known default
+      //
+      return easy_setopt( p_curl, p_option, p_default.c_str() ); // reset known default
     }
-    else
-      return easy_setopt( p_curl, p_option, p_value.c_str() ); // set the value
+    //
+    return easy_setopt( p_curl, p_option, p_value.c_str() ); // set the value
   }
 } // namespace
 
@@ -125,4 +128,5 @@ void Certificates::set_default( const std::string & p_ca_info, const std::string
   m_ca_path_default = p_ca_path;
 }
 
+// NOLINTEND(readability-misleading-indentation)
 } // namespace curlev

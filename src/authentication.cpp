@@ -8,6 +8,7 @@
 
 namespace curlev
 {
+// NOLINTBEGIN(readability-misleading-indentation)
 
 //--------------------------------------------------------------------
 // Expect a CSKV list of credential details. Example:
@@ -82,4 +83,5 @@ void Authentication::set_default( void )
   m_secret.clear();     // user password or access token
 }
 
+// NOLINTEND(readability-misleading-indentation)
 } // namespace curlev
