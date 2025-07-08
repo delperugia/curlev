@@ -177,6 +177,8 @@ std::future< HTTP::Response > HTTP::launch( void )
         // Tricky part: we are certain of the mutability of HTTP, the transfer
         // is guaranteed to be finished, join() is not yet released. state is
         // either idle or finished.
+        // The original reason to have a const is to prevent the end user from
+        // restarting a request from with the callback. It is not a concern here.
         auto & http = const_cast< HTTP & >( p_http );
         //
         Response response;

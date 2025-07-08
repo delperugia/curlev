@@ -221,8 +221,6 @@ Or the request can be started using the convenient method `exec()`,
 which executes the request synchronously (`start()` + `join()`).
 
 Or a `std::future` can be retrieved using `launch()`.
-Note: because the response is moved to the `std::future`, it is
-not available anymore in the `HTTP` object.
 
 While a request is running, all methods except `join()` are ignored
 (as a side effect `exec()` behaves like `join()`).
@@ -264,8 +262,8 @@ the request is running, as this may cause undefined behavior.
 
 Or if a `std::future` was used, `get()` returns a structure with the same information.
 
-Note: because the data are copied into the promise, this approach may be slightly
-less efficient than the other methods.
+Note: because the response is moved to the `std::future`, it is
+not available anymore in the `HTTP` object.
 
 ## REST
 
