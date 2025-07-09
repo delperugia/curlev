@@ -321,3 +321,26 @@ TEST( http_complex, two_start )
   //
   async.stop();
 }
+
+//--------------------------------------------------------------------
+TEST( http_complex, running )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto http = HTTP::create( async );
+    http->GET( c_server_httpbun + "delay/1" ) .start();
+    //
+    auto code = http->options( "connect_timeout=1,timeout=1" )
+                     .authentication( "mode=basic,user=joe,secret=abc123" )
+                     .certificates( "sslcert=unknown.pem,sslkey=unknown.pem,keypasswd=none" )
+                     .get_code();
+    EXPECT_EQ( code, c_running );
+    //
+    code = http->join().get_code();
+    EXPECT_EQ( code, 200 );
+  }
+  //
+  async.stop();
+}
