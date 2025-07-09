@@ -94,8 +94,6 @@ bool HTTP::get_json( nlohmann::json & p_json ) const noexcept
   return ! p_json.is_discarded();
 }
 
-#endif
-
 //--------------------------------------------------------------------
 bool HTTP::Response::get_json( nlohmann::json & p_json ) const noexcept
 {
@@ -103,6 +101,8 @@ bool HTTP::Response::get_json( nlohmann::json & p_json ) const noexcept
   //
   return ! p_json.is_discarded();
 }
+
+#endif
 
 //--------------------------------------------------------------------
 // JSON convenient functions for nlohmann/json
