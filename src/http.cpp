@@ -179,6 +179,7 @@ std::future< HTTP::Response > HTTP::launch( void )
         // either idle or finished.
         // The original reason to have a const is to prevent the end user from
         // restarting a request from with the callback. It is not a concern here.
+        // (see Wrapper::cb_protocol)
         auto & http = const_cast< HTTP & >( p_http );
         //
         Response response;
@@ -380,7 +381,9 @@ namespace
   {
     constexpr auto max_int = std::numeric_limits< int >::max();
     //
-    return p_string.length() > max_int ? max_int : static_cast< int >( p_string.length() ); // NOLINT(bugprone-narrowing-conversions)
+    return p_string.length() > max_int ?
+      max_int :
+      static_cast< int >( p_string.length() ); // NOLINT(bugprone-narrowing-conversions)
   }
 }
 

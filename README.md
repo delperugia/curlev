@@ -178,7 +178,7 @@ In a console, execute the following:
 ```sh
 git clone https://github.com/delperugia/curlev
 cd curlev/
-cmake -B         build/  -DCMAKE_BUILD_TYPE=Debug
+cmake -B         build/  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build    build/  -j
 ctest --test-dir build/  -T test -T coverage
 ctest --test-dir build/  -T memcheck
