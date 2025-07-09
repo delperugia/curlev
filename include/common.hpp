@@ -25,9 +25,23 @@ using t_key_values    = std::unordered_map< std::string, std::string >;         
 using t_key_values_ci = std::unordered_map< std::string, std::string, t_ci, t_ci >; // used for received headers, case insensitive keys
 
 // Wrapper around the libcurl setops function, returning true upon success
-#define easy_setopt(  handle, opt, param ) ( CURLE_OK   == curl_easy_setopt ( handle, opt, param ) )
-#define share_setopt( handle, opt, param ) ( CURLSHE_OK == curl_share_setopt( handle, opt, param ) )
-#define multi_setopt( handle, opt, param ) ( CURLM_OK   == curl_multi_setopt( handle, opt, param ) )
+template < typename type >
+bool easy_setopt( CURL * p_curl, CURLoption p_option, type p_parameter )
+{
+  return CURLE_OK == curl_easy_setopt( p_curl, p_option, p_parameter );
+}
+
+template < typename type >
+bool multi_setopt( CURL * p_curl, CURLMoption p_option, type p_parameter )
+{
+  return CURLM_OK == curl_multi_setopt( p_curl, p_option, p_parameter );
+}
+
+template < typename type >
+bool share_setopt( CURL * p_curl, CURLSHoption p_option, type p_parameter )
+{
+  return CURLSHE_OK == curl_share_setopt( p_curl, p_option, p_parameter );
+}
 
 // Start with p_list set to nullptr, then add string.
 // p_list is updated and must be freed using curl_slist_free_all.

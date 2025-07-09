@@ -334,7 +334,7 @@ TEST( http_advanced, user_cb )
                 } )
             .join()
             .get_code();
-    ASSERT_EQ( code, 200 );
+    ASSERT_EQ( code, c_error_user_callback );
   }
   //
   async.stop();

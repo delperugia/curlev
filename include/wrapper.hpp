@@ -13,6 +13,7 @@
 #include <mutex>
 
 #include "async.hpp"
+#include "common.hpp"
 
 namespace curlev
 {
@@ -24,23 +25,19 @@ constexpr long c_error_certificates_format        =  -3; // bad certificates for
 constexpr long c_error_certificates_set           =  -4; // bad certificates value
 constexpr long c_error_options_format             =  -5; // bad options format string
 constexpr long c_error_options_set                =  -6; // bad option value
-constexpr long c_error_internal_protocol_crashed  =  -7; // protocol crashed whiled invoked by ASync
-constexpr long c_error_internal_start             =  -8; // internal error
-constexpr long c_error_http_headers_set           =  -9; // bad header
-constexpr long c_error_http_method_set            = -10; // internal error
-constexpr long c_error_http_mime_set              = -11; // bad MIME value
+constexpr long c_error_user_callback              =  -7; // callback crashed
+constexpr long c_error_internal_protocol_crashed  =  -8; // protocol crashed whiled invoked by ASync
+constexpr long c_error_internal_start             =  -9; // internal error
+constexpr long c_error_http_headers_set           = -10; // bad header
+constexpr long c_error_http_method_set            = -11; // internal error
+constexpr long c_error_http_mime_set              = -12; // bad MIME value
 
 //--------------------------------------------------------------------
 // The base class is the one known and called by ASync
 class WrapperBase
 {
 public:
-  explicit WrapperBase() = default;
   virtual ~WrapperBase() = default;
-  //
-  // Prevent copy
-  WrapperBase( const WrapperBase & )             = delete;
-  WrapperBase & operator=( const WrapperBase & ) = delete;
   //
 protected:
   friend class ASync;
@@ -78,7 +75,6 @@ class Wrapper: public WrapperBase
     struct ProtocolPublic : public Protocol
     {
       explicit ProtocolPublic( ASync & p_async ) : Protocol( p_async ) {}
-      virtual ~ProtocolPublic() = default;
     };
     //
   public:
@@ -89,7 +85,7 @@ class Wrapper: public WrapperBase
     //
     ~Wrapper() override
     {
-      m_async.return_handle( m_curl );
+      ASync::return_handle( m_curl );
     }
     //
     // The factory. The invoker takes the ownership of the new class, but
@@ -216,6 +212,12 @@ class Wrapper: public WrapperBase
     // Accessors
     long get_code( void ) const { return m_response_code; };
     //
+    // Prevent copy
+    Wrapper            ( const Wrapper & ) = delete;
+    Wrapper & operator=( const Wrapper & ) = delete;
+    Wrapper            ( Wrapper &&      ) = delete;
+    Wrapper & operator=( Wrapper &&      ) = delete;
+    //
   protected:
     CURL *         m_curl          = nullptr;
     long           m_response_code = c_success;
@@ -313,6 +315,7 @@ class Wrapper: public WrapperBase
       }
       catch ( ... )
       {
+        m_response_code = c_error_user_callback; // this overwrite the real result
       }
     }
     //

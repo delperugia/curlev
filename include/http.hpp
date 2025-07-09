@@ -117,6 +117,12 @@ public:
   //
   std::future< Response > launch( void );
   //
+  // Prevent copy
+  HTTP            ( const HTTP & ) = delete;
+  HTTP & operator=( const HTTP & ) = delete;
+  HTTP            ( HTTP &&      ) = delete;
+  HTTP & operator=( HTTP &&      ) = delete;
+  //
 protected:
   // Prevent creating directly an instance of the class, the Wrapper::create() method must be used
   explicit HTTP( ASync & p_async ) : Wrapper< HTTP >( p_async ) {};

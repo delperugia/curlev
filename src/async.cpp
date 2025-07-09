@@ -20,7 +20,7 @@ namespace curlev
 {
 
 // A safety in case a notification is lost
-constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 1000 );
+constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 1'000 );
 
 // Short sleep delay when doing active wait
 constexpr auto c_short_wait_ms      = 10U;
@@ -676,8 +676,9 @@ void ASync::destroy_curl_context( CurlContext * p_context )
 {
   if ( p_context != nullptr )
   {
+    // From doc: uv_handle_t is the base type for all handles...any libuv handle can be cast to uv_handle_t
     uv_close(
-        reinterpret_cast< uv_handle_t * >( &p_context->poll ),
+        reinterpret_cast< uv_handle_t * >( &p_context->poll ), // NOLINT( cppcoreguidelines-pro-type-reinterpret-cast )
         []( uv_handle_t * handle )
         {
           if ( handle == nullptr || handle->data == nullptr ) // not possible

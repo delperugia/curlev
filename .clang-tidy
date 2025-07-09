@@ -1,21 +1,29 @@
-# cmake      -B build/ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-# clang-tidy -p build/ src/async.cpp
+# clang-tidy -p build/ include/*.hpp src/*.cpp
 
 Checks: >
   clang-analyzer-*,
   bugprone-*,
   -bugprone-easily-swappable-parameters,
   performance-*,
+  -performance-enum-size,
   readability-*,
   -readability-braces-around-statements,
   -readability-identifier-length,
   modernize-*,
   -modernize-redundant-void-arg,
   -modernize-use-trailing-return-type,
-  cppcoreguidelines-avoid-magic-numbers,
-  cppcoreguidelines-init-variables,
-  cppcoreguidelines-pro-type-static-cast-downcast,
+  cppcoreguidelines-*,
+  -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-union-access,
   misc-unused-parameters
 
 HeaderFilterRegex: '.*/curlev/include/.*'
 WarningsAsErrors:  ''
+
+CheckOptions:
+  - key:             cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+    value:           '1'

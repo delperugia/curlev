@@ -23,6 +23,9 @@
 namespace curlev
 {
 
+// The default network timeout
+constexpr auto c_default_network_timeout_ms = 30'000U;
+
 class                                WrapperBase;
 template < typename Protocol > class Wrapper;
 
@@ -49,9 +52,14 @@ public:
   void lock_shared( void ) { pthread_rwlock_rdlock( &m_lock ); }
   void unlock     ( void ) { pthread_rwlock_unlock( &m_lock ); }
   //
+  shared_mutex            ( const shared_mutex & ) = delete;
+  shared_mutex & operator=( const shared_mutex & ) = delete;
+  shared_mutex            ( shared_mutex &&      ) = delete;
+  shared_mutex & operator=( shared_mutex &&      ) = delete;
+  //
 private:
   bool             m_initialized = false;
-  pthread_rwlock_t m_lock;
+  pthread_rwlock_t m_lock        = {};
 };
 
 //--------------------------------------------------------------------
@@ -63,7 +71,7 @@ class ASync
 {
 public:
   ASync();
-  ~ASync();
+  virtual ~ASync();
   //
   // Must be called at least once before doing calling any other function of curlev
   bool start( void );
@@ -71,7 +79,7 @@ public:
   // Must be called at least when the program stops.
   // Waits a maximum of p_timeout_ms milliseconds before forcefully stopping,
   // returns true if stopping was forced.
-  bool stop( unsigned p_timeout_ms = 30000 );
+  bool stop( unsigned p_timeout_ms = c_default_network_timeout_ms );
   //
   // Accessors
   int  peak_requests   ( void ) const { return m_multi_running_max;     }
@@ -82,6 +90,11 @@ public:
   bool options       ( const std::string & p_options );
   bool authentication( const std::string & p_credential );
   bool certificates  ( const std::string & p_certificates );
+  //
+  ASync            ( const ASync & ) = delete;
+  ASync & operator=( const ASync & ) = delete;
+  ASync            ( ASync &&      ) = delete;
+  ASync & operator=( ASync &&      ) = delete;
   //
 protected:
   template < typename Protocol > friend class Wrapper;
@@ -168,8 +181,8 @@ private:
   mutable std::condition_variable m_uv_run_cv;
   bool                            m_uv_running = false; // worker thread is running
   std::thread                     m_uv_worker;
-  uv_loop_t *                     m_uv_loop = nullptr;
-  uv_timer_t                      m_uv_timer;
+  uv_loop_t *                     m_uv_loop    = nullptr;
+  uv_timer_t                      m_uv_timer   = {};
   //
   bool        uv_init( void );
   void        uv_clear( void );
@@ -184,7 +197,7 @@ private:
   {
     ASync &       async;
     curl_socket_t curl;
-    uv_poll_t     poll;
+    uv_poll_t     poll = {};
     //
     CurlContext( ASync & p_async, curl_socket_t p_curl ) :
       async( p_async ), curl( p_curl ){}
