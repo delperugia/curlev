@@ -739,7 +739,7 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
   if ( p_userdata == nullptr )
     return CURL_WRITEFUNC_ERROR;
   //
-  auto * protocol = reinterpret_cast< WrapperBase * >( p_userdata );
+  auto * protocol = static_cast< WrapperBase * >( p_userdata );
   auto   to_add   = p_size * p_nmemb;
   //
   // Future: add a hard limit on total received body size
@@ -765,7 +765,7 @@ size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nit
   if ( p_userdata == nullptr )
     return CURL_WRITEFUNC_ERROR;
   //
-  auto * protocol = reinterpret_cast< WrapperBase * >( p_userdata );
+  auto * protocol = static_cast< WrapperBase * >( p_userdata );
   auto   line     = std::string_view( p_buffer, p_size * p_nitems );
   auto   colon    = line.find( ':' );
   //
