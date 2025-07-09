@@ -10,6 +10,42 @@
 using namespace curlev;
 
 //--------------------------------------------------------------------
+TEST( common, svtol )
+{
+  long v;
+
+  // Basic numeric conversions
+  EXPECT_TRUE( svtol( "0"        , v ) && v ==         0 );
+  EXPECT_TRUE( svtol( "42"       , v ) && v ==        42 );
+  EXPECT_TRUE( svtol( "-42"      , v ) && v ==       -42 );
+  EXPECT_TRUE( svtol( "123456789", v ) && v == 123456789 );
+
+  // Leading and trailing space are not supported
+  EXPECT_FALSE( svtol( ""        , v ) );
+  EXPECT_FALSE( svtol( " "       , v ) );
+  EXPECT_FALSE( svtol( "\t"      , v ) );
+  EXPECT_FALSE( svtol( "  42  "  , v ) );
+  EXPECT_FALSE( svtol( "\t-123\n", v ) );
+
+  // Leading zeros
+  EXPECT_TRUE( svtol( "000"  , v ) && v ==   0 );
+  EXPECT_TRUE( svtol( "0042" , v ) && v ==  42 );
+  EXPECT_TRUE( svtol( "-0042", v ) && v == -42 );
+
+  // Invalid input
+  EXPECT_FALSE( svtol( "abc"                , v ) );
+  EXPECT_FALSE( svtol( "12abc34"            , v ) );
+  EXPECT_FALSE( svtol( "abc123"             , v ) );
+  EXPECT_FALSE( svtol( "+42"                , v ) );
+  EXPECT_FALSE( svtol( "-"                  , v ) );
+  EXPECT_FALSE( svtol( "9999999999999999999", v ) );
+
+  // Limits
+  EXPECT_TRUE( svtol( "2147483647" , v ) && v ==  2147483647 );
+  EXPECT_TRUE( svtol( "-2147483647", v ) && v == -2147483647 );
+}
+
+//--------------------------------------------------------------------
 TEST( common, trim )
 {
   EXPECT_EQ( trim( ""     ), ""   );
@@ -47,66 +83,32 @@ TEST( common, trim_unicode )
 }
 
 //--------------------------------------------------------------------
-TEST( common, curl_slist_checked_append )
+TEST( common, equal_ascii_ci )
 {
-  curl_slist * slist = nullptr;
-  //
-  // Append to empty list
-  EXPECT_TRUE( curl_slist_checked_append( slist, "Header1: value1" ) );
-  ASSERT_NE( slist, nullptr );
-  EXPECT_STREQ( slist->data, "Header1: value1" );
-  //
-  // Append another header
-  EXPECT_TRUE( curl_slist_checked_append( slist, "Header2: value2" ) );
-  ASSERT_NE( slist, nullptr );
-  ASSERT_NE( slist->next, nullptr );
-  EXPECT_STREQ( slist->next->data, "Header2: value2" );
-  //
-  // Append an empty string (should not change list)
-  curl_slist * slist_before = slist;
-  EXPECT_FALSE( curl_slist_checked_append( slist, "" ) );
-  ASSERT_NE( slist, nullptr );
-  ASSERT_NE( slist->next, nullptr );
-  EXPECT_EQ( slist_before, slist );
-  EXPECT_STREQ( slist->next->data, "Header2: value2" );
-  //
-  curl_slist_free_all( slist );
-}
+  EXPECT_TRUE( equal_ascii_ci( "a", "A" ) );
+  EXPECT_TRUE( equal_ascii_ci( "abc", "ABC" ) );
+  EXPECT_TRUE( equal_ascii_ci( "AbC", "aBc" ) );
+  EXPECT_TRUE( equal_ascii_ci( "test", "TEST" ) );
+  EXPECT_TRUE( equal_ascii_ci( "TeSt123", "tEsT123" ) );
+  EXPECT_TRUE( equal_ascii_ci( "", "" ) );
+  EXPECT_TRUE( equal_ascii_ci( "a", "a" ) );
+  EXPECT_TRUE( equal_ascii_ci( "A", "A" ) );
+  EXPECT_TRUE( equal_ascii_ci( "123", "123" ) );
+  EXPECT_TRUE( equal_ascii_ci( "abcDEF", "ABCdef" ) );
 
-//--------------------------------------------------------------------
-TEST( common, svtol )
-{
-  long v;
+  EXPECT_FALSE( equal_ascii_ci( "abc", "abcd" ) );
+  EXPECT_FALSE( equal_ascii_ci( "abc", "ab" ) );
+  EXPECT_FALSE( equal_ascii_ci( "abc", "abd" ) );
+  EXPECT_FALSE( equal_ascii_ci( "abc", "aBcD" ) );
+  EXPECT_FALSE( equal_ascii_ci( "abc", "xyz" ) );
+  EXPECT_FALSE( equal_ascii_ci( "abc", "" ) );
+  EXPECT_FALSE( equal_ascii_ci( "", "abc" ) );
+  EXPECT_FALSE( equal_ascii_ci( "abc1", "abc2" ) );
+  EXPECT_FALSE( equal_ascii_ci( "abc!", "abc" ) );
 
-  // Basic numeric conversions
-  EXPECT_TRUE( svtol( "0"        , v ) && v ==         0 );
-  EXPECT_TRUE( svtol( "42"       , v ) && v ==        42 );
-  EXPECT_TRUE( svtol( "-42"      , v ) && v ==       -42 );
-  EXPECT_TRUE( svtol( "123456789", v ) && v == 123456789 );
-
-  // Leading and trailing space are not supported
-  EXPECT_FALSE( svtol( ""        , v ) );
-  EXPECT_FALSE( svtol( " "       , v ) );
-  EXPECT_FALSE( svtol( "\t"      , v ) );
-  EXPECT_FALSE( svtol( "  42  "  , v ) );
-  EXPECT_FALSE( svtol( "\t-123\n", v ) );
-
-  // Leading zeros
-  EXPECT_TRUE( svtol( "000"  , v ) && v ==   0 );
-  EXPECT_TRUE( svtol( "0042" , v ) && v ==  42 );
-  EXPECT_TRUE( svtol( "-0042", v ) && v == -42 );
-
-  // Invalid input
-  EXPECT_FALSE( svtol( "abc"                , v ) );
-  EXPECT_FALSE( svtol( "12abc34"            , v ) );
-  EXPECT_FALSE( svtol( "abc123"             , v ) );
-  EXPECT_FALSE( svtol( "+42"                , v ) );
-  EXPECT_FALSE( svtol( "-"                  , v ) );
-  EXPECT_FALSE( svtol( "9999999999999999999", v ) );
-
-  // Limits
-  EXPECT_TRUE( svtol( "2147483647" , v ) && v ==  2147483647 );
-  EXPECT_TRUE( svtol( "-2147483647", v ) && v == -2147483647 );
+  // Non-ASCII: should not be considered equal
+  EXPECT_FALSE( equal_ascii_ci( "abc", "ábć" ) );
+  EXPECT_FALSE( equal_ascii_ci( "á", "a" ) );
 }
 
 //--------------------------------------------------------------------
@@ -180,4 +182,31 @@ TEST( common, parse_cskv )
   // Handler rejection
   EXPECT_FALSE( parse_cskv( "key1=value1,key2=value2",
                             []( std::string_view key, std::string_view value ) { return false; } ) );
+}
+
+//--------------------------------------------------------------------
+TEST( common, curl_slist_checked_append )
+{
+  curl_slist * slist = nullptr;
+  //
+  // Append to empty list
+  EXPECT_TRUE( curl_slist_checked_append( slist, "Header1: value1" ) );
+  ASSERT_NE( slist, nullptr );
+  EXPECT_STREQ( slist->data, "Header1: value1" );
+  //
+  // Append another header
+  EXPECT_TRUE( curl_slist_checked_append( slist, "Header2: value2" ) );
+  ASSERT_NE( slist, nullptr );
+  ASSERT_NE( slist->next, nullptr );
+  EXPECT_STREQ( slist->next->data, "Header2: value2" );
+  //
+  // Append an empty string (should not change list)
+  curl_slist * slist_before = slist;
+  EXPECT_FALSE( curl_slist_checked_append( slist, "" ) );
+  ASSERT_NE( slist, nullptr );
+  ASSERT_NE( slist->next, nullptr );
+  EXPECT_EQ( slist_before, slist );
+  EXPECT_STREQ( slist->next->data, "Header2: value2" );
+  //
+  curl_slist_free_all( slist );
 }

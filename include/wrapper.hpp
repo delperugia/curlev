@@ -49,8 +49,9 @@ protected:
   [[nodiscard]] virtual bool use_threaded_cb( void ) const = 0;
   //
   // Data received during transfer by ASync's callbacks
-  t_key_values_ci m_response_headers; // must be persistent (CURLOPT_HEADERDATA)
-  std::string     m_response_body;    // must be persistent (CURLOPT_WRITEDATA)
+  t_key_values_ci m_response_headers;          // must be persistent (CURLOPT_HEADERDATA)
+  std::string     m_response_body;             // must be persistent (CURLOPT_WRITEDATA)
+  size_t          m_header_content_length = 0; // set to the received Content-Length header, if received; reset when receiving body
 };
 
 //--------------------------------------------------------------------
@@ -231,8 +232,9 @@ class Wrapper: public WrapperBase
     {
       assert( ! m_exec_mutex.try_lock() );
       //
-      m_response_code    = c_success;
-      m_user_cb_threaded = true;
+      m_response_code         = c_success;
+      m_header_content_length = 0;
+      m_user_cb_threaded      = true;
       //
       m_async.get_default( m_options, m_authentication, m_certificates ); // restore global defaults
       //

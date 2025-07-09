@@ -156,13 +156,13 @@ HTTP & HTTP::add_mime_parameters( const mime::parts & p_parts )
 // These accessors return references for efficiency, directly exposing the object's
 // internal. They must only be used after the request has fully completed to ensure data
 // consistency and avoid unstable values during ongoing operations.
-static const std::string     empty_string;
-static const t_key_values_ci empty_key_values_ci;
+static const std::string     c_empty_string;
+static const t_key_values_ci c_empty_key_values_ci;
 
-const t_key_values_ci & HTTP::get_headers     ( void ) const noexcept { return is_running() ? empty_key_values_ci : m_response_headers;      }
-const std::string     & HTTP::get_content_type( void ) const noexcept { return is_running() ? empty_string        : m_response_content_type; }
-const std::string     & HTTP::get_redirect_url( void ) const noexcept { return is_running() ? empty_string        : m_response_redirect_url; }
-const std::string     & HTTP::get_body        ( void ) const noexcept { return is_running() ? empty_string        : m_response_body;         }
+const t_key_values_ci & HTTP::get_headers     ( void ) const noexcept { return is_running() ? c_empty_key_values_ci : m_response_headers;      }
+const std::string     & HTTP::get_content_type( void ) const noexcept { return is_running() ? c_empty_string        : m_response_content_type; }
+const std::string     & HTTP::get_redirect_url( void ) const noexcept { return is_running() ? c_empty_string        : m_response_redirect_url; }
+const std::string     & HTTP::get_body        ( void ) const noexcept { return is_running() ? c_empty_string        : m_response_body;         }
 
 //--------------------------------------------------------------------
 std::future< HTTP::Response > HTTP::launch( void )

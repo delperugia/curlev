@@ -744,6 +744,11 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
   auto   to_add   = p_size * p_nmemb;
   //
   // Future: add a hard limit on total received body size
+  if ( protocol->m_header_content_length > 0 ) // length was received in headers, and reservation is not yet done
+  {
+    protocol->m_response_body.reserve( protocol->m_header_content_length );
+    protocol->m_header_content_length = 0; // disabled on next call
+  }
   //
   try
   {
@@ -761,8 +766,27 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
 // To store header received during the transfer.
 // Data is located in the Protocol and is a std::map< std::string, std::string >.
 // m_uv_run_mutex is locked.
+namespace
+{
+  // Converts a std::string to a size_t. Returns false on error.
+  bool cvt_length( const std::string & p_value, size_t & p_length )
+  {
+    try
+    {
+      p_length = std::stoul( p_value );
+      return true;
+    }
+    catch ( const std::exception & e )
+    {
+      return false;
+    }
+  }
+}
+
 size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nitems, void * p_userdata )
 {
+  static const std::string c_content_length = "content-length";
+  //
   if ( p_userdata == nullptr )
     return CURL_WRITEFUNC_ERROR;
   //
@@ -776,9 +800,13 @@ size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nit
     auto value = std::string( trim( line.substr( colon + 1 ) ) ); // value
     //
     if ( ! key.empty() )
+    {
+      // Capture the body length: it will be used later in curl_cb_write
+      if ( equal_ascii_ci( key, c_content_length ) )
+        cvt_length( value, protocol->m_header_content_length );
+      //
       protocol->m_response_headers.insert_or_assign( std::move( key ), std::move( value ) );
-    //
-    // Future: capture Content-Size to pre-alloc curl_cb_write body size
+    }
   }
   //
   return p_nitems * p_size;
