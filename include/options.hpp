@@ -47,7 +47,7 @@ private:
   bool        m_cookies            = false;
   bool        m_follow_location    = false;
   bool        m_insecure           = false;
-  long        m_maxredirs          = false;
+  long        m_maxredirs          = 0;
   std::string m_proxy;
   long        m_timeout            = 0;
   bool        m_verbose            = false;
