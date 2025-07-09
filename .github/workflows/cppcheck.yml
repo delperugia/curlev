@@ -26,7 +26,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cppcheck
 
-      - name: Run Cppcheck on source and tests
+      - name: Run Cppcheck on sources and tests
         run: |
           cppcheck --enable=all --inconclusive --force \
                    --inline-suppr --std=c++17 --quiet \

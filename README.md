@@ -4,6 +4,7 @@ curlev
 [![CodeQL](https://github.com/delperugia/curlev/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/github-code-scanning/codeql)
 [![flawfinder](https://github.com/delperugia/curlev/actions/workflows/flawfinder.yml/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/flawfinder.yml)
 [![Cppcheck](https://github.com/delperugia/curlev/actions/workflows/cppcheck.yml/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/cppcheck.yml)
+[![Clang-Tidy](https://github.com/delperugia/curlev/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/clang-tidy.yml)
 [![Valgrind](https://github.com/delperugia/curlev/actions/workflows/valgrind.yml/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/valgrind.yml)
 [![Codecov](https://codecov.io/gh/delperugia/curlev/graph/badge.svg?token=339AIQXBS3)](https://codecov.io/gh/delperugia/curlev)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)

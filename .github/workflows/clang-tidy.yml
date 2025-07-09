@@ -1,0 +1,31 @@
+name: Clang-Tidy
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  cppcheck:
+    name: Run Clang-Tidy
+    runs-on: ubuntu-latest
+    permissions:
+      actions:         read
+      contents:        read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy
+
+      - name: Run Clang-Tidy on sources
+        run: |
+          clang-tidy -p build/ include/*.hpp src/*.cpp -- -std=c++17 -Iinclude/
