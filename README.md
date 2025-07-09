@@ -168,9 +168,10 @@ will be available in the HTTP client.
 
 For testing and debugging, you must also install the following packages:
 
+ - clang-tidy
+ - cppcheck (>=2.13)
  - gtest
  - nlohmann-json
- - cppcheck (>=2.13)
  - valgrind
 
 In a console, execute the following:

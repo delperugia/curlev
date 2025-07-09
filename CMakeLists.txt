@@ -33,7 +33,7 @@ if( CPPCHECK_EXECUTABLE )
     add_custom_target(
         cppcheck
         COMMAND ${CPPCHECK_EXECUTABLE}
-                --enable=all --inconclusive --force 
+                --enable=all --inconclusive --force
                 --inline-suppr --std=c++17 --quiet
                 --suppress=checkersReport
                 --suppress=missingIncludeSystem
@@ -42,5 +42,19 @@ if( CPPCHECK_EXECUTABLE )
                 ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/tests/
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running Cppcheck on all sources"
+    )
+endif()
+
+# clang-tidy
+find_program( CLANG_TIDY_EXECUTABLE NAMES clang-tidy )
+
+if( CLANG_TIDY_EXECUTABLE )
+    add_custom_target(
+        clang-tidy
+        COMMAND ${CLANG_TIDY_EXECUTABLE}
+                -p ${CMAKE_SOURCE_DIR}/build/
+                ${CMAKE_SOURCE_DIR}/include/*.hpp ${CMAKE_SOURCE_DIR}/src/*.cpp
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running clang-tidy on all sources"
     )
 endif()
