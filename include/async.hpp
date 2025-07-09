@@ -132,8 +132,8 @@ private:
   //
   // libcurl share interface - share data between multiple easy handles (DNS, TLS...)
   //
-  shared_mutex m_share_locks[ CURL_LOCK_DATA_LAST ];
-  CURLSH *     m_share_handle = nullptr;
+  std::array< shared_mutex, CURL_LOCK_DATA_LAST > m_share_locks;
+  CURLSH *                                        m_share_handle = nullptr;
   //
   bool        share_init( void );
   void        share_clear( void );

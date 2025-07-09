@@ -47,8 +47,8 @@ public:
   // Resets all parts added.
   void clear( void ) { m_parts.clear(); };
   //
-  // Returns true if there is at least one part added
-  bool empty( void ) const { return m_parts.empty(); }
+  // Returns true if the MIME document is empty
+  [[nodiscard]] bool empty( void ) const { return m_parts.empty(); }
   //
 private:
   mime::parts m_parts;

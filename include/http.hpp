@@ -35,7 +35,7 @@ namespace curlev
 class HTTP : public Wrapper< HTTP >
 {
 public:
-  virtual ~HTTP();
+  ~HTTP() override;
   //
   // The first step is to call one of theses method:
   //
@@ -132,15 +132,16 @@ protected:
   //
 private:
   // Data used when sending the request
-  enum class Method { none, eGET, eDELETE, ePOST, ePUT, ePATCH }
-                  m_request_method = Method::none;
-  std::string     m_request_url;
-  t_key_values    m_request_query_parameters;
-  t_key_values    m_request_headers;
-  std::string     m_request_content_type;
-  std::string     m_request_body;            // must be persistent (CURLOPT_POSTFIELDS)
-  t_key_values    m_request_body_parameters; // has precedence over m_request_body
-  MIME            m_request_mime;            // has precedence over m_request_body and m_request_body_parameters
+  enum class Method { none, eGET, eDELETE, ePOST, ePUT, ePATCH };
+  //
+  Method        m_request_method = Method::none;
+  std::string   m_request_url;
+  t_key_values  m_request_query_parameters;
+  t_key_values  m_request_headers;
+  std::string   m_request_content_type;
+  std::string   m_request_body;            // must be persistent (CURLOPT_POSTFIELDS)
+  t_key_values  m_request_body_parameters; // has precedence over m_request_body
+  MIME          m_request_mime;            // has precedence over m_request_body and m_request_body_parameters
   //
   // Data retrieved from the request response
   // Received headers and body are stored the WrapperBase

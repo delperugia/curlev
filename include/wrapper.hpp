@@ -49,7 +49,7 @@ protected:
   virtual void async_cb( long p_result ) = 0;
   //
   // Is async_cb called in ASync uv thread (false) or a dedicated thread (true)
-  virtual bool use_threaded_cb( void ) const = 0;
+  [[nodiscard]] virtual bool use_threaded_cb( void ) const = 0;
   //
   // Data received during transfer by ASync's callbacks
   t_key_values_ci m_response_headers; // must be persistent (CURLOPT_HEADERDATA)
@@ -61,7 +61,7 @@ protected:
 struct bad_curl_easy_alloc : public std::bad_alloc
 {
   // cppcheck-suppress unusedFunction
-  const char * what() const noexcept override
+  [[nodiscard]] const char * what() const noexcept override
   {
     return "Initializing curl easy handle";
   }
@@ -82,8 +82,15 @@ class Wrapper: public WrapperBase
     };
     //
   public:
-    explicit Wrapper( ASync & p_async ) : WrapperBase(), m_async( p_async ) {}
-    virtual ~Wrapper() { m_async.return_handle( m_curl ); }
+    explicit Wrapper( ASync & p_async ) :
+      WrapperBase(),
+      m_async( p_async )
+    {}
+    //
+    ~Wrapper() override
+    {
+      m_async.return_handle( m_curl );
+    }
     //
     // The factory. The invoker takes the ownership of the new class, but
     // the class itself keeps a weak pointer to the return shared pointer.
@@ -334,16 +341,18 @@ class Wrapper: public WrapperBase
     }
     //
   private:
-    ASync &                   m_async;
+    ASync & m_async;
     //
-    mutable std::mutex        m_exec_mutex;
-    std::condition_variable   m_exec_cv; // used by join()
     enum class State
     {
       idle,     // just created or terminated
       running,  // actively running
       finished  // transfer is finished but post processing is still taking place
-    }                         m_exec_state = State::idle;
+    };
+    //
+    mutable std::mutex      m_exec_mutex;
+    std::condition_variable m_exec_cv; // used by join()
+    State                   m_exec_state = State::idle;
     //
     std::weak_ptr< Protocol > m_self_weak; // set on self at creation, used to create and pass a shared_ptr to ASync
     //
