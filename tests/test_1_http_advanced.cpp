@@ -162,33 +162,40 @@ TEST( http_advanced, rest )
   ASync async;
   async.start();
   //
+  for ( const auto & [ document, verb ] :
+        t_key_values{ { "get", "GET" }, { "delete", "DELETE" }, { "post", "POST" }, { "put", "PUT" }, { "patch", "PATCH" } } )
   {
-    auto http = HTTP::create( async );
-    auto code = http->REST( c_server_httpbun + "get", "GET" ).exec().get_code();
-    ASSERT_EQ( code, 200 );
+    nlohmann::json json;
     //
-    EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
-    EXPECT_EQ( json_count( http->get_body(), "$.form"  ), 0 );
-    EXPECT_EQ( json_count( http->get_body(), "$.files" ), 0 );
+    auto http = HTTP::create( async );
+    auto code = http->REST( c_server_httpbun + document, verb ).exec().get_code();
+    ASSERT_EQ( code, 200 );
+    ASSERT_TRUE( http->get_json( json ) );
+    //
+    EXPECT_EQ( json["method"]      , verb );
+    EXPECT_EQ( json["args" ].size(), 0    );
+    EXPECT_EQ( json["form" ].size(), 0    );
+    EXPECT_EQ( json["files"].size(), 0    );
   }
   //
-#if __has_include( <nlohmann/json.hpp> )
+  for ( const auto & [ document, verb ] :
+        t_key_values{ { "post", "POST" }, { "put", "PUT" }, { "patch", "PATCH" } } )
   {
     nlohmann::json payload = nlohmann::json::parse( R"({ "a": "1", "b": "2" })" );
     nlohmann::json json;
     //
     auto http = HTTP::create( async );
-    auto code = http->REST( c_server_httpbun + "post", "POST", payload )
+    auto code = http->REST( c_server_httpbun + document, verb, payload )
                      .add_query_parameters( { { "c", "3" } } ).exec().get_code();
     ASSERT_EQ( code, 200 );
     ASSERT_TRUE( http->get_json( json ) );
     //
+    EXPECT_EQ( json["method"]                 , verb               );
     EXPECT_EQ( json["headers"]["Content-Type"], "application/json" );
     EXPECT_EQ( json["json"]["a"]              , "1"                );
     EXPECT_EQ( json["json"]["b"]              , "2"                );
     EXPECT_EQ( json["args"]["c"]              , "3"                );
   }
-#endif
   //
 #if __has_include( <rapidjson/document.h> )
   {

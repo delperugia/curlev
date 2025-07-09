@@ -477,8 +477,15 @@ TEST( http_basic, launch )
     //
     EXPECT_EQ( response1.code, 200 );
     EXPECT_EQ( json_extract( response1.body, "$.args.a" ), "21" );
+    nlohmann::json json1;
+    EXPECT_TRUE( response1.get_json( json1 ) && json1[ "args" ][ "a" ] == "21" );
+    //
     EXPECT_EQ( response2.code, 200 );
     EXPECT_EQ( json_extract( response2.body, "$.args.a" ), "22" );
+#if __has_include( <rapidjson/document.h> )
+    rapidjson::Document json2;
+    EXPECT_TRUE( response2.get_json( json2 ) && json2[ "args" ][ "a" ] == "22" );
+#endif
   }
   //
   async.stop();
