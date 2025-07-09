@@ -90,7 +90,7 @@ protected:
   void get_default( Options & p_options, Authentication & p_authentication, Certificates & p_certificates ) const;
   //
   // Create a new easy handle that *must* be freed using return_handle
-  [[nodiscard]] CURL * get_handle( void ) const;
+  [[nodiscard]] CURL * get_handle( WrapperBase * p_protocol ) const;
   //
   // Release a handle previously allocated by get_handle, ok on nullptr
   static

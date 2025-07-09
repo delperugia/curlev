@@ -143,10 +143,9 @@ private:
   MIME            m_request_mime;            // has precedence over m_request_body and m_request_body_parameters
   //
   // Data retrieved from the request response
-  t_key_values_ci m_response_headers;        // must be persistent (CURLOPT_HEADERDATA)
+  // Received headers and body are stored the WrapperBase
   std::string     m_response_redirect_url;
   std::string     m_response_content_type;
-  std::string     m_response_body;           // must be persistent (CURLOPT_WRITEDATA)
   //
   // Extra curl handles used when sending the request
   curl_slist *    m_curl_headers = nullptr;  // must be persistent (CURLOPT_HTTPHEADER)

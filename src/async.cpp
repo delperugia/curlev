@@ -120,16 +120,18 @@ void ASync::get_default( Options & p_options, Authentication & p_authentication,
 //--------------------------------------------------------------------
 // Create a new easy handle that *must* be freed using return_handle.
 // CURLOPT_WRITEDATA is properly set in the wrapper to one of its member.
-[[nodiscard]] CURL * ASync::get_handle() const
+[[nodiscard]] CURL * ASync::get_handle( WrapperBase * p_protocol ) const
 {
+  assert( p_protocol != nullptr );
+  //
   auto * curl = curl_easy_init();
   bool   ok   = true;
   //
   ok = ok && curl != nullptr;
   ok = ok && easy_setopt( curl, CURLOPT_WRITEFUNCTION , curl_cb_write  );
-  ok = ok && easy_setopt( curl, CURLOPT_WRITEDATA     , nullptr        );
+  ok = ok && easy_setopt( curl, CURLOPT_WRITEDATA     , p_protocol     );
   ok = ok && easy_setopt( curl, CURLOPT_HEADERFUNCTION, curl_cb_header );
-  ok = ok && easy_setopt( curl, CURLOPT_HEADERDATA    , nullptr        );
+  ok = ok && easy_setopt( curl, CURLOPT_HEADERDATA    , p_protocol     );
   ok = ok && easy_setopt( curl, CURLOPT_SHARE         , m_share_handle );
   ok = ok && easy_setopt( curl, CURLOPT_NOSIGNAL      , 1L             );
   //
@@ -737,14 +739,14 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
   if ( p_userdata == nullptr )
     return CURL_WRITEFUNC_ERROR;
   //
-  auto * protocol_buffer = static_cast< std::string * >( p_userdata );
-  auto   to_add          = p_size * p_nmemb;
+  auto * protocol = reinterpret_cast< WrapperBase * >( p_userdata );
+  auto   to_add   = p_size * p_nmemb;
   //
   // Future: add a hard limit on total received body size
   //
   try
   {
-    protocol_buffer->append( p_ptr, to_add );
+    protocol->m_response_body.append( p_ptr, to_add );
   }
   catch ( ... )
   {
@@ -763,9 +765,9 @@ size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nit
   if ( p_userdata == nullptr )
     return CURL_WRITEFUNC_ERROR;
   //
-  auto * protocol_headers = static_cast< t_key_values_ci * >( p_userdata );
-  auto   line             = std::string_view( p_buffer, p_size * p_nitems );
-  auto   colon            = line.find( ':' );
+  auto * protocol = reinterpret_cast< WrapperBase * >( p_userdata );
+  auto   line     = std::string_view( p_buffer, p_size * p_nitems );
+  auto   colon    = line.find( ':' );
   //
   if ( colon != std::string_view::npos )
   {
@@ -773,7 +775,7 @@ size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nit
     auto value = std::string( trim( line.substr( colon + 1 ) ) ); // value
     //
     if ( ! key.empty() )
-      protocol_headers->insert_or_assign( std::move( key ), std::move( value ) );
+      protocol->m_response_headers.insert_or_assign( std::move( key ), std::move( value ) );
     //
     // Future: capture Content-Size to pre-alloc curl_cb_write body size
   }

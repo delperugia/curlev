@@ -38,6 +38,10 @@ public:
   explicit WrapperBase() = default;
   virtual ~WrapperBase() = default;
   //
+  // Prevent copy
+  WrapperBase( const WrapperBase & )             = delete;
+  WrapperBase & operator=( const WrapperBase & ) = delete;
+  //
 protected:
   friend class ASync;
   //
@@ -47,9 +51,9 @@ protected:
   // Is async_cb called in ASync uv thread (false) or a dedicated thread (true)
   virtual bool use_threaded_cb( void ) const = 0;
   //
-  // Prevent copy
-  WrapperBase( const WrapperBase & )             = delete;
-  WrapperBase & operator=( const WrapperBase & ) = delete;
+  // Data received during transfer by ASync's callbacks
+  t_key_values_ci m_response_headers; // must be persistent (CURLOPT_HEADERDATA)
+  std::string     m_response_body;    // must be persistent (CURLOPT_WRITEDATA)
 };
 
 //--------------------------------------------------------------------
@@ -88,7 +92,7 @@ class Wrapper: public WrapperBase
     {
       auto wrapper = std::make_shared< ProtocolPublic >( p_async ); // throw on memory error;
       //
-      wrapper->m_curl = p_async.get_handle(); // allocate and configure the curl easy handle
+      wrapper->m_curl = p_async.get_handle( wrapper.get() ); // allocate and configure the curl easy handle
       if ( wrapper->m_curl == nullptr )
         throw bad_curl_easy_alloc();
       //

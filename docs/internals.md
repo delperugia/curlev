@@ -83,6 +83,7 @@ of the various protocols offered by `libcurl`.
 - Uses the Builder pattern for configuring `libcurl` common features
 - Supports both synchronous (`exec()`) and asynchronous (`start()`) operations
 - Create extra `shared_ptr` when needed to ensure proper lifecycle management
+- Inherit from `WrapperBase`, which is the class known by `ASync`
 
 The classes work together where:
 1. `ASync` provides the event loop infrastructure
@@ -93,6 +94,16 @@ The classes work together where:
 4. ASync processes the request asynchronously and:
    1. makes result available via the `Wrapper`'s `cb_back()`
    2. delete the extra `shared_ptr`
+
+## WrapperBase class
+
+The `WrapperBase` class acts as the interface between `ASync` and
+protocol-specific wrappers:
+
+- Stores data received from `ASync` during request processing
+- Exposes methods that are called by `ASync` to notify about request completion and status updates
+- Serves as the base class for all protocol wrappers, enabling polymorphic handling by `ASync`
+- Ensures a consistent interface for asynchronous operations across different protocols
 
 # HTTP class
 

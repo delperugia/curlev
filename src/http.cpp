@@ -209,9 +209,7 @@ bool HTTP::prepare_protocol( void )
   auto final_url = url_with_parameters( m_request_url, m_request_query_parameters );
   bool ok        = true;
   //
-  ok = ok && easy_setopt( m_curl, CURLOPT_URL       , final_url.c_str()   ); // doesn't have to be persistent
-  ok = ok && easy_setopt( m_curl, CURLOPT_WRITEDATA , &m_response_body    ); // must be persistent
-  ok = ok && easy_setopt( m_curl, CURLOPT_HEADERDATA, &m_response_headers ); // must be persistent
+  ok = ok && easy_setopt( m_curl, CURLOPT_URL, final_url.c_str() ); // doesn't have to be persistent
   //
   ok = ok && fill_method();  // set m_response_code on error
   ok = ok && fill_body();    // must be called before fill_headers(), set m_response_code on error
