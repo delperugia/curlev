@@ -28,10 +28,4 @@ jobs:
 
       - name: Run Cppcheck on sources and tests
         run: |
-          cppcheck --enable=all --inconclusive --force \
-                   --inline-suppr --std=c++17 --quiet \
-                   --suppress=checkersReport \
-                   --suppress=missingIncludeSystem \
-                   --error-exitcode=1 \
-                   -I include \
-                   src/ tests/
+          cmake --build build/  --config Debug  --target cppcheck
