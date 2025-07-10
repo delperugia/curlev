@@ -382,6 +382,7 @@ TEST( http_advanced, compression )
     ASSERT_EQ( code, 200 );
     //
     EXPECT_TRUE( http->get_headers().count("content-encoding") == 0 );
+    EXPECT_GT( http->get_body().size(), 1024 ); // counter test for http_complex.max_size
   }
   //
   {
@@ -394,6 +395,7 @@ TEST( http_advanced, compression )
     ASSERT_EQ( code, 200 );
     //
     EXPECT_TRUE( http->get_headers().count("content-encoding") > 0 );
+    EXPECT_GT( http->get_body().size(), 1024 ); // counter test for http_complex.max_size
   }
   //
   async.stop();

@@ -344,3 +344,24 @@ TEST( http_complex, running )
   //
   async.stop();
 }
+
+//--------------------------------------------------------------------
+// Counter test in http_advanced.compression
+TEST( http_complex, max_size )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto http = HTTP::create( async );
+    auto code = http->GET( c_server_compress )
+                    .maximal_response_size( 1024 )
+                    .exec()
+                    .get_code();
+    //
+    ASSERT_EQ( code, CURLE_WRITE_ERROR );
+    EXPECT_LE( http->get_body().size(), 1024 );
+  }
+  //
+  async.stop();
+}

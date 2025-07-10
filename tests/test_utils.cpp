@@ -7,7 +7,7 @@
 #include <nlohmann/json.hpp>
 
 std::string c_server_httpbun      = "http://httpbun.com:80/";
-std::string c_server_compress     = "https://github.com/delperugia/curlev/blob/master/README.md";
+std::string c_server_compress     = "https://github.com/delperugia/curlev/blob/master/README.md";  // response size greater than 1024
 std::string c_server_certificates = "https://github.com/delperugia/curlev/blob/master/.gitignore";
 
 //--------------------------------------------------------------------

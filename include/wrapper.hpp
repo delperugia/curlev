@@ -19,7 +19,7 @@ namespace curlev
 {
 
 constexpr long c_success                          =   0;
-constexpr long c_running                          =  -1; ; // todo
+constexpr long c_running                          =  -1; // request is still running
 constexpr long c_error_authentication_format      =  -2; // bad authentication format string
 constexpr long c_error_authentication_set         =  -3; // bad authentication value
 constexpr long c_error_certificates_format        =  -4; // bad certificates format string
@@ -33,12 +33,15 @@ constexpr long c_error_http_headers_set           = -11; // bad header
 constexpr long c_error_http_method_set            = -12; // internal error
 constexpr long c_error_http_mime_set              = -13; // bad MIME value
 
+// The default maximal received response size
+constexpr auto c_default_max_response_size        = 2'000'000;
+
 //--------------------------------------------------------------------
 // The base class is the one known and called by ASync
 class WrapperBase
 {
 public:
-  virtual ~WrapperBase() = default;
+  virtual ~WrapperBase( void ) = default;
   //
 protected:
   friend class ASync;
@@ -47,7 +50,10 @@ protected:
   virtual void async_cb( long p_result ) = 0;
   //
   // Is async_cb called in ASync uv thread (false) or a dedicated thread (true)
-  [[nodiscard]] virtual bool use_threaded_cb( void ) const = 0;
+  virtual bool use_threaded_cb( void ) const = 0;
+  //
+  // Maximum size of the body that ASync will receive
+  virtual size_t get_max_response_size( void ) const = 0;
   //
   // Data received during transfer by ASync's callbacks
   t_key_values_ci m_response_headers;          // must be persistent (CURLOPT_HEADERDATA)
@@ -60,7 +66,7 @@ protected:
 struct bad_curl_easy_alloc : public std::bad_alloc
 {
   // cppcheck-suppress unusedFunction
-  [[nodiscard]] const char * what() const noexcept override
+  [[nodiscard]] const char * what( void ) const noexcept override
   {
     return "Initializing curl easy handle";
   }
@@ -85,7 +91,7 @@ class Wrapper: public WrapperBase
       m_async( p_async )
     {}
     //
-    ~Wrapper() override
+    ~Wrapper( void ) override
     {
       ASync::return_handle( m_curl );
     }
@@ -220,6 +226,17 @@ class Wrapper: public WrapperBase
       return static_cast< Protocol & >( *this );
     }
     //
+    // Set the maximal response size (default 2MB)
+    Protocol & maximal_response_size( size_t p_size )
+    {
+      do_if_idle( [ & ]() {
+        if ( m_response_code == c_success )
+          m_max_response_size = p_size;
+      } );
+      //
+      return static_cast< Protocol & >( *this );
+    }
+    //
     // Accessors
     long get_code( void ) const noexcept { return is_running() ? c_running : m_response_code; };
     //
@@ -245,6 +262,8 @@ class Wrapper: public WrapperBase
       m_response_code         = c_success;
       m_header_content_length = 0;
       m_user_cb_threaded      = true;
+      m_user_cb               = nullptr;
+      m_max_response_size     = c_default_max_response_size;
       //
       m_async.get_default( m_options, m_authentication, m_certificates ); // restore global defaults
       //
@@ -303,6 +322,12 @@ class Wrapper: public WrapperBase
     bool use_threaded_cb( void ) const override
     {
       return m_user_cb_threaded && m_user_cb != nullptr;
+    }
+    //
+    // Retrieve the maximum size of the body that ASync will receive
+    size_t get_max_response_size( void ) const override
+    {
+      return m_max_response_size;
     }
     //
     // When starting, the Protocol configures the easy handle
@@ -372,8 +397,9 @@ class Wrapper: public WrapperBase
     std::weak_ptr< Protocol > m_self_weak; // set on self at creation, used to create and pass a shared_ptr to ASync
     //
     // Optional user CB invoked from async_cb
-    bool                                      m_user_cb_threaded = true;
-    std::function< void( const Protocol & ) > m_user_cb          = nullptr;
+    bool                                      m_user_cb_threaded  = true;
+    std::function< void( const Protocol & ) > m_user_cb           = nullptr;
+    size_t                                    m_max_response_size = c_default_max_response_size;
 };
 
 } // namespace curlev

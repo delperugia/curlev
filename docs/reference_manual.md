@@ -83,10 +83,10 @@ an optional map of parameters to send on the query string.
 
 Then if needed, one or several of the following configuration methods
 are available:
+- `add_headers( headers )`:         add headers
 - `add_query_parameters( params )`: add query parameters
 - `add_body_parameters( params )`:  add body parameters (forms 1 and 3 only)
 - `add_mime_parameters( parts )`:   add MIME parts to the body (form 1 only)
-- `add_headers( headers )`:         add headers
 - `authentication( auth_string )`:  set authentication
 - `options( opt_string )`:          set options
 - `certificates( cert_string )`:    set SSL certificates
@@ -264,6 +264,9 @@ Or if a `std::future` was used, `get()` returns a structure with the same inform
 
 Note: because the response is moved to the `std::future`, it is
 not available anymore in the `HTTP` object.
+
+Note: the maximal received response size is set y default to 2MB, but can
+be changed by using `maximal_response_size()`.
 
 ## REST
 

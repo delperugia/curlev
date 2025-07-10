@@ -13,7 +13,7 @@ namespace curlev
 constexpr auto c_average_parameter_length = 32;
 
 //--------------------------------------------------------------------
-HTTP::~HTTP()
+HTTP::~HTTP( void )
 {
   release_curl_extras();
 }

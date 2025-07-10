@@ -37,12 +37,12 @@ template < typename Protocol > class Wrapper;
 class shared_mutex
 {
 public:
-  explicit shared_mutex()
+  explicit shared_mutex( void )
   {
     m_initialized = pthread_rwlock_init( &m_lock, nullptr ) == 0;
   }
   //
-  virtual ~shared_mutex()
+  virtual ~shared_mutex( void )
   {
     if ( m_initialized )
       pthread_rwlock_destroy( &m_lock );
@@ -70,8 +70,8 @@ private:
 class ASync
 {
 public:
-  ASync();
-  virtual ~ASync();
+  ASync( void );
+  virtual ~ASync( void );
   //
   // Must be called at least once before doing calling any other function of curlev
   bool start( void );

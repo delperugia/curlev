@@ -29,13 +29,13 @@ constexpr auto c_short_wait_ms      = 10U;
 constexpr auto c_requests_per_ms    = 300U;
 
 //--------------------------------------------------------------------
-ASync::ASync()
+ASync::ASync( void )
 {
   m_uv_timer.data = nullptr;
 }
 
 //--------------------------------------------------------------------
-ASync::~ASync()
+ASync::~ASync( void )
 {
   stop();
 }
@@ -43,7 +43,7 @@ ASync::~ASync()
 //--------------------------------------------------------------------
 // Must be called at least once before doing calling any other function of curlev.
 // Start curl, share and multi, then UV and its worker thread.
-bool ASync::start()
+bool ASync::start( void )
 {
   if ( m_uv_running )
     return true;
@@ -120,7 +120,7 @@ void ASync::get_default( Options & p_options, Authentication & p_authentication,
 //--------------------------------------------------------------------
 // Create a new easy handle that *must* be freed using return_handle.
 // CURLOPT_WRITEDATA is properly set in the wrapper to one of its member.
-[[nodiscard]] CURL * ASync::get_handle( WrapperBase * p_protocol ) const
+CURL * ASync::get_handle( WrapperBase * p_protocol ) const
 {
   assert( p_protocol != nullptr );
   //
@@ -740,15 +740,23 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
   if ( p_userdata == nullptr )
     return CURL_WRITEFUNC_ERROR;
   //
-  auto * protocol = static_cast< WrapperBase * >( p_userdata );
-  auto   to_add   = p_size * p_nmemb;
+  auto *     protocol = static_cast< WrapperBase * >( p_userdata );
+  const auto to_add   = p_size * p_nmemb;
   //
-  // Future: add a hard limit on total received body size
-  if ( protocol->m_header_content_length > 0 ) // length was received in headers, and reservation is not yet done
+  // Reserve buffer if content-length is known and not yet reserved
+  if ( protocol->m_header_content_length > 0 )
   {
+    // Prevent reserving more than allowed
+    if ( protocol->m_header_content_length > protocol->get_max_response_size() )
+      return CURL_WRITEFUNC_ERROR;
+    //
     protocol->m_response_body.reserve( protocol->m_header_content_length );
-    protocol->m_header_content_length = 0; // disabled on next call
+    protocol->m_header_content_length = 0;
   }
+  //
+  // Prevent exceeding max response size
+  if ( protocol->m_response_body.size() + to_add > protocol->get_max_response_size() )
+    return CURL_WRITEFUNC_ERROR;
   //
   try
   {
@@ -759,7 +767,7 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
     return CURL_WRITEFUNC_ERROR;
   }
   //
-  return p_size * p_nmemb;
+  return to_add;
 }
 
 //--------------------------------------------------------------------

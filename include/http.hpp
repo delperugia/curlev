@@ -35,7 +35,7 @@ namespace curlev
 class HTTP : public Wrapper< HTTP >
 {
 public:
-  ~HTTP() override;
+  ~HTTP( void ) override;
   //
   // The first step is to call one of theses method:
   //
