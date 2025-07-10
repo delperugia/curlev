@@ -6,11 +6,12 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - '.github/workflows/coverage.yml'
   pull_request:
     branches: [ master ]
 
 jobs:
-  ci:
+  coverage:
     name: Build coverage
     runs-on: ubuntu-latest
     permissions:

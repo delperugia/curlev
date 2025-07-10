@@ -6,11 +6,12 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - '.github/workflows/clang-tidy.yml'
   pull_request:
     branches: [ master ]
 
 jobs:
-  cppcheck:
+  clang-tidy:
     name: Run Clang-Tidy
     runs-on: ubuntu-latest
     permissions:

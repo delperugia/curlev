@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - '.github/workflows/cppcheck.yml'
   pull_request:
     branches: [ master ]
 
