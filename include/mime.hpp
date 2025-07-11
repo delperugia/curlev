@@ -45,10 +45,10 @@ public:
   bool apply( CURL * p_curl, curl_mime * p_curl_mime ) const;
   //
   // Resets all parts added.
-  void clear( void ) { m_parts.clear(); };
+  void clear() { m_parts.clear(); };
   //
   // Returns true if the MIME document is empty
-  [[nodiscard]] bool empty( void ) const { return m_parts.empty(); }
+  [[nodiscard]] bool empty() const { return m_parts.empty(); }
   //
 private:
   mime::parts m_parts;

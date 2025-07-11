@@ -31,7 +31,7 @@ public:
   bool apply( CURL * p_curl ) const;
   //
   // Reset credential to their default values
-  void set_default( void );
+  void set_default();
   //
 private:
   enum class Mode { none, basic, digest, bearer };

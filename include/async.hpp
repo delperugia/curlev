@@ -18,6 +18,7 @@
 
 #include "authentication.hpp"
 #include "certificates.hpp"
+#include "common.hpp"
 #include "options.hpp"
 
 namespace curlev
@@ -34,28 +35,23 @@ template < typename Protocol > class Wrapper;
 // in std::shared_mutex, and because libcurl CURLSHOPT_UNLOCKFUNC function
 // does not receive the access, C functions must be used. They are wrapped
 // here for conveniency (even if libcurl seldom use shared locks).
-class shared_mutex
+class shared_mutex : private non_transferable
 {
 public:
-  explicit shared_mutex( void )
+  shared_mutex()
   {
     m_initialized = pthread_rwlock_init( &m_lock, nullptr ) == 0;
   }
   //
-  virtual ~shared_mutex( void )
+  ~shared_mutex() override
   {
     if ( m_initialized )
       pthread_rwlock_destroy( &m_lock );
   }
   //
-  void lock       ( void ) { pthread_rwlock_wrlock( &m_lock ); }
-  void lock_shared( void ) { pthread_rwlock_rdlock( &m_lock ); }
-  void unlock     ( void ) { pthread_rwlock_unlock( &m_lock ); }
-  //
-  shared_mutex            ( const shared_mutex & ) = delete;
-  shared_mutex & operator=( const shared_mutex & ) = delete;
-  shared_mutex            ( shared_mutex &&      ) = delete;
-  shared_mutex & operator=( shared_mutex &&      ) = delete;
+  void lock       () { pthread_rwlock_wrlock( &m_lock ); }
+  void lock_shared() { pthread_rwlock_rdlock( &m_lock ); }
+  void unlock     () { pthread_rwlock_unlock( &m_lock ); }
   //
 private:
   bool             m_initialized = false;
@@ -67,14 +63,14 @@ private:
 // It is also here that libcurl easy handle are created.
 // Create a single instance of this class, and call start before passing it
 // to the various protocol creation functions.
-class ASync
+class ASync : private non_transferable
 {
 public:
-  ASync( void );
-  virtual ~ASync( void );
+  ASync();
+  ~ASync() override;
   //
   // Must be called at least once before doing calling any other function of curlev
-  bool start( void );
+  bool start();
   //
   // Must be called at least when the program stops.
   // Waits a maximum of p_timeout_ms milliseconds before forcefully stopping,
@@ -82,19 +78,14 @@ public:
   bool stop( unsigned p_timeout_ms = c_default_network_timeout_ms );
   //
   // Accessors
-  int  peak_requests   ( void ) const { return m_multi_running_max;     }
-  int  active_requests ( void ) const { return m_multi_running_current; }
-  bool protocol_crashed( void ) const { return m_protocol_has_crashed;  }
+  int  peak_requests   () const { return m_multi_running_max;     }
+  int  active_requests () const { return m_multi_running_current; }
+  bool protocol_crashed() const { return m_protocol_has_crashed;  }
   //
   // Setting defaults
   bool options       ( const std::string & p_options );
   bool authentication( const std::string & p_credential );
   bool certificates  ( const std::string & p_certificates );
-  //
-  ASync            ( const ASync & ) = delete;
-  ASync & operator=( const ASync & ) = delete;
-  ASync            ( ASync &&      ) = delete;
-  ASync & operator=( ASync &&      ) = delete;
   //
 protected:
   template < typename Protocol > friend class Wrapper;
@@ -140,16 +131,16 @@ private:
   std::string m_global_ca_info; // default CURLINFO_CAINFO
   std::string m_global_ca_path; // default CURLINFO_CAPATH
   //
-  bool global_init( void );
-  void global_clear( void );
+  bool global_init ();
+  void global_clear();
   //
   // libcurl share interface - share data between multiple easy handles (DNS, TLS...)
   //
   std::array< shared_mutex, CURL_LOCK_DATA_LAST > m_share_locks;
   CURLSH *                                        m_share_handle = nullptr;
   //
-  bool        share_init( void );
-  void        share_clear( void );
+  bool        share_init ();
+  void        share_clear();
   static void share_cb_unlock( CURL * p_handle, curl_lock_data p_data, void * p_user_ptr );
   static void share_cb_lock(
       CURL *           p_handle,
@@ -163,10 +154,10 @@ private:
   std::atomic_int m_multi_running_max     = 0; // maximum simultaneous requests reached
   std::atomic_int m_multi_running_current = 0; // current simultaneous request
   //
-  bool       multi_init( void );
-  void       multi_clear( void );
+  bool       multi_init ();
+  void       multi_clear();
   void       multi_update_running_stats( int p_running_handles );
-  void       multi_fetch_messages( void );
+  void       multi_fetch_messages();
   static int multi_cb_timer( CURLM * p_multi, long p_timeout_ms, void * p_clientp );
   static int multi_cb_socket(
       CURL *        p_easy,
@@ -184,8 +175,8 @@ private:
   uv_loop_t *                     m_uv_loop    = nullptr;
   uv_timer_t                      m_uv_timer   = {};
   //
-  bool        uv_init( void );
-  void        uv_clear( void );
+  bool        uv_init ();
+  void        uv_clear();
   void        uv_run_accept_requests( std::unique_lock< std::mutex > & p_lock ) const;
   void        uv_run_wait_requests  ( std::unique_lock< std::mutex > & p_lock ) const;
   static void uv_io_cb     ( uv_poll_t * p_handle, int p_status, int p_events );
@@ -193,7 +184,7 @@ private:
   //
   // Context shared between multi and uv
   //
-  struct CurlContext
+  struct CurlContext : private non_transferable
   {
     ASync &       async;
     curl_socket_t curl;
@@ -218,8 +209,8 @@ private:
   bool                            m_cb_running = false; // worker thread is running
   std::thread                     m_cb_worker;
   //
-  bool cb_init( void );
-  void cb_clear( void );
+  bool cb_init ();
+  void cb_clear();
   //
   // To store data received during a transfer
   static size_t curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, void * p_userdata );

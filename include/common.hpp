@@ -63,4 +63,19 @@ bool share_setopt( CURL * p_curl, CURLSHoption p_option, type p_parameter )
 // p_string must not be empty.
 bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_string );
 
+// To make a class non-copyable and non-movable, inherit from this class
+class non_transferable
+{
+public:
+  virtual ~non_transferable()                              = default;
+  //
+  non_transferable            ( const non_transferable & ) = delete;
+  non_transferable & operator=( const non_transferable & ) = delete;
+  non_transferable            ( non_transferable && )      = delete;
+  non_transferable & operator=( non_transferable && )      = delete;
+  //
+protected:
+  non_transferable()                                       = default;
+};
+
 } // namespace curlev

@@ -77,7 +77,7 @@ bool Authentication::apply( CURL * p_curl ) const
 
 //--------------------------------------------------------------------
 // Reset credential to its default value
-void Authentication::set_default( void )
+void Authentication::set_default()
 {
   m_mode  = Mode::none; // no authentication
   m_user  .clear();     // user login

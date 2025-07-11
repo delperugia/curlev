@@ -38,11 +38,8 @@ constexpr auto c_default_max_response_size        = 2'000'000;
 
 //--------------------------------------------------------------------
 // The base class is the one known and called by ASync
-class WrapperBase
+class WrapperBase : private non_transferable
 {
-public:
-  virtual ~WrapperBase( void ) = default;
-  //
 protected:
   friend class ASync;
   //
@@ -50,10 +47,10 @@ protected:
   virtual void async_cb( long p_result ) = 0;
   //
   // Is async_cb called in ASync uv thread (false) or a dedicated thread (true)
-  virtual bool use_threaded_cb( void ) const = 0;
+  virtual bool use_threaded_cb() const = 0;
   //
   // Maximum size of the body that ASync will receive
-  virtual size_t get_max_response_size( void ) const = 0;
+  virtual size_t get_max_response_size() const = 0;
   //
   // Data received during transfer by ASync's callbacks
   t_key_values_ci m_response_headers;          // must be persistent (CURLOPT_HEADERDATA)
@@ -66,7 +63,7 @@ protected:
 struct bad_curl_easy_alloc : public std::bad_alloc
 {
   // cppcheck-suppress unusedFunction
-  [[nodiscard]] const char * what( void ) const noexcept override
+  [[nodiscard]] const char * what() const noexcept override
   {
     return "Initializing curl easy handle";
   }
@@ -91,7 +88,7 @@ class Wrapper: public WrapperBase
       m_async( p_async )
     {}
     //
-    ~Wrapper( void ) override
+    ~Wrapper() override
     {
       ASync::return_handle( m_curl );
     }
@@ -152,7 +149,7 @@ class Wrapper: public WrapperBase
     }
     //
     // Wait for the end of the asynchronous transfer (after start())
-    Protocol & join( void )
+    Protocol & join()
     {
       {
         std::unique_lock lock( m_exec_mutex );
@@ -165,13 +162,13 @@ class Wrapper: public WrapperBase
     }
     //
     // To execute the transfer synchronously
-    Protocol & exec( void )
+    Protocol & exec()
     {
       return start().join(); // start and wait
     }
     //
     // Abort current request
-    Protocol & abort( void )
+    Protocol & abort()
     {
       if ( is_running() )
         m_async.abort_request( m_curl );
@@ -238,13 +235,7 @@ class Wrapper: public WrapperBase
     }
     //
     // Accessors
-    long get_code( void ) const noexcept { return is_running() ? c_running : m_response_code; };
-    //
-    // Prevent copy
-    Wrapper            ( const Wrapper & ) = delete;
-    Wrapper & operator=( const Wrapper & ) = delete;
-    Wrapper            ( Wrapper &&      ) = delete;
-    Wrapper & operator=( Wrapper &&      ) = delete;
+    long get_code() const noexcept { return is_running() ? c_running : m_response_code; };
     //
   protected:
     CURL *         m_curl          = nullptr;
@@ -255,7 +246,7 @@ class Wrapper: public WrapperBase
     //
     // Reset the protocol before starting a new transfer.
     // m_exec_state must be idle and m_exec_mutex locked (use do_if_idle).
-    void clear( void )
+    void clear()
     {
       assert( ! m_exec_mutex.try_lock() );
       //
@@ -272,7 +263,7 @@ class Wrapper: public WrapperBase
     //
     // When starting, applies the local configuration.
     // It is guaranteed that there is no operation running.
-    bool prepare_local( void )
+    bool prepare_local()
     {
       if ( ! m_options.apply( m_curl ) )
       {
@@ -319,28 +310,28 @@ class Wrapper: public WrapperBase
     // Is async_cb called in ASync uv thread (false) or a dedicated thread (true)
     // If there is no user CB (only our async_cb code), consider that it is fast
     // enough and don't use an extra thread.
-    bool use_threaded_cb( void ) const override
+    bool use_threaded_cb() const override
     {
       return m_user_cb_threaded && m_user_cb != nullptr;
     }
     //
     // Retrieve the maximum size of the body that ASync will receive
-    size_t get_max_response_size( void ) const override
+    size_t get_max_response_size() const override
     {
       return m_max_response_size;
     }
     //
     // When starting, the Protocol configures the easy handle
-    virtual bool prepare_protocol( void ) = 0;
+    virtual bool prepare_protocol() = 0;
     //
     // When the transfer is finished, the Protocol retrieves protocol related details
-    virtual void finalize_protocol( void ) = 0;
+    virtual void finalize_protocol() = 0;
     //
     // When doing a clear() to reset the Protocol options
-    virtual void clear_protocol( void ) = 0;
+    virtual void clear_protocol() = 0;
     //
     // Invoke the Protocol user's callback, clear m_user_cb
-    void cb_protocol( void )
+    void cb_protocol()
     {
       try
       {
@@ -373,7 +364,7 @@ class Wrapper: public WrapperBase
     }
     //
     // Transfer is active (or was since the lock goes out of scope)
-    bool is_running( void ) const
+    bool is_running() const
     {
       std::lock_guard lock( m_exec_mutex );
       //

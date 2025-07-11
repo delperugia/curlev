@@ -39,7 +39,7 @@ public:
   bool apply( CURL * p_curl ) const;
   //
   // Reset options to their default values
-  void set_default( void );
+  void set_default();
   //
 private:
   bool        m_accept_compression = false;

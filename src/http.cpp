@@ -13,7 +13,7 @@ namespace curlev
 constexpr auto c_average_parameter_length = 32;
 
 //--------------------------------------------------------------------
-HTTP::~HTTP( void )
+HTTP::~HTTP()
 {
   release_curl_extras();
 }
@@ -159,13 +159,13 @@ HTTP & HTTP::add_mime_parameters( const mime::parts & p_parts )
 static const std::string     c_empty_string;
 static const t_key_values_ci c_empty_key_values_ci;
 
-const t_key_values_ci & HTTP::get_headers     ( void ) const noexcept { return is_running() ? c_empty_key_values_ci : m_response_headers;      }
-const std::string     & HTTP::get_content_type( void ) const noexcept { return is_running() ? c_empty_string        : m_response_content_type; }
-const std::string     & HTTP::get_redirect_url( void ) const noexcept { return is_running() ? c_empty_string        : m_response_redirect_url; }
-const std::string     & HTTP::get_body        ( void ) const noexcept { return is_running() ? c_empty_string        : m_response_body;         }
+const t_key_values_ci & HTTP::get_headers     () const noexcept { return is_running() ? c_empty_key_values_ci : m_response_headers;      }
+const std::string     & HTTP::get_content_type() const noexcept { return is_running() ? c_empty_string        : m_response_content_type; }
+const std::string     & HTTP::get_redirect_url() const noexcept { return is_running() ? c_empty_string        : m_response_redirect_url; }
+const std::string     & HTTP::get_body        () const noexcept { return is_running() ? c_empty_string        : m_response_body;         }
 
 //--------------------------------------------------------------------
-std::future< HTTP::Response > HTTP::launch( void )
+std::future< HTTP::Response > HTTP::launch()
 {
   auto promise = std::make_shared< std::promise< HTTP::Response > >();
   auto future  = promise->get_future();
@@ -198,7 +198,7 @@ std::future< HTTP::Response > HTTP::launch( void )
 //--------------------------------------------------------------------
 // Called by Wrapper before starting a request.
 // It is guaranteed that there is no operation running.
-bool HTTP::prepare_protocol( void )
+bool HTTP::prepare_protocol()
 {
   m_response_headers     .clear();
   m_response_redirect_url.clear();
@@ -222,7 +222,7 @@ bool HTTP::prepare_protocol( void )
 //--------------------------------------------------------------------
 // Called by Wrapper after a request to retrieve protocol specific details.
 // Release extra curl handles that were used during the operation.
-void HTTP::finalize_protocol( void )
+void HTTP::finalize_protocol()
 {
   char * value = nullptr;
   //
@@ -238,7 +238,7 @@ void HTTP::finalize_protocol( void )
 //--------------------------------------------------------------------
 // Called by Wrapper::clear() when the user wants to reset the Protocol.
 // Clear all previous configuration before doing a new request.
-void HTTP::clear_protocol( void )
+void HTTP::clear_protocol()
 {
     release_curl_extras();
     //
@@ -259,7 +259,7 @@ void HTTP::clear_protocol( void )
 
 //--------------------------------------------------------------------
 // Release extra curl handles that were used during the operation
-void HTTP::release_curl_extras( void )
+void HTTP::release_curl_extras()
 {
   curl_slist_free_all( m_curl_headers ); // ok on nullptr
   curl_mime_free     ( m_curl_mime    ); // ok on nullptr
@@ -269,7 +269,7 @@ void HTTP::release_curl_extras( void )
 
 //--------------------------------------------------------------------
 // Set the request method
-bool HTTP::fill_method( void )
+bool HTTP::fill_method()
 {
   const char * method = nullptr;
   //
@@ -290,7 +290,7 @@ bool HTTP::fill_method( void )
 
 //--------------------------------------------------------------------
 // Add all headers to the request
-bool HTTP::fill_headers( void )
+bool HTTP::fill_headers()
 {
   curl_slist_free_all( m_curl_headers ); // ok on nullptr
   m_curl_headers = nullptr;
@@ -315,7 +315,7 @@ bool HTTP::fill_headers( void )
 //--------------------------------------------------------------------
 // Build the body.
 // Must be called before fill_headers() since it can add headers.
-bool HTTP::fill_body( void )
+bool HTTP::fill_body()
 {
   bool ok = true;
   //
@@ -348,7 +348,7 @@ bool HTTP::fill_body( void )
 // Build the MIME body. MIME body can contain a list of regular parameters
 // (key / value) or files. p_mime_parameters contains a vector of variants.
 // Each variant represents either a parameter or a file.
-bool HTTP::fill_body_mime( void )
+bool HTTP::fill_body_mime()
 {
   curl_mime_free( m_curl_mime );
   m_curl_mime = curl_mime_init( m_curl );

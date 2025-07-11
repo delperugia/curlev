@@ -35,7 +35,7 @@ namespace curlev
 class HTTP : public Wrapper< HTTP >
 {
 public:
-  ~HTTP( void ) override;
+  ~HTTP() override;
   //
   // The first step is to call one of theses method:
   //
@@ -84,10 +84,10 @@ public:
   // These accessors return references for efficiency, directly exposing the object's
   // internal. They must only be used after the request has fully completed to ensure data
   // consistency and avoid unstable values during ongoing operations.
-  const t_key_values_ci & get_headers     ( void ) const noexcept;
-  const std::string     & get_content_type( void ) const noexcept;
-  const std::string     & get_redirect_url( void ) const noexcept;
-  const std::string     & get_body        ( void ) const noexcept;
+  const t_key_values_ci & get_headers     () const noexcept;
+  const std::string     & get_content_type() const noexcept;
+  const std::string     & get_redirect_url() const noexcept;
+  const std::string     & get_body        () const noexcept;
   //
   #if __has_include( <nlohmann/json.hpp> )
     bool get_json( nlohmann::json & p_json ) const noexcept;
@@ -115,26 +115,20 @@ public:
     #endif
   };
   //
-  std::future< Response > launch( void );
-  //
-  // Prevent copy
-  HTTP            ( const HTTP & ) = delete;
-  HTTP & operator=( const HTTP & ) = delete;
-  HTTP            ( HTTP &&      ) = delete;
-  HTTP & operator=( HTTP &&      ) = delete;
+  std::future< Response > launch();
   //
 protected:
   // Prevent creating directly an instance of the class, the Wrapper::create() method must be used
   explicit HTTP( ASync & p_async ) : Wrapper< HTTP >( p_async ) {};
   //
   // Called by Wrapper before starting a request
-  bool prepare_protocol( void ) override;
+  bool prepare_protocol() override;
   //
   // Called by Wrapper after a request completes to retrieve protocol specific details
-  void finalize_protocol( void ) override;
+  void finalize_protocol() override;
   //
   // Called by Wrapper when the user wants to reset the Protocol
-  void clear_protocol( void ) override;
+  void clear_protocol() override;
   //
 private:
   // Data used when sending the request
@@ -159,19 +153,19 @@ private:
   curl_mime *     m_curl_mime    = nullptr;  // must be persistent (CURLOPT_MIMEPOST)
   //
   // Release extra curl handles that were used during the operation
-  void release_curl_extras( void );
+  void release_curl_extras();
   //
   // Set the request method
-  bool fill_method( void );
+  bool fill_method();
   //
   // Add all headers to the request
-  bool fill_headers( void );
+  bool fill_headers();
   //
   // Build the body
-  bool fill_body( void );
+  bool fill_body();
   //
   // Build the MIME body
-  bool fill_body_mime( void );
+  bool fill_body_mime();
   //
   // Encode parameters into a application/x-www-form-urlencoded string
   std::string encode_parameters( const t_key_values & p_parameters );

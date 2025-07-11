@@ -42,13 +42,13 @@ namespace
 {
   // The 4 functions to visit the variant mime::part and mime::alternative
 
-  bool read_part( [[maybe_unused]] CURL * p_curl, curl_mimepart * p_mime_part, const mime::parameter & p_parameter )
+  bool read_part( CURL * /* easy */, curl_mimepart * p_mime_part, const mime::parameter & p_parameter )
   {
     return mime_name( p_mime_part, p_parameter.name  ) &&
            mime_data( p_mime_part, p_parameter.value );
   }
 
-  bool read_part( [[maybe_unused]] CURL * p_curl, curl_mimepart * p_mime_part, const mime::data & p_data )
+  bool read_part( CURL * /* easy */, curl_mimepart * p_mime_part, const mime::data & p_data )
   {
     return mime_name    ( p_mime_part, p_data.name         ) &&
            mime_data    ( p_mime_part, p_data.data         ) &&
@@ -56,7 +56,7 @@ namespace
            mime_filename( p_mime_part, p_data.filename     );
   }
 
-  bool read_part( [[maybe_unused]] CURL * p_curl, curl_mimepart * p_mime_part, const mime::file & p_file )
+  bool read_part( CURL * /* easy */, curl_mimepart * p_mime_part, const mime::file & p_file )
   {
     return mime_name    ( p_mime_part, p_file.name         ) &&
            mime_filedata( p_mime_part, p_file.filedata     ) &&
@@ -78,7 +78,7 @@ namespace
       //
       ok = ok && sub_part != nullptr;
       //
-      std::visit( [ &ok, p_curl, sub_part ]( auto visited ) {
+      std::visit( [ &ok, p_curl, sub_part ]( const auto & visited ) {
                     ok = ok && read_part( p_curl, sub_part, visited );  // and read the part
                   },
                   part );
@@ -107,7 +107,7 @@ bool MIME::apply( CURL * p_curl, curl_mime * p_curl_mime ) const
     //
     ok = ok && mime_part != nullptr;
     //
-    std::visit( [ &ok, p_curl, mime_part ]( auto visited ) {
+    std::visit( [ &ok, p_curl, mime_part ]( const auto & visited ) {
                   ok = ok && read_part( p_curl, mime_part, visited ); // and read it
                 },
                 part );
