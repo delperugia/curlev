@@ -12,6 +12,7 @@ namespace curlev
 //--------------------------------------------------------------------
 // Expect a CSKV list of credential details. Example:
 //   sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret
+// if-else is twice faster than unordered_map in almost all cases.
 // NOLINTBEGIN(readability-misleading-indentation)
 bool Certificates::set( const std::string & p_cskv )
 {
@@ -19,8 +20,7 @@ bool Certificates::set( const std::string & p_cskv )
     p_cskv,
     [ this ]( std::string_view key, std::string_view value )
     {
-           if ( key == "engine"            ) m_engine            = value;
-      else if ( key == "sslcert"           ) m_sslcert           = value;
+           if ( key == "sslcert"           ) m_sslcert           = value;
       else if ( key == "sslcerttype"       ) m_sslcerttype       = value;
       else if ( key == "sslkey"            ) m_sslkey            = value;
       else if ( key == "sslkeytype"        ) m_sslkeytype        = value;
@@ -34,6 +34,7 @@ bool Certificates::set( const std::string & p_cskv )
       else if ( key == "proxy_keypasswd"   ) m_proxy_keypasswd   = value;
       else if ( key == "proxy_cainfo"      ) m_proxy_cainfo      = value;
       else if ( key == "proxy_capath"      ) m_proxy_capath      = value;
+      else if ( key == "engine"            ) m_engine            = value;
       else
           return false;  // unhandled key
       //

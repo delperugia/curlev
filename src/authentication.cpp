@@ -21,10 +21,10 @@ bool Authentication::set( const std::string& p_cskv )
     {
       if ( key == "mode" )
       {
-               if ( value == "none"   ) m_mode = Mode::none;
-          else if ( value == "basic"  ) m_mode = Mode::basic;
+               if ( value == "bearer" ) m_mode = Mode::bearer;
           else if ( value == "digest" ) m_mode = Mode::digest;
-          else if ( value == "bearer" ) m_mode = Mode::bearer;
+          else if ( value == "basic"  ) m_mode = Mode::basic;
+          else if ( value == "none"   ) m_mode = Mode::none;
           else
               return false;  // unhandled mode
       }

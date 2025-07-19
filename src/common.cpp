@@ -25,6 +25,7 @@ namespace
   }
 } // namespace
 
+// ~ twice faster than using std::stol, and works on string_view
 bool svtol( std::string_view p_string, long & p_value )
 {
   constexpr auto base     = 10U;
