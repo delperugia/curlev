@@ -177,7 +177,7 @@ separated string with the following keys available:
 
 | Name               | Default | Unit         | Comment                             | libcurl option
 |--------------------|---------|--------------|-------------------------------------|---------------------
-| accept_compression | 0       | 0 or 1       | activate compression                | CURLOPT_ACCEPT_ENCODING
+| accept_compression | 1       | 0 or 1       | activate compression                | CURLOPT_ACCEPT_ENCODING
 | connect_timeout    | 30000   | milliseconds | connection timeout                  | CURLOPT_CONNECTTIMEOUT_MS
 | cookies            | false   | 0 or 1       | receive and resend cookies          | CURLOPT_COOKIEFILE
 | follow_location    | 0       | 0 or 1       | follow HTTP 3xx redirects           | CURLOPT_FOLLOWLOCATION

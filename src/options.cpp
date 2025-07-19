@@ -69,7 +69,7 @@ bool Options::apply( CURL * p_curl ) const
 // Reset options to their default values
 void Options::set_default()
 {
-  m_accept_compression = false ;          // activate compression if true
+  m_accept_compression = true;            // activate compression if true
   m_connect_timeout    = c_timeout_ms ;   // in milliseconds
   m_cookies            = false ;          // receive and resend cookies
   m_follow_location    = false ;          // follow HTTP 3xx redirects

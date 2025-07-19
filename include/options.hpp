@@ -24,7 +24,7 @@ public:
   // See the reference manual for a complete description.
   // Available keys are:
   //   Name               Default  Unit          Comment
-  //   accept_compression 0        0 or 1        activate compression
+  //   accept_compression 1        0 or 1        activate compression
   //   connect_timeout    30000    milliseconds  connection timeout
   //   cookies            false    0 or 1        receive and resend cookies
   //   follow_location    false    0 or 1        follow HTTP 3xx redirects
@@ -42,7 +42,7 @@ public:
   void set_default();
   //
 private:
-  bool        m_accept_compression = false;
+  bool        m_accept_compression = true;
   long        m_connect_timeout    = 0;
   bool        m_cookies            = false;
   bool        m_follow_location    = false;

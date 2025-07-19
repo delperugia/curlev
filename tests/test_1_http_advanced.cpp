@@ -376,12 +376,13 @@ TEST( http_advanced, compression )
   {
     auto http = HTTP::create( async );
     auto code = http->GET( c_server_compress )
+                    .options( "accept_compression=0" )
                     .exec()
                     .get_code();
     //
     ASSERT_EQ( code, 200 );
     //
-    EXPECT_TRUE( http->get_headers().count("content-encoding") == 0 );
+    EXPECT_TRUE( http->get_headers().count( "content-encoding" ) == 0 );
     EXPECT_GT( http->get_body().size(), 1024 ); // counter test for http_complex.max_size
   }
   //
@@ -394,7 +395,7 @@ TEST( http_advanced, compression )
     //
     ASSERT_EQ( code, 200 );
     //
-    EXPECT_TRUE( http->get_headers().count("content-encoding") > 0 );
+    EXPECT_TRUE( http->get_headers().count( "content-encoding" ) > 0 );
     EXPECT_GT( http->get_body().size(), 1024 ); // counter test for http_complex.max_size
   }
   //
