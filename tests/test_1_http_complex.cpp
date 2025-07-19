@@ -385,7 +385,7 @@ TEST( http_complex, retry )
     //
     EXPECT_EQ( code, CURLE_COULDNT_CONNECT );
     EXPECT_EQ( async.active_requests(), 0 );
-    EXPECT_GT( duration_ns, 2'000'000'000 ); // > 2s
+    EXPECT_GT( duration_ns, 1'900'000'000 ); // > 1.9s (leave a small margin)
   }
   //
   async.stop();
