@@ -659,26 +659,30 @@ void ASync::uv_timeout_cb( uv_timer_t * p_handle )
 // m_uv_run_mutex is locked.
 void ASync::uv_restart_cb( uv_timer_t * p_handle )
 {
-  if ( p_handle             == nullptr ||
-       p_handle->data       == nullptr ||
-       p_handle->loop       == nullptr ||
-       p_handle->loop->data == nullptr ) // not possible
-    return;
-  //
-  auto * curl = static_cast< CURL *  >( p_handle->data );
-  auto * self = static_cast< ASync * >( p_handle->loop->data );
-  //
-  auto * wrapper = ASync::get_wrapper_from_curl( curl );
-  if ( wrapper == nullptr || ! *wrapper ) // not possible
-    return;
-  //
-  uv_close( reinterpret_cast< uv_handle_t * >( &( *wrapper )->m_retry_uv_timer ), nullptr ); // NOLINT( cppcoreguidelines-pro-type-reinterpret-cast )
-  //
-  // Added for the next uv_run() (in worker thread of uv_init())
-  if ( curl_multi_add_handle( self->m_multi_handle, curl ) == CURLM_OK ) // ok on nullptr
-    return;
-  //
-  self->post_to_wrapper( curl, wrapper, c_error_internal_restart );
+  uv_close(
+      reinterpret_cast< uv_handle_t * >( p_handle ), // NOLINT( cppcoreguidelines-pro-type-reinterpret-cast )
+      []( uv_handle_t * handle )
+      {
+        if ( handle             == nullptr ||
+             handle->data       == nullptr ||
+             handle->loop       == nullptr ||
+             handle->loop->data == nullptr ) // not possible
+          return;
+        //
+        auto * curl = static_cast< CURL *  >( handle->data );
+        auto * self = static_cast< ASync * >( handle->loop->data );
+        //
+        auto * wrapper = ASync::get_wrapper_from_curl( curl );
+        if ( wrapper == nullptr || ! *wrapper ) // not possible
+          return;
+        //
+        // Re-post the request
+        if ( curl_multi_add_handle( self->m_multi_handle, curl ) == CURLM_OK ) // ok on nullptr
+          return;
+        //
+        // On error, inform the Wrapper
+        self->post_to_wrapper( curl, wrapper, c_error_internal_restart );
+      } );
 }
 
 //--------------------------------------------------------------------
