@@ -200,10 +200,8 @@ std::future< HTTP::Response > HTTP::launch()
 // It is guaranteed that there is no operation running.
 bool HTTP::prepare_protocol()
 {
-  m_response_headers     .clear();
   m_response_redirect_url.clear();
   m_response_content_type.clear();
-  m_response_body        .clear();
   //
   m_request_headers.insert_or_assign( "Expect", "" ); // to prevent libcurl to send Expect
   //

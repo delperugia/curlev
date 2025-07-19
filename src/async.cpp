@@ -118,8 +118,7 @@ void ASync::get_default( Options & p_options, Authentication & p_authentication,
 }
 
 //--------------------------------------------------------------------
-// Create a new easy handle that *must* be freed using return_handle.
-// CURLOPT_WRITEDATA is properly set in the wrapper to one of its member.
+// Create a new easy handle that *must* be freed using return_handle().
 CURL * ASync::get_handle( WrapperBase * p_protocol ) const
 {
   assert( p_protocol != nullptr );
@@ -134,6 +133,8 @@ CURL * ASync::get_handle( WrapperBase * p_protocol ) const
   ok = ok && easy_setopt( curl, CURLOPT_HEADERDATA    , p_protocol     );
   ok = ok && easy_setopt( curl, CURLOPT_SHARE         , m_share_handle );
   ok = ok && easy_setopt( curl, CURLOPT_NOSIGNAL      , 1L             );
+  //
+  p_protocol->m_retry_uv_timer.data = curl; // the timer used for retry points on the curl handle
   //
   if ( ! ok )
   {
@@ -187,7 +188,7 @@ void ASync::abort_request( CURL * p_curl )
   auto result_code = curl_multi_remove_handle( m_multi_handle, p_curl ); // ok on nullptr
   //
   if ( result_code == CURLM_OK )
-    notify_wrapper( p_curl, CURLE_ABORTED_BY_CALLBACK ); // wrapper cannot be deleted here since it is currently calling us
+    request_completed( p_curl, CURLE_ABORTED_BY_CALLBACK ); // wrapper cannot be deleted here since it is currently calling us
 }
 
 //--------------------------------------------------------------------
@@ -392,7 +393,7 @@ void ASync::multi_fetch_messages()
     case CURLMSG_DONE:
       curl_multi_remove_handle( m_multi_handle, message->easy_handle );
       //
-      notify_wrapper( message->easy_handle, outcome_code( message ) ); // wrapper can be deleted here, easy_handle may be invalid
+      request_completed( message->easy_handle, outcome_code( message ) ); // wrapper can be deleted here, easy_handle may be invalid
       break;
     default:
       break;
@@ -509,6 +510,7 @@ bool ASync::uv_init()
   //
   if ( ok )
   {
+    m_uv_loop->data = this;
     m_uv_timer.data = this;
     m_uv_running    = true;
     m_uv_worker     = std::thread(
@@ -634,6 +636,7 @@ void ASync::uv_io_cb(
 
 //--------------------------------------------------------------------
 // Called by uv_run() when a timeout is triggered.
+// The timer used is the one in ASync.
 // m_uv_run_mutex is locked.
 void ASync::uv_timeout_cb( uv_timer_t * p_handle )
 {
@@ -648,6 +651,34 @@ void ASync::uv_timeout_cb( uv_timer_t * p_handle )
   self->multi_update_running_stats( running_handles );
   //
   self->multi_fetch_messages(); // must be the last line as the wrapper can be deleted here
+}
+
+//--------------------------------------------------------------------
+// Called by uv_run() when a request is programmed to restart by request_completed().
+// The timer used is the one in WrapperBase.
+// m_uv_run_mutex is locked.
+void ASync::uv_restart_cb( uv_timer_t * p_handle )
+{
+  if ( p_handle             == nullptr ||
+       p_handle->data       == nullptr ||
+       p_handle->loop       == nullptr ||
+       p_handle->loop->data == nullptr ) // not possible
+    return;
+  //
+  auto * curl = static_cast< CURL *  >( p_handle->data );
+  auto * self = static_cast< ASync * >( p_handle->loop->data );
+  //
+  auto * wrapper = ASync::get_wrapper_from_curl( curl );
+  if ( wrapper == nullptr || ! *wrapper ) // not possible
+    return;
+  //
+  uv_close( reinterpret_cast< uv_handle_t * >( &( *wrapper )->m_retry_uv_timer ), nullptr ); // NOLINT( cppcoreguidelines-pro-type-reinterpret-cast )
+  //
+  // Added for the next uv_run() (in worker thread of uv_init())
+  if ( curl_multi_add_handle( self->m_multi_handle, curl ) == CURLM_OK ) // ok on nullptr
+    return;
+  //
+  self->post_to_wrapper( curl, wrapper, c_error_internal_restart );
 }
 
 //--------------------------------------------------------------------
@@ -843,45 +874,81 @@ bool ASync::wait_pending_requests( unsigned p_timeout_ms ) const
 }
 
 //--------------------------------------------------------------------
-// Returns the operation outcome to the Wrapper.
-// Ensure that the Wrapper is only called once (which should always be the case,
-// except for abort_request).
-// Depending on the config:
+// Handles the termination of the request. If configured, the request
+// may be restarted.
+// m_uv_run_mutex is locked.
+namespace
+{
+  // Check if the code guarantees that the request can be resubmitted without side effect
+  bool safe_to_restart_outcome( long p_result_code )
+  {
+    return p_result_code == CURLE_COULDNT_RESOLVE_HOST
+        || p_result_code == CURLE_COULDNT_RESOLVE_PROXY
+        || p_result_code == CURLE_COULDNT_CONNECT
+        || p_result_code == CURLE_SSL_CONNECT_ERROR
+        || p_result_code == CURLE_PEER_FAILED_VERIFICATION
+        || p_result_code == 429 // Too Many Requests    NOLINT( cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers )
+        || p_result_code == 503 // Service Unavailable  NOLINT( cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers )
+        ;
+  }
+} // namespace
+
+void ASync::request_completed( CURL * p_curl, long p_result_code )
+{
+  auto * wrapper = get_wrapper_from_curl( p_curl );
+  if ( wrapper == nullptr || ! *wrapper )
+    return;
+  //
+  if ( ( *wrapper )->can_reattempt() && safe_to_restart_outcome( p_result_code ) )
+  {
+    bool ok = true;
+    //
+    ok = ok && 0 == uv_timer_init ( m_uv_loop, &( *wrapper )->m_retry_uv_timer );
+    ok = ok && 0 == uv_timer_start( &( *wrapper )->m_retry_uv_timer, uv_restart_cb,
+                                    ( *wrapper )->get_retry_delay_ms(), 0 );
+    //
+    if ( ok )
+      return;
+    //
+    // Keep the original result code if the restart fails
+  }
+  //
+  post_to_wrapper( p_curl, wrapper, p_result_code );
+}
+
+//--------------------------------------------------------------------
+// Returns the operation outcome to the wrapper, depending on the config:
 //  1] push the job in the queue, callback thread will call the Wrapper.
 //  2] call the Wrapper from UV worker thread.
 // m_uv_run_mutex is locked.
-void ASync::notify_wrapper( CURL * p_curl, long p_result_code )
+void ASync::post_to_wrapper(
+    CURL *                     p_curl,
+    t_wrapper_shared_ptr_ptr & p_wrapper,
+    long                       p_result_code )
 {
-  void * cb_data = nullptr;
-  if ( curl_easy_getinfo( p_curl, CURLINFO_PRIVATE, &cb_data ) != CURLE_OK ||
-       cb_data == nullptr ) // already notified
-    return;
+  assert( p_wrapper != nullptr && ( *p_wrapper ) );
   //
   curl_easy_setopt( p_curl, CURLOPT_PRIVATE, nullptr ); // set when Wrapper start(), cleared here
   //
-  auto * wrapper = static_cast< t_wrapper_shared_ptr_ptr >( cb_data ); // allocated by Wrapper start()
-  if ( ! ( *wrapper ) ) // cannot happen
-    return;
-  //
-  if ( ( *wrapper )->use_threaded_cb() ) // push it to CB queue
+  if ( ( *p_wrapper )->use_threaded_cb() ) // push it to CB queue for later delivery
   {
     std::lock_guard lock( m_cb_mutex );
     //
-    m_cb_queue.emplace_back( wrapper, p_result_code );
+    m_cb_queue.emplace_back( p_wrapper, p_result_code );
     m_cb_cv.notify_one();
   }
   else // call it now and here (in uv_run worker thread)
   {
-    invoke_wrapper( wrapper, p_result_code );
+    invoke_wrapper( p_wrapper, p_result_code );
   }
 }
 
 //--------------------------------------------------------------------
-// Call the wrapper, delete the shared_ptr
+// Call the wrapper, delete the shared_ptr.
+// m_uv_run_mutex may be locked.
 void ASync::invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code )
 {
-  if ( p_wrapper == nullptr || ! ( *p_wrapper ) ) // cannot happen
-    return;
+  assert( p_wrapper != nullptr && ( *p_wrapper ) );
   //
   try
   {
@@ -897,6 +964,19 @@ void ASync::invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_
   ( *p_wrapper ).reset(); // possibly delete Protocol
   delete p_wrapper;
   p_wrapper = nullptr;
+}
+
+//--------------------------------------------------------------------
+// Retrieve the Wrapper from the curl handle
+// It is set when Wrapper start(), and cleared in post_to_wrapper()
+ASync::t_wrapper_shared_ptr_ptr ASync::get_wrapper_from_curl( CURL * p_curl )
+{
+  void * cb_data = nullptr;
+  if ( curl_easy_getinfo( p_curl, CURLINFO_PRIVATE, &cb_data ) != CURLE_OK ||
+       cb_data == nullptr ) // already notified
+    return nullptr;
+  //
+  return static_cast< ASync::t_wrapper_shared_ptr_ptr >( cb_data ); // allocated by Wrapper start()
 }
 
 } // namespace curlev

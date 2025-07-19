@@ -81,6 +81,14 @@ an optional map of parameters to send on the query string.
 2. URL, content type and body
 3. URL and a map of parameters to send in the body as `application/x-www-form-urlencoded`
 
+Examples:
+
+```cpp
+auto http = HTTP::create( async );
+http->GET( "http://www.httpbin.org/get" ).exec();
+std::cout << http->get_code() << " " << http->get_body() << std::endl;
+```
+
 Then if needed, one or several of the following configuration methods
 are available:
 - `add_headers( headers )`:         add headers
@@ -99,6 +107,15 @@ has an extra method `REST()`.
 `REST()` has two forms:
 1. URI, verb (any of 'GET', 'DELETE', 'PATCH', 'POST' or 'PUT')
 2. URI, verb (only 'PATCH', 'POST' or 'PUT') and a JSON object (a `rapidjson::Document` or a `nlohmann::json`)
+
+Example:
+```cpp
+nlohmann::json payload = nlohmann::json::parse( R"({ "a": "1", "b": "2" })" );
+//
+auto http = HTTP::create( async );
+http->REST( "http://www.httpbin.org/post", "POST", payload ).exec();
+std::cout << http->get_code() << " " << http->get_body() << std::endl;
+```
 
 ## Adding headers and parameters
 
@@ -225,6 +242,10 @@ Or a `std::future` can be retrieved using `launch()`.
 While a request is running, all methods except `join()` are ignored
 (as a side effect `exec()` behaves like `join()`).
 
+The `HTTP` object can be configured to retry automatically if the request
+fails, if there no risk that the request has been executed (it retries
+on connection error, not on timeout). The method to use is `set_retries()`.
+
 ## Callback
 
 If a callback is passed to `start()`, it is invoked before
@@ -266,7 +287,7 @@ Note: because the response is moved to the `std::future`, it is
 not available anymore in the `HTTP` object.
 
 Note: the maximal received response size is set y default to 2MB, but can
-be changed by using `maximal_response_size()`.
+be changed by using `maximal_response_size()` in `HTTP`.
 
 ## REST
 
@@ -275,6 +296,13 @@ has an extra method `get_json()`, which retrieve either a `rapidjson::Document`
 or a `nlohmann::json`.
 
 This method returns false if the parsing of the received by fails.
+
+```cpp
+nlohmann::json json;
+
+if ( http->get_json( json ) )
+  std::cout << json["user"]["name"] << std::endl;
+```
 
 # Aborting a request
 

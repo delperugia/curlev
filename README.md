@@ -19,9 +19,10 @@ Key features:
 - Synchronous and asynchronous requests with callback support
 - Supports all standard HTTP methods (GET, POST, PUT, PATCH, DELETE)
 - Handles query parameters, form data, MIME handling, and raw bodies
-- Custom headers and authentication
-- Method chaining
 - REST functions using common JSON parsers
+- Custom headers and authentication
+- Automatic retry on error
+- Method chaining
 
 Example of a synchronous request:
 

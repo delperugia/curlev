@@ -37,7 +37,7 @@ There are two threads running in ASync:
  1. one in `uv_init()` and invoking `uv_run()`. This thread is the root
     of all function calls on the ASync side.
  2. one in `cb_init()` used to notifying the Wrapper when an operation
-    completes (jobs queued from the 1st thread by `notify_wrapper()`).
+    completes (jobs queued from the 1st thread by `post_to_wrapper()`).
 
 Then there are users' threads invoking `start_request()` and `abort_request()`:
 
@@ -47,7 +47,7 @@ The mutex `m_uv_run_mutex` protects the internal objects, the mutex `m_cb_mutex`
     start_request
 L       m_nb_running_requests++
 L       curl_multi_add_handle  -------------------> multi_cb_timer
-L       ! notify_wrapper                 /              uv_timer_stop
+L       ! invoke_wrapper                 /              uv_timer_stop
 L       !     m_nb_running_requests--   /               uv_timer_start  -->>>
                                        /
 L   uv_run                            /
@@ -58,19 +58,19 @@ L                                                       uv_poll_start
 L           multi_fetch_messages
 L               curl_multi_info_read
 L                   curl_multi_remove_handle
-L                   notify_wrapper
+L                   invoke_wrapper
 L                       m_nb_running_requests--
 L
 L  >>>  uv_timeout_cb
 L           multi_fetch_messages
 L               curl_multi_info_read
 L                   curl_multi_remove_handle
-L                   notify_wrapper
+L                   invoke_wrapper
 L                       m_nb_running_requests--
 
     abort_request
 L       curl_multi_remove_handle
-L       notify_wrapper
+L       invoke_wrapper
 L           m_nb_running_requests--
 ```
 
@@ -182,70 +182,3 @@ the number of pending requests.
  - [libuv](https://libuv.org/)
  - libcurl example [multi-uv](https://curl.se/libcurl/c/multi-uv.html)
  - [GoogleTest](https://google.github.io/googletest/)
-
-# IA Reviews
-
-## Review of `shared_ptr` Usage Between `Wrapper` and `ASync`
-
-### Ownership and Lifetime Flow
-
-1. **Creation in `Wrapper::create()`**
-   A `std::shared_ptr<Protocol>` is created and returned to the user.
-   `m_self_weak` is set to this shared pointer for later use.
-
-2. **Start of ASync Operation**
-   In `Wrapper::start()`, a new `std::shared_ptr<Protocol>` is created from `m_self_weak.lock()` and heap-allocated:
-   This pointer (`cb_data`) is passed to `ASync::start_request()` as the `CURLOPT_PRIVATE` data for the CURL handle.
-
-3. **ASync Receives and Stores Pointer**
-   ASync never takes ownership of the `shared_ptr` itself, only the pointer to it (`cb_data`).
-   When the transfer completes, `ASync::notify_wrapper()` retrieves this pointer, and passes it to `invoke_wrapper()`.
-
-4. **Cleanup in `ASync::invoke_wrapper()`**
-   `invoke_wrapper()` calls the protocol callback, then:
-   This ensures the `shared_ptr` is destroyed, and the Protocol object is deleted if no other references exist.
-
-### Analysis
-
-#### Strengths
-
-- **Clear Ownership:**
-  The heap-allocated `shared_ptr` ensures the Protocol object stays alive for the duration of the async operation, even if the user releases their copy.
-
-- **Safe Cleanup:**
-  The pointer is deleted only after the callback is invoked, and the `shared_ptr` is reset, ensuring no use-after-free.
-
-#### Potential Issues
-
-- **Manual `new`/`delete` for `shared_ptr`:**
-  This is safe here, but is a bit unusual. If any code path forgets to call `delete`, it will leak memory.
-
-- **Double Deletion Risk:**
-  If `notify_wrapper()` is called more than once for the same CURL handle, it could double-delete the pointer.
-  However, you clear `CURLOPT_PRIVATE` after use, which should prevent this.
-
-- **Thread Safety:**
-  The code appears to be thread-safe due to mutexes and condition variables.
-
-#### Alternatives
-
-You could use a `unique_ptr<shared_ptr<Protocol>>` to make ownership clearer, but your current approach is valid as long as the contract is respected.
-
-### Summary Table
-
-| Step              | Owner of Protocol | Owner of shared_ptr | Notes                                   |
-|-------------------|-------------------|---------------------|-----------------------------------------|
-| User creates      | User              | User                | via `Wrapper::create()`                 |
-| User calls start()| User + ASync      | User + ASync        | ASync gets a new heap-allocated shared_ptr |
-| During transfer   | ASync             | ASync               | User may release their shared_ptr       |
-| After callback    | -                 | -                   | ASync resets and deletes shared_ptr     |
-
----
-
-### Conclusion
-
-- Your `shared_ptr` usage is correct and safe as implemented, provided that `notify_wrapper()` is only called once per transfer.
-- The heap allocation of the `shared_ptr` is a bit unusual but justified by the need to pass ownership through C APIs.
-- There is no risk of use-after-free or double deletion as long as the contract is respected.
-- If you want to further bulletproof the design, consider using a smart pointer for the heap-allocated `shared_ptr`,
-  or add assertions to ensure `notify_wrapper()` is never called twice for the same handle.

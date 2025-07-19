@@ -20,21 +20,30 @@ namespace curlev
 
 constexpr long c_success                          =   0;
 constexpr long c_running                          =  -1; // request is still running
-constexpr long c_error_authentication_format      =  -2; // bad authentication format string
-constexpr long c_error_authentication_set         =  -3; // bad authentication value
-constexpr long c_error_certificates_format        =  -4; // bad certificates format string
-constexpr long c_error_certificates_set           =  -5; // bad certificates value
-constexpr long c_error_options_format             =  -6; // bad options format string
-constexpr long c_error_options_set                =  -7; // bad option value
-constexpr long c_error_user_callback              =  -8; // callback crashed
-constexpr long c_error_internal_protocol_crashed  =  -9; // protocol crashed whiled invoked by ASync
-constexpr long c_error_internal_start             = -10; // internal error
-constexpr long c_error_http_headers_set           = -11; // bad header
-constexpr long c_error_http_method_set            = -12; // internal error
-constexpr long c_error_http_mime_set              = -13; // bad MIME value
+
+constexpr long c_error_internal_protocol_crashed  = -10; // protocol crashed whiled invoked by ASync
+constexpr long c_error_internal_start             = -11; // failed to start a request
+constexpr long c_error_internal_restart           = -12; // failed to restart a request
+
+constexpr long c_error_authentication_format      = -20; // bad authentication format string
+constexpr long c_error_authentication_set         = -21; // bad authentication value
+constexpr long c_error_certificates_format        = -22; // bad certificates format string
+constexpr long c_error_certificates_set           = -23; // bad certificates value
+constexpr long c_error_options_format             = -24; // bad options format string
+constexpr long c_error_options_set                = -25; // bad option value
+
+constexpr long c_error_user_callback              = -30; // callback crashed
+constexpr long c_error_http_headers_set           = -31; // bad header
+constexpr long c_error_http_method_set            = -32; // bad method
+constexpr long c_error_http_mime_set              = -33; // bad MIME value
 
 // The default maximal received response size
-constexpr auto c_default_max_response_size        = 2'000'000;
+constexpr auto c_default_response_size_max        = 2'000'000;
+
+// When retrying failed requests, the default number of retries
+// and delay between retries
+constexpr auto c_default_retries_max              = 0U;
+constexpr auto c_default_retries_delay_ms         = 100U;
 
 //--------------------------------------------------------------------
 // The base class is the one known and called by ASync
@@ -52,10 +61,20 @@ protected:
   // Maximum size of the body that ASync will receive
   virtual size_t get_max_response_size() const = 0;
   //
+  // If restarting a request, the delay before the reattempt
+  virtual uint64_t get_retry_delay_ms() const = 0;
+  //
+  // Return true if a failed request can be retried
+  virtual bool can_reattempt() = 0;
+  //
   // Data received during transfer by ASync's callbacks
-  t_key_values_ci m_response_headers;          // must be persistent (CURLOPT_HEADERDATA)
-  std::string     m_response_body;             // must be persistent (CURLOPT_WRITEDATA)
-  size_t          m_header_content_length = 0; // set to the received Content-Length header, if received; reset when receiving body
+  t_key_values_ci m_response_headers;           // must be persistent (CURLOPT_HEADERDATA)
+  std::string     m_response_body;              // must be persistent (CURLOPT_WRITEDATA)
+  size_t          m_header_content_length = 0;  // set to the received Content-Length header, if received; reset when receiving body
+  //
+  // Timer used to control the delay before a failed request re-attempt.
+  // Set by ASync::get_handle; its data is the curl handle
+  uv_timer_t m_retry_uv_timer = {};
 };
 
 //--------------------------------------------------------------------
@@ -228,7 +247,21 @@ class Wrapper: public WrapperBase
     {
       do_if_idle( [ & ]() {
         if ( m_response_code == c_success )
-          m_max_response_size = p_size;
+          m_response_size_max = p_size;
+      } );
+      //
+      return static_cast< Protocol & >( *this );
+    }
+    //
+    // Set the maximal number of retries and delay between retries in milliseconds
+    Protocol & set_retries(unsigned p_retries, unsigned p_delay_ms)
+    {
+      do_if_idle( [ & ]() {
+        if ( m_response_code == c_success )
+        {
+          m_retries_max      = p_retries;
+          m_retries_delay_ms = p_delay_ms;
+        }
       } );
       //
       return static_cast< Protocol & >( *this );
@@ -238,8 +271,9 @@ class Wrapper: public WrapperBase
     long get_code() const noexcept { return is_running() ? c_running : m_response_code; };
     //
   protected:
-    CURL *         m_curl          = nullptr;
-    long           m_response_code = c_success;
+    CURL *         m_curl            = nullptr;
+    unsigned       m_request_retries = 0;
+    long           m_response_code   = c_success;
     Options        m_options;
     Authentication m_authentication;
     Certificates   m_certificates;
@@ -250,11 +284,17 @@ class Wrapper: public WrapperBase
     {
       assert( ! m_exec_mutex.try_lock() );
       //
-      m_response_code         = c_success;
+      // In WrapperBase
+      m_response_headers.clear();
+      m_response_body   .clear();
       m_header_content_length = 0;
-      m_user_cb_threaded      = true;
-      m_user_cb               = nullptr;
-      m_max_response_size     = c_default_max_response_size;
+      //
+      // In Wrapper
+      m_request_retries   = 0;
+      m_response_code     = c_success;
+      m_user_cb_threaded  = true;
+      m_user_cb           = nullptr;
+      m_response_size_max = c_default_response_size_max;
       //
       m_async.get_default( m_options, m_authentication, m_certificates ); // restore global defaults
       //
@@ -318,7 +358,19 @@ class Wrapper: public WrapperBase
     // Retrieve the maximum size of the body that ASync will receive
     size_t get_max_response_size() const override
     {
-      return m_max_response_size;
+      return m_response_size_max;
+    }
+    //
+    // If restarting a request, the delay before the reattempt
+    uint64_t get_retry_delay_ms() const override
+    {
+      return m_retries_delay_ms;
+    }
+    //
+    // Return true if a failed request can be retried
+    bool can_reattempt() override
+    {
+      return m_request_retries++ < m_retries_max;
     }
     //
     // When starting, the Protocol configures the easy handle
@@ -390,7 +442,11 @@ class Wrapper: public WrapperBase
     // Optional user CB invoked from async_cb
     bool                                      m_user_cb_threaded  = true;
     std::function< void( const Protocol & ) > m_user_cb           = nullptr;
-    size_t                                    m_max_response_size = c_default_max_response_size;
+    //
+    // Options
+    size_t   m_response_size_max = c_default_response_size_max;
+    unsigned m_retries_max       = c_default_retries_max;
+    unsigned m_retries_delay_ms  = c_default_retries_delay_ms;
 };
 
 } // namespace curlev

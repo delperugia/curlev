@@ -83,11 +83,11 @@ TEST( http_complex, cookies )
     auto http2 = HTTP::create( async );
     //
     // Set a cookie
-    auto code = http1->GET( c_server_httpbun + "cookies/set", { { "d1", "61" } } ).options ( "cookies=1" ).exec().get_code();
+    auto code = http1->GET( c_server_httpbun + "cookies/set", { { "d1", "61" } } ).options( "cookies=1" ).exec().get_code();
     ASSERT_EQ( code, 302 );
     //
     // And retrieve it
-    code = http1->GET( c_server_httpbun + "cookies" ).options ( "cookies=1" ).exec().get_code();
+    code = http1->GET( c_server_httpbun + "cookies" ).options( "cookies=1" ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_extract( http1->get_body(), "$.cookies.d1" ), "61" );
@@ -200,8 +200,9 @@ TEST( http_complex, abort )
     //
     auto start = uv_hrtime();
     async.stop(); // should wait for the end of all pending requests
-    auto duration = uv_hrtime() - start;  // in nanoseconds.
-    EXPECT_LT( duration, 3'000'000'000 ); // < 3s
+    auto duration_ns = uv_hrtime() - start;  // in nanoseconds
+    //
+    EXPECT_LT( duration_ns, 3'000'000'000 ); // < 3s
   }
   //
   EXPECT_TRUE( cb_count == 1 );
@@ -361,6 +362,30 @@ TEST( http_complex, max_size )
     //
     ASSERT_EQ( code, CURLE_WRITE_ERROR );
     EXPECT_LE( http->get_body().size(), 1024 );
+  }
+  //
+  async.stop();
+}
+
+//--------------------------------------------------------------------
+TEST( http_complex, retry )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    auto start = uv_hrtime();
+    auto http  = HTTP::create( async );
+    auto code  =
+        http->GET( "http://localhost:9999/" )
+            .set_retries( 10, 200 ) // 10 * 200ms = 2s
+            .exec()
+            .get_code();
+    auto duration_ns = uv_hrtime() - start; // in nanoseconds
+    //
+    EXPECT_EQ( code, CURLE_COULDNT_CONNECT );
+    EXPECT_EQ( async.active_requests(), 0 );
+    EXPECT_GT( duration_ns, 2'000'000'000 ); // > 2s
   }
   //
   async.stop();

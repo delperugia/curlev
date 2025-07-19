@@ -170,10 +170,10 @@ private:
   //
   mutable std::mutex              m_uv_run_mutex;
   mutable std::condition_variable m_uv_run_cv;
-  bool                            m_uv_running = false; // worker thread is running
+  bool                            m_uv_running = false;   // worker thread is running
   std::thread                     m_uv_worker;
-  uv_loop_t *                     m_uv_loop    = nullptr;
-  uv_timer_t                      m_uv_timer   = {};
+  uv_loop_t *                     m_uv_loop    = nullptr; // data is the ASync object
+  uv_timer_t                      m_uv_timer   = {};      // data is the ASync object
   //
   bool        uv_init ();
   void        uv_clear();
@@ -181,6 +181,7 @@ private:
   void        uv_run_wait_requests  ( std::unique_lock< std::mutex > & p_lock ) const;
   static void uv_io_cb     ( uv_poll_t * p_handle, int p_status, int p_events );
   static void uv_timeout_cb( uv_timer_t * p_handle );
+  static void uv_restart_cb( uv_timer_t * p_handle );
   //
   // Context shared between multi and uv
   //
@@ -221,11 +222,17 @@ private:
   // Wait for all pending requests to finish
   bool wait_pending_requests( unsigned p_timeout_ms ) const;
   //
+  // Handles the termination of the request
+  void request_completed( CURL * p_curl, long p_result_code );
+  //
   // Returns the operation outcome to the wrapper, immediately or delayed
-  void notify_wrapper( CURL * p_curl, long p_result_code );
+  void post_to_wrapper( CURL * p_curl, t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code );
   //
   // Call the wrapper, delete the shared_ptr
   void invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code );
+  //
+  // Retrieve the Wrapper from the curl handle
+  static t_wrapper_shared_ptr_ptr get_wrapper_from_curl( CURL * p_curl );
 };
 
 } // namespace curlev
