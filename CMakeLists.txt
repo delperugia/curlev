@@ -17,7 +17,7 @@ find_package     ( PkgConfig REQUIRED                       )
 pkg_check_modules( LIBUV     REQUIRED IMPORTED_TARGET libuv )
 
 # Library and test sources
-add_subdirectory( src   )
+add_subdirectory( src )
 if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
     add_subdirectory( tests )
 endif()
