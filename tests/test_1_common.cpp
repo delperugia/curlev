@@ -41,8 +41,66 @@ TEST( common, svtol )
   EXPECT_FALSE( svtol( "9999999999999999999", v ) );
 
   // Limits
-  EXPECT_TRUE( svtol( "2147483647" , v ) && v ==  2147483647 );
-  EXPECT_TRUE( svtol( "-2147483647", v ) && v == -2147483647 );
+  if ( sizeof( long ) == 4 )
+  {
+    EXPECT_TRUE( ! svtol( "2147483648" , v ) );
+    EXPECT_TRUE(   svtol( "2147483647" , v ) && v == std::numeric_limits<long>::max() );
+    EXPECT_TRUE(   svtol( "-2147483648", v ) && v == std::numeric_limits<long>::min() );
+    EXPECT_TRUE( ! svtol( "-2147483649", v ) );
+  }
+  else
+  {
+    EXPECT_TRUE( ! svtol( "9223372036854775808" , v ) );
+    EXPECT_TRUE(   svtol( "9223372036854775807" , v ) && v == std::numeric_limits<long>::max() );
+    EXPECT_TRUE(   svtol( "-9223372036854775808", v ) && v == std::numeric_limits<long>::min() );
+    EXPECT_TRUE( ! svtol( "-9223372036854775809", v ) );
+  }
+}
+
+//--------------------------------------------------------------------
+TEST( common, svtoul )
+{
+  unsigned long v;
+
+  // Basic numeric conversions
+  EXPECT_TRUE(  svtoul( "0"        , v ) && v ==         0 );
+  EXPECT_TRUE(  svtoul( "42"       , v ) && v ==        42 );
+  EXPECT_FALSE( svtoul( "-42"      , v )                   );
+  EXPECT_TRUE(  svtoul( "123456789", v ) && v == 123456789 );
+
+  // Leading and trailing space are not supported
+  EXPECT_FALSE( svtoul( ""        , v ) );
+  EXPECT_FALSE( svtoul( " "       , v ) );
+  EXPECT_FALSE( svtoul( "\t"      , v ) );
+  EXPECT_FALSE( svtoul( "  42  "  , v ) );
+  EXPECT_FALSE( svtoul( "\t-123\n", v ) );
+
+  // Leading zeros
+  EXPECT_TRUE(  svtoul( "000"  , v ) && v ==   0 );
+  EXPECT_TRUE(  svtoul( "0042" , v ) && v ==  42 );
+  EXPECT_FALSE( svtoul( "-0042", v )             );
+
+  // Invalid input
+  EXPECT_FALSE( svtoul( "abc"                 , v ) );
+  EXPECT_FALSE( svtoul( "12abc34"             , v ) );
+  EXPECT_FALSE( svtoul( "abc123"              , v ) );
+  EXPECT_FALSE( svtoul( "+42"                 , v ) );
+  EXPECT_FALSE( svtoul( "-"                   , v ) );
+  EXPECT_FALSE( svtoul( "99999999999999999999", v ) );
+
+  // Limits
+  if ( sizeof( long ) == 4 )
+  {
+    EXPECT_FALSE( svtoul( "4294967296" , v ) );
+    EXPECT_TRUE(  svtoul( "4294967295" , v ) && v == std::numeric_limits<unsigned long>::max() );
+    EXPECT_TRUE(  svtoul( "0"          , v ) && v == 0                                         );
+  }
+  else
+  {
+    EXPECT_FALSE( svtoul( "18446744073709551616" , v ) );
+    EXPECT_TRUE(  svtoul( "18446744073709551615" , v ) && v == std::numeric_limits<unsigned long>::max() );
+    EXPECT_TRUE(  svtoul( "0"                    , v ) && v == 0                                         );
+  }
 }
 
 //--------------------------------------------------------------------

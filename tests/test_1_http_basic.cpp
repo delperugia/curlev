@@ -74,7 +74,7 @@ TEST( http_basic, async )
 
 // Internal libcurl constant
 #ifndef CURL_MAX_INPUT_LENGTH
-#define CURL_MAX_INPUT_LENGTH 8000000
+#define CURL_MAX_INPUT_LENGTH 8'000'000
 #endif
 
 TEST( http_basic, cskv_error )
