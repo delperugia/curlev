@@ -29,6 +29,8 @@ namespace
 bool svtol( std::string_view p_string, long & p_value )
 {
   constexpr auto base     = 10U;
+  unsigned long  max      = std::numeric_limits< long >::max(); // 2147483647
+  //
   unsigned long  value    = 0;
   bool           negative = false;
   const auto *   current  = p_string.data();
@@ -37,6 +39,7 @@ bool svtol( std::string_view p_string, long & p_value )
   if ( current < last && *current == '-' )
   {
     negative = true;
+    max++; // now 2147483648
     current++;
   }
   //
@@ -46,7 +49,7 @@ bool svtol( std::string_view p_string, long & p_value )
   while ( current < last && is_digit( *current ) )
   {
     value = value * base + ( *current++ - '0' );
-    if ( value > std::numeric_limits< long >::max() )
+    if ( value > max )
       return false; // overflow
   }
   //
@@ -58,14 +61,36 @@ bool svtol( std::string_view p_string, long & p_value )
   return true;
 }
 
-//--------------------------------------------------------------------
-// Remove leading and trailing white spaces (space, tabulations...) from string
-std::string_view trim( std::string_view p_string )
+// The unsigned version of svtol
+bool svtoul( std::string_view p_string, unsigned long & p_value )
 {
-  const auto * begin = std::find_if_not( p_string.begin() , p_string.end() , ::isspace );
-  const auto * end   = std::find_if_not( p_string.rbegin(), p_string.rend(), ::isspace ).base();
+  constexpr auto base     = 10U;
+  constexpr auto max      = std::numeric_limits< unsigned long >::max(); // 4294967295
   //
-  return ( begin < end ) ? std::string_view( begin, end - begin ) : std::string_view( "" );
+  unsigned long  value    = 0;
+  const auto *   current  = p_string.data();
+  const auto *   last     = p_string.data() + p_string.size();
+  //
+  if ( current == last ) // p_string is ""
+    return false;
+  //
+  while ( current < last && is_digit( *current ) )
+  {
+    unsigned long digit = *current - '0';
+    if ( value > max / base )
+      return false;
+    value *= base;
+    if ( value > max - digit )
+      return false;
+    value += digit;
+    current++;
+  }
+  //
+  if ( current < last ) // non digit found in p_string
+    return false;
+  //
+  p_value = value;
+  return true;
 }
 
 //--------------------------------------------------------------------
@@ -90,34 +115,6 @@ bool equal_ascii_ci( const std::string & p_a, const std::string & p_b )
 {
   return p_a.length() == p_b.length() &&
          strcasecmp( p_a.c_str(), p_b.c_str() ) == 0;
-}
-
-//--------------------------------------------------------------------
-// Parse a key-value comma-separated string (CSKV) and call the handler for each pair.
-// The handler must return false if the key-value pair is invalid.
-bool parse_cskv(
-    const std::string &                                                               p_cskv,
-    const std::function< bool( std::string_view p_key, std::string_view p_value ) > & p_handler )
-{
-  std::istringstream iss( p_cskv );
-  std::string        token;
-  //
-  while ( std::getline( iss, token, ',' ) )
-  {
-    std::string_view key_value = token;
-    //
-    auto delimiter_pos = key_value.find( '=' );
-    if ( delimiter_pos == std::string::npos )
-      return false; // invalid format: no = sign
-    //
-    auto key   = trim( key_value.substr( 0, delimiter_pos ) );
-    auto value = trim( key_value.substr( delimiter_pos + 1 ) );
-    //
-    if ( ! p_handler( key, value ) )
-      return false; // invalid option reported
-  }
-  //
-  return true;
 }
 
 //--------------------------------------------------------------------

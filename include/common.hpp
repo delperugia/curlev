@@ -13,20 +13,52 @@
 namespace curlev
 {
 
+//--------------------------------------------------------------------
+// Remove leading and trailing white spaces (space, tabulations...) from a string
+inline
+std::string_view trim( std::string_view p_string )
+{
+  const auto * begin = std::find_if_not( p_string.begin() , p_string.end() , ::isspace );
+  const auto * end   = std::find_if_not( p_string.rbegin(), p_string.rend(), ::isspace ).base();
+  //
+  return ( begin < end ) ? std::string_view( begin, end - begin ) : std::string_view();
+}
+
+//--------------------------------------------------------------------
+// Parse a key-value comma-separated string (CSKV) and call the handler for each pair.
+// The handler receives two string_view and must return false if the key-value pair is invalid.
+template < typename Callable >
+bool parse_cskv( std::string_view p_cskv, Callable && p_handler )
+{
+  while ( ! p_cskv.empty() )
+  {
+    auto comma_pos = p_cskv.find( ',' );
+    auto key_value = p_cskv.substr( 0, comma_pos );
+    //
+    p_cskv.remove_prefix( comma_pos == std::string_view::npos ? p_cskv.size() : comma_pos + 1 );
+    //
+    auto delimiter_pos = key_value.find( '=' );
+    if ( delimiter_pos == std::string_view::npos )
+      return false; // invalid format: no = sign
+    //
+    auto key   = trim( key_value.substr( 0, delimiter_pos ) );
+    auto value = trim( key_value.substr( delimiter_pos + 1 ) );
+    //
+    if ( ! std::forward< Callable >( p_handler )( key, value ) )
+      return false; // invalid option reported
+  }
+  //
+  return true;
+}
+
 // Converts a std::string_view to a long. Returns false on error.
 bool svtol( std::string_view p_string, long & p_value );
 
-// Remove leading and trailing white spaces (space, tabulations...) from string
-std::string_view trim( std::string_view p_string );
+// Converts a std::string_view to an unsigned long. Returns false on error.
+bool svtoul( std::string_view p_string, unsigned long & p_value );
 
 // Checks is 2 ASCII strings are equal, ignoring case differences
 bool equal_ascii_ci( const std::string & p_a, const std::string & p_b );
-
-// Parse a key-value comma-separated string (CSKV) and call the handler for each pair.
-// The handler must return false if the key-value pair is invalid.
-bool parse_cskv(
-    const std::string &                                                               p_cskv,
-    const std::function< bool( std::string_view p_key, std::string_view p_value ) > & p_handler );
 
 // Case insensitive operations for the std::unordered_map of t_key_values_ci
 struct t_ci
@@ -40,22 +72,22 @@ using t_key_values    = std::unordered_map< std::string, std::string >;         
 using t_key_values_ci = std::unordered_map< std::string, std::string, t_ci, t_ci >; // used for received headers, case insensitive keys
 
 // Wrapper around the libcurl setops function, returning true upon success
-template < typename type >
-bool easy_setopt( CURL * p_curl, CURLoption p_option, type p_parameter )
+template < typename Type >
+bool easy_setopt( CURL * p_curl, CURLoption p_option, Type && p_parameter )
 {
-  return CURLE_OK == curl_easy_setopt( p_curl, p_option, p_parameter );
+  return CURLE_OK == curl_easy_setopt( p_curl, p_option, std::forward< Type >( p_parameter ) );
 }
 
-template < typename type >
-bool multi_setopt( CURL * p_curl, CURLMoption p_option, type p_parameter )
+template < typename Type >
+bool multi_setopt( CURL * p_curl, CURLMoption p_option, Type && p_parameter )
 {
-  return CURLM_OK == curl_multi_setopt( p_curl, p_option, p_parameter );
+  return CURLM_OK == curl_multi_setopt( p_curl, p_option, std::forward< Type >( p_parameter ) );
 }
 
-template < typename type >
-bool share_setopt( CURL * p_curl, CURLSHoption p_option, type p_parameter )
+template < typename Type >
+bool share_setopt( CURL * p_curl, CURLSHoption p_option, Type && p_parameter )
 {
-  return CURLSHE_OK == curl_share_setopt( p_curl, p_option, p_parameter );
+  return CURLSHE_OK == curl_share_setopt( p_curl, p_option, std::forward< Type >( p_parameter ) );
 }
 
 // Start with p_list set to nullptr, then add string.

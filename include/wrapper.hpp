@@ -102,6 +102,8 @@ class Wrapper: public WrapperBase
     };
     //
   public:
+    using t_cb_user = std::function< void( const Protocol & ) >;
+    //
     explicit Wrapper( ASync & p_async ) :
       WrapperBase(),
       m_async( p_async )
@@ -132,7 +134,7 @@ class Wrapper: public WrapperBase
     // To ensure persistency, a new shared pointer is created and passed to ASync.
     // This increases the reference counter of the shared pointer, and thus the class continues
     // to exist even if the share pointer owned by the user goes out of scope and is reset.
-    Protocol & start( std::function< void( const Protocol & ) > p_user_cb = nullptr )
+    Protocol & start( t_cb_user && p_user_cb = nullptr )
     {
       {
         std::lock_guard lock( m_exec_mutex );
@@ -140,7 +142,7 @@ class Wrapper: public WrapperBase
         if ( m_exec_state != State::idle )              // already running: do nothing at all
           return static_cast< Protocol & >( *this );
         //
-        m_user_cb = p_user_cb;                          // will be cleared by cb_protocol (below or in async_cb)
+        m_user_cb = std::move( p_user_cb );             // will be cleared by cb_protocol (below or in async_cb)
         //
         if ( m_response_code == c_success )             // initialization succeeded
         {
@@ -401,14 +403,14 @@ class Wrapper: public WrapperBase
     //
     // Execute an action if a request is just created or terminated.
     // Returns true if is was executed
-    template< typename action >
-    bool do_if_idle( action p_action ) const
+    template < typename Callable >
+    bool do_if_idle( Callable && p_action ) const
     {
       std::lock_guard lock( m_exec_mutex );
       //
       if ( m_exec_state == State::idle )
       {
-        p_action();
+        std::forward< Callable >( p_action )();
         return true;
       }
       //
@@ -440,8 +442,8 @@ class Wrapper: public WrapperBase
     std::weak_ptr< Protocol > m_self_weak; // set on self at creation, used to create and pass a shared_ptr to ASync
     //
     // Optional user CB invoked from async_cb
-    bool                                      m_user_cb_threaded  = true;
-    std::function< void( const Protocol & ) > m_user_cb           = nullptr;
+    bool      m_user_cb_threaded  = true;
+    t_cb_user m_user_cb           = nullptr;
     //
     // Options
     size_t   m_response_size_max = c_default_response_size_max;
