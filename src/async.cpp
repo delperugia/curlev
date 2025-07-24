@@ -19,14 +19,30 @@
 namespace curlev
 {
 
-// A safety in case a notification is lost
-constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 1'000 );
+namespace
+{
+  // A safety in case a notification is lost
+  constexpr auto c_event_wait_timeout = std::chrono::milliseconds( 1'000 );
 
-// Short sleep delay when doing active wait
-constexpr auto c_short_wait_ms      = 10U;
+  // Short sleep delay when doing active wait
+  constexpr auto c_short_wait_ms      = 10U;
 
-// Some magic values: it is possible to start around 300req/ms in curl_multi_add_handle()
-constexpr auto c_requests_per_ms    = 300U;
+  // Some magic values: it is possible to start around 300req/ms in curl_multi_add_handle()
+  constexpr auto c_requests_per_ms    = 300U;
+
+  // Cleanly close and deallocate a loop
+  void uv_clear_loop( uv_loop_t *& p_loop )
+  {
+    if ( p_loop != nullptr )
+    {
+      while ( uv_loop_close( p_loop ) == UV_EBUSY )
+        uv_sleep( c_short_wait_ms );
+      //
+      delete p_loop;
+      p_loop = nullptr;
+    }
+  }
+} // namespace
 
 //--------------------------------------------------------------------
 ASync::ASync()
@@ -482,23 +498,6 @@ int ASync::multi_cb_socket(
 
 //--------------------------------------------------------------------
 // Start UV loop and timer, and the worker thread waiting for IO
-
-namespace
-{
-  // Cleanly close and deallocate a loop
-  void uv_clear_loop( uv_loop_t *& p_loop )
-  {
-    if ( p_loop != nullptr )
-    {
-      while ( uv_loop_close( p_loop ) == UV_EBUSY )
-        uv_sleep( c_short_wait_ms );
-      //
-      delete p_loop;
-      p_loop = nullptr;
-    }
-  }
-} // namespace
-
 bool ASync::uv_init()
 {
   bool ok = true;
