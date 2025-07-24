@@ -176,6 +176,34 @@ needs to wait `m_uv_run_mutex` which is only unlocked for a short period of time
 by `uv_run()`. This bottleneck was removed by increasing the delay depending on
 the number of pending requests.
 
+Copying the default configuration from ASync to the Wrapper is negligible, but
+setting the `libcurl` options, authentication and certificates is not.
+
+Because Wrapper objects are re-usable,
+and because `curlev` default values are not exact the same as `libcurl` defaults,
+the `libcurl` configuration must be set before each execution,
+even if the program does not set a configuration.
+
+Resetting the `libcurl` handle and only applying the needed options is slower
+(16.144µs vs 13.986µs).
+
+And disabling the ability to ability to reuse a Wrapper (thus removing the need to reset
+default values) reduces the initialization time (from 13.986µs to 11.089µs).
+
+If Wrapper were only reinitialized when reused, and if only the non-default values
+were set, the initialization time is reduced (from 13.986µs to 10.678µs).
+
+If Wrapper were not re-usable,
+and if `curlev` default were the same as `libcurl`,
+the initialization time would be even more reduced (from 13.986µs to 8.868µs).
+
+An implementation configuring only the required options, using unordered map
+(because keys defined in ASync could be overloaded in Wrapper) of variants
+(long and std::string) was slower (20.895µs vs 13.986µs).
+
+In all cases, the time saved is negligible compared to the network side,
+and doesn't worth complexifying the code.
+
 # References
 
  - [libcurl](https://curl.se/libcurl/)
