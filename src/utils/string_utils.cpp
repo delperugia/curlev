@@ -34,7 +34,7 @@ namespace
 } // namespace
 
 //--------------------------------------------------------------------
-// Remove leading and trailing white spaces (space, tabulations...) from a string
+// Removes leading and trailing white spaces (spaces, tabulations...) from a string
 std::string_view trim( std::string_view p_string )
 {
   const auto * begin = std::find_if_not( p_string.begin() , p_string.end() , ::isspace );
@@ -44,7 +44,7 @@ std::string_view trim( std::string_view p_string )
 }
 
 //--------------------------------------------------------------------
-// Converts a std::string_view to a long. Returns false on error.
+// Converts a std::string_view into a long. Returns false on error.
 // ~ twice faster than using std::stol, and works on string_view
 bool svtol( std::string_view p_string, long & p_value )
 {
@@ -115,7 +115,7 @@ bool svtoul( std::string_view p_string, unsigned long & p_value )
 }
 
 //--------------------------------------------------------------------
-// Checks is two ASCII strings are equal, ignoring case differences,
+// Checks is two ASCII strings are equal, ignoring case differences.
 // strcasecmp is ~5 times faster than std::lexicographical_compare.
 bool equal_ascii_ci( const std::string & p_a, const std::string & p_b )
 {

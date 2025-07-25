@@ -11,20 +11,19 @@
 namespace curlev
 {
 
-// Remove leading and trailing white spaces (space, tabulations...) from a string
+// Removes leading and trailing white spaces (spaces, tabulations...) from a string
 std::string_view trim( std::string_view p_string );
 
-// Converts a std::string_view to a long. Returns false on error.
+// Converts a std::string_view into a long. Returns false on error.
 bool svtol( std::string_view p_string, long & p_value );
 
-// Converts a std::string_view to an unsigned long. Returns false on error.
+// Converts a std::string_view into an unsigned long. Returns false on error.
 bool svtoul( std::string_view p_string, unsigned long & p_value );
 
-// Checks is 2 ASCII strings are equal, ignoring case differences
+// Checks is two ASCII strings are equal, ignoring case differences.
 bool equal_ascii_ci( const std::string & p_a, const std::string & p_b );
 
-//--------------------------------------------------------------------
-// Parse a key-value comma-separated string (CSKV) and call the handler for each pair.
+// Parses a key-value comma-separated string (CSKV) and calls the handler for each pair.
 // The handler receives two string_view and must return false if the key-value pair is invalid.
 template < typename Callable >
 bool parse_cskv( std::string_view p_cskv, Callable && p_handler )
@@ -34,7 +33,9 @@ bool parse_cskv( std::string_view p_cskv, Callable && p_handler )
     auto comma_pos = p_cskv.find( ',' );
     auto key_value = p_cskv.substr( 0, comma_pos );
     //
-    p_cskv.remove_prefix( comma_pos == std::string_view::npos ? p_cskv.size() : comma_pos + 1 );
+    p_cskv.remove_prefix( comma_pos == std::string_view::npos ?
+                            p_cskv.size() :   // remove key_value
+                            comma_pos + 1 );  // remove key_value and comma
     //
     auto delimiter_pos = key_value.find( '=' );
     if ( delimiter_pos == std::string_view::npos )

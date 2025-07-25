@@ -9,14 +9,14 @@ namespace curlev
 {
 
 //--------------------------------------------------------------------
-// Start with p_list set to nullptr, then add string.
-// p_list is updated and must be freed using curl_slist_free_all.
+// Add std::string to a curl_slist. The first time p_list must be set to nullptr.
+// p_list is updated at each call, and must be freed using curl_slist_free_all.
 // p_string must not be empty.
 // Because curl_slist_append returns nullptr on error, the previous value
-// of p_list must be kept to be preserved to be freed.
+// of p_list must be preserved to be later freed.
 bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_string )
 {
-  if ( p_string.empty() ) // nothng to do
+  if ( p_string.empty() ) // nothing to do
     return false;
   //
   curl_slist * temp = curl_slist_append( p_list, p_string.c_str() );

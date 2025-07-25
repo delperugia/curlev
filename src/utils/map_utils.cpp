@@ -12,9 +12,9 @@ namespace curlev
 {
 
 //--------------------------------------------------------------------
-// Calculate a case insensitive hash optimized for HTTP header keys
+// Calculates a case insensitive hash optimized for HTTP header keys
 // (2 to 30 characters, a-z and - characters, limited number of headers).
-// For the 50 most common headers there is no collision
+// For the 50 most common headers there is no collision.
 std::size_t t_ci::operator()( const std::string & p_key ) const
 {
   constexpr std::size_t multiplier = 31;
