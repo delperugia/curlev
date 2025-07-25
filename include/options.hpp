@@ -26,13 +26,13 @@ public:
   //   Name               Default  Unit          Comment
   //   accept_compression 1        0 or 1        activate compression
   //   connect_timeout    30000    milliseconds  connection timeout
-  //   cookies            false    0 or 1        receive and resend cookies
-  //   follow_location    false    0 or 1        follow HTTP 3xx redirects
-  //   insecure           false    0 or 1        disables certificate validation
+  //   cookies            0        0 or 1        receive and resend cookies
+  //   follow_location    0        0,1,2,3       follow HTTP 3xx redirects
+  //   insecure           0        0 or 1        disables certificate validation
   //   maxredirs          5        count         maximum number of redirects allowed
   //   proxy                       string        the SOCKS or HTTP URl to a proxy
   //   timeout            30000    milliseconds  receive data timeout
-  //   verbose            false    0 or 1        debug log on console
+  //   verbose            0        0 or 1        debug log on console
   bool set( const std::string & p_cskv );
   //
   // Apply options to curl easy handle
@@ -45,7 +45,7 @@ private:
   bool        m_accept_compression = true;
   long        m_connect_timeout    = 0;
   bool        m_cookies            = false;
-  bool        m_follow_location    = false;
+  long        m_follow_location    = 0;
   bool        m_insecure           = false;
   long        m_maxredirs          = 0;
   std::string m_proxy;

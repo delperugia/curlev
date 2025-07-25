@@ -32,7 +32,7 @@ bool Options::set( const std::string & p_cskv )
            if ( key == "timeout"            )  ok                   = svtol( value, m_timeout );
       else if ( key == "connect_timeout"    )  ok                   = svtol( value, m_connect_timeout );
       else if ( key == "insecure"           )  m_insecure           = ( value == "1" );
-      else if ( key == "follow_location"    )  m_follow_location    = ( value == "1" );
+      else if ( key == "follow_location"    )  ok                   = svtol( value, m_follow_location );
       else if ( key == "maxredirs"          )  ok                   = svtol( value, m_maxredirs );
       else if ( key == "proxy"              )  m_proxy              = value;
       else if ( key == "cookies"            )  m_cookies            = ( value == "1" );
@@ -56,12 +56,12 @@ bool Options::apply( CURL * p_curl ) const
   ok = ok && easy_setopt( p_curl, CURLOPT_ACCEPT_ENCODING  , m_accept_compression ? "" : nullptr              );
   ok = ok && easy_setopt( p_curl, CURLOPT_CONNECTTIMEOUT_MS, m_connect_timeout                                );
   ok = ok && easy_setopt( p_curl, CURLOPT_COOKIEFILE       , m_cookies            ? "" : nullptr              );
-  ok = ok && easy_setopt( p_curl, CURLOPT_FOLLOWLOCATION   , m_follow_location    ? 1L : 0L                   ); // follow 30x
+  ok = ok && easy_setopt( p_curl, CURLOPT_FOLLOWLOCATION   , m_follow_location                                ); // follow 30x
   ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYHOST   , m_insecure           ? 0L : 2L                   );
   ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYPEER   , m_insecure           ? 0L : 1L                   );
-  ok = ok && easy_setopt( p_curl, CURLOPT_MAXREDIRS        , m_maxredirs );
+  ok = ok && easy_setopt( p_curl, CURLOPT_MAXREDIRS        , m_maxredirs                                      );
   ok = ok && easy_setopt( p_curl, CURLOPT_PROXY            , m_proxy.empty()      ? nullptr : m_proxy.c_str() );
-  ok = ok && easy_setopt( p_curl, CURLOPT_TIMEOUT_MS       , m_timeout );
+  ok = ok && easy_setopt( p_curl, CURLOPT_TIMEOUT_MS       , m_timeout                                        );
   ok = ok && easy_setopt( p_curl, CURLOPT_VERBOSE          , m_verbose            ? 1L : 0L                   );
   //
   return ok;
@@ -72,14 +72,14 @@ bool Options::apply( CURL * p_curl ) const
 void Options::set_default()
 {
   m_accept_compression = true;            // activate compression if true
-  m_connect_timeout    = c_timeout_ms ;   // in milliseconds
-  m_cookies            = false ;          // receive and resend cookies
-  m_follow_location    = false ;          // follow HTTP 3xx redirects
-  m_insecure           = false ;          // disables certificate validation
+  m_connect_timeout    = c_timeout_ms;    // in milliseconds
+  m_cookies            = false;           // receive and resend cookies
+  m_follow_location    = 0;               // follow HTTP 3xx redirects
+  m_insecure           = false;           // disables certificate validation
   m_maxredirs          = c_max_redirect;  // maximum number of redirects allowed
   m_proxy              .clear();          // the SOCKS or HTTP URl to a proxy
-  m_timeout            = c_timeout_ms ;   // in milliseconds
-  m_verbose            = false ;          // debug log on console
+  m_timeout            = c_timeout_ms;    // in milliseconds
+  m_verbose            = false;           // debug log on console
 }
 
 } // namespace curlev

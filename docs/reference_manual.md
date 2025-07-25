@@ -179,8 +179,8 @@ separated string with the following keys available:
 |--------------------|---------|--------------|-------------------------------------|---------------------
 | accept_compression | 1       | 0 or 1       | activate compression                | CURLOPT_ACCEPT_ENCODING
 | connect_timeout    | 30000   | milliseconds | connection timeout                  | CURLOPT_CONNECTTIMEOUT_MS
-| cookies            | false   | 0 or 1       | receive and resend cookies          | CURLOPT_COOKIEFILE
-| follow_location    | 0       | 0 or 1       | follow HTTP 3xx redirects           | CURLOPT_FOLLOWLOCATION
+| cookies            | 0       | 0 or 1       | receive and resend cookies          | CURLOPT_COOKIEFILE
+| follow_location    | 0       | 0, 1, 2, 3   | follow HTTP 3xx redirects           | CURLOPT_FOLLOWLOCATION (ALL, OBEYCODE, FIRSTONLY)
 | insecure           | 0       | 0 or 1       | disables certificate validation     | CURLOPT_SSL_VERIFYHOST and CURLOPT_SSL_VERIFYPEER
 | maxredirs          | 5       | count        | maximum number of redirects allowed | CURLOPT_MAXREDIRS
 | proxy              |         | string       | the SOCKS or HTTP URl to a proxy    | CURLOPT_PROXY
@@ -196,6 +196,7 @@ Notes:
 - accept_compression: all built-in supported encodings are accepted
 - cookies:            no initial file is specified when activated
 - proxy:              see https://curl.se/libcurl/c/CURLOPT_PROXY.html
+- follow_location:    see modes in https://curl.se/libcurl/c/CURLOPT_FOLLOWLOCATION.html
 
 ## Setting certificates
 
