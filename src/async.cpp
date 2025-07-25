@@ -9,8 +9,9 @@
 #include <string>
 
 #include "async.hpp"
-#include "common.hpp"
 #include "wrapper.hpp"
+#include "utils/curl_utils.hpp"
+#include "utils/string_utils.hpp"
 
 #if LIBCURL_VERSION_NUM < CURL_VERSION_BITS( 7, 87, 0 )
 #define CURL_WRITEFUNC_ERROR 0 // added in 7.87.0

@@ -1,0 +1,39 @@
+/*********************************************************************
+ * Copyright (c) 2025, Pierre DEL PERUGIA and the curlev project contributors
+ * SPDX-License-Identifier: Apache-2.0
+ ********************************************************************/
+
+#pragma once
+
+#include <curl/curl.h>
+#include <string>
+
+namespace curlev
+{
+
+// Wrapper around the libcurl setops function, returning true upon success
+
+template < typename Type >
+bool easy_setopt( CURL * p_curl, CURLoption p_option, Type && p_parameter )
+{
+  return CURLE_OK == curl_easy_setopt( p_curl, p_option, std::forward< Type >( p_parameter ) );
+}
+
+template < typename Type >
+bool multi_setopt( CURL * p_curl, CURLMoption p_option, Type && p_parameter )
+{
+  return CURLM_OK == curl_multi_setopt( p_curl, p_option, std::forward< Type >( p_parameter ) );
+}
+
+template < typename Type >
+bool share_setopt( CURL * p_curl, CURLSHoption p_option, Type && p_parameter )
+{
+  return CURLSHE_OK == curl_share_setopt( p_curl, p_option, std::forward< Type >( p_parameter ) );
+}
+
+// Start with p_list set to nullptr, then add string.
+// p_list is updated and must be freed using curl_slist_free_all.
+// p_string must not be empty.
+bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_string );
+
+} // namespace curlev

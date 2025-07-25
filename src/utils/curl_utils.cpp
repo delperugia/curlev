@@ -1,0 +1,30 @@
+/*********************************************************************
+ * Copyright (c) 2025, Pierre DEL PERUGIA and the curlev project contributors
+ * SPDX-License-Identifier: Apache-2.0
+ ********************************************************************/
+
+#include "utils/curl_utils.hpp"
+
+namespace curlev
+{
+
+//--------------------------------------------------------------------
+// Start with p_list set to nullptr, then add string.
+// p_list is updated and must be freed using curl_slist_free_all.
+// p_string must not be empty.
+// Because curl_slist_append returns nullptr on error, the previous value
+// of p_list must be kept to be preserved to be freed.
+bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_string )
+{
+  if ( p_string.empty() ) // nothng to do
+    return false;
+  //
+  curl_slist * temp = curl_slist_append( p_list, p_string.c_str() );
+  if ( temp == nullptr ) // allocation failed
+    return false;
+  //
+  p_list = temp;
+  return true;
+}
+
+} // namespace curlev

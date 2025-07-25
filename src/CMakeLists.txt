@@ -7,11 +7,13 @@ set( SRC_FILES
      async.cpp
      authentication.cpp
      certificates.cpp
-     common.cpp
      http.cpp
      http_json.cpp
      mime.cpp
      options.cpp
+     utils/curl_utils.cpp
+     utils/map_utils.cpp
+     utils/string_utils.cpp
 )
 
 # Check strcasecmp availability

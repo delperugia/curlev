@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************/
 
-#include "common.hpp"
 #include "http.hpp"
+#include "utils/curl_utils.hpp"
 
 namespace curlev
 {

@@ -17,7 +17,6 @@
   #include <rapidjson/document.h>
 #endif
 
-#include "common.hpp"
 #include "mime.hpp"
 #include "wrapper.hpp"
 

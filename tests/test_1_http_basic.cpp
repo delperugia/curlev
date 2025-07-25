@@ -7,7 +7,6 @@
 #include <iostream>
 
 #include "async.hpp"
-#include "common.hpp"
 #include "http.hpp"
 #include "test_utils.hpp"
 

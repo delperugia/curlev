@@ -18,8 +18,8 @@
 
 #include "authentication.hpp"
 #include "certificates.hpp"
-#include "common.hpp"
 #include "options.hpp"
+#include "utils/non_transferable.hpp"
 
 namespace curlev
 {

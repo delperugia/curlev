@@ -5,7 +5,8 @@
 
 #include <gtest/gtest.h>
 
-#include "common.hpp"
+#include "utils/string_utils.hpp"
+#include "utils/curl_utils.hpp"
 
 using namespace curlev;
 
