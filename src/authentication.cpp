@@ -55,17 +55,17 @@ bool Authentication::apply( CURL * p_curl ) const
     ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH, CURLAUTH_NONE );
     break;
   case Mode::basic:
-    ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC );
-    ok = ok && easy_setopt( p_curl, CURLOPT_USERNAME, m_user.c_str() );
+    ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC   );
+    ok = ok && easy_setopt( p_curl, CURLOPT_USERNAME, m_user.c_str()   );
     ok = ok && easy_setopt( p_curl, CURLOPT_PASSWORD, m_secret.c_str() );
     break;
   case Mode::digest:
-    ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST );
-    ok = ok && easy_setopt( p_curl, CURLOPT_USERNAME, m_user.c_str() );
+    ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH, CURLAUTH_DIGEST  );
+    ok = ok && easy_setopt( p_curl, CURLOPT_USERNAME, m_user.c_str()   );
     ok = ok && easy_setopt( p_curl, CURLOPT_PASSWORD, m_secret.c_str() );
     break;
   case Mode::bearer:
-    ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH      , CURLAUTH_BEARER );
+    ok = ok && easy_setopt( p_curl, CURLOPT_HTTPAUTH      , CURLAUTH_BEARER  );
     ok = ok && easy_setopt( p_curl, CURLOPT_XOAUTH2_BEARER, m_secret.c_str() );
     break;
   default:

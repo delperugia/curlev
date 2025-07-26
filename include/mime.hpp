@@ -16,7 +16,7 @@ namespace curlev
   {
     // The 3 types of data that can be added in the MIME document
     // - content_type is the optional part's content type
-    // - filedata is a file read to retrieve the data to sent, and is used as the default filename
+    // - filedata is a file name containing the data to sent, and is also used as the default filename
     // - filename is the optional remote filename
     struct parameter { std::string name; std::string value; };
     struct data      { std::string name; std::string data;     std::string content_type; std::string filename; };
@@ -26,7 +26,7 @@ namespace curlev
     // parts:        the MIME document, it is a vector of parts (part)
     // part:         either a data (parameter, data, file) or an alternative of parts (alternatives)
     // alternatives: a vector of alternatives (alternative)
-    // alternative:  a data (parameter, data, file)
+    // alternative:  a data (parameter, data, file from above)
     using  alternative  = std::variant< parameter, data, file >;
     using  alternatives = std::vector < alternative >;
     using  part         = std::variant< parameter, data, file, alternatives >;

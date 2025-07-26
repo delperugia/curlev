@@ -29,15 +29,15 @@ bool Options::set( const std::string & p_cskv )
     {
       bool ok = true;
       //
-           if ( key == "timeout"            )  ok                   = svtol( value, m_timeout );
-      else if ( key == "connect_timeout"    )  ok                   = svtol( value, m_connect_timeout );
-      else if ( key == "insecure"           )  m_insecure           = ( value == "1" );
-      else if ( key == "follow_location"    )  ok                   = svtol( value, m_follow_location );
-      else if ( key == "maxredirs"          )  ok                   = svtol( value, m_maxredirs );
-      else if ( key == "proxy"              )  m_proxy              = value;
-      else if ( key == "cookies"            )  m_cookies            = ( value == "1" );
-      else if ( key == "accept_compression" )  m_accept_compression = ( value == "1" );
-      else if ( key == "verbose"            )  m_verbose            = ( value == "1" );
+           if ( key == "timeout"            ) ok                   = svtol( value, m_timeout );
+      else if ( key == "connect_timeout"    ) ok                   = svtol( value, m_connect_timeout );
+      else if ( key == "insecure"           ) m_insecure           = ( value == "1" );
+      else if ( key == "follow_location"    ) ok                   = svtol( value, m_follow_location );
+      else if ( key == "maxredirs"          ) ok                   = svtol( value, m_maxredirs );
+      else if ( key == "proxy"              ) m_proxy              = value;
+      else if ( key == "cookies"            ) m_cookies            = ( value == "1" );
+      else if ( key == "accept_compression" ) m_accept_compression = ( value == "1" );
+      else if ( key == "verbose"            ) m_verbose            = ( value == "1" );
       else
           return false;  // unhandled key
       //
