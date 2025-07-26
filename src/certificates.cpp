@@ -131,4 +131,6 @@ void Certificates::set_default( const std::string & p_ca_info, const std::string
   m_ca_path_default = p_ca_path;
 }
 
+// feat(erase_memory_secrets): m_keypasswd, m_proxy_keypasswd, CURLOPT_KEYPASSWD, CURLOPT_PROXY_KEYPASSWD
+
 } // namespace curlev

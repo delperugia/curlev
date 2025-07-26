@@ -85,4 +85,6 @@ void Authentication::set_default()
   m_secret.clear();     // user password or access token
 }
 
+// feat(erase_memory_secrets): switch( m_mode ): m_secret, CURLOPT_PASSWORD, CURLOPT_XOAUTH2_BEARER
+
 } // namespace curlev

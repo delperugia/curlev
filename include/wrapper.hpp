@@ -161,6 +161,8 @@ class Wrapper: public WrapperBase
               delete cb_data;
             }
           }
+          //
+          // feat(erase_memory_secrets): m_authentication, m_certificates, m_options?
         }
       }
       //
@@ -333,6 +335,7 @@ class Wrapper: public WrapperBase
     {
       m_response_code = p_result; // before finalize, in case the Protocol needs it
       //
+      // feat(erase_memory_secrets): m_authentication, m_certificates, m_options?
       finalize_protocol(); // calls Protocol to retrieve protocol related details
       //
       {
