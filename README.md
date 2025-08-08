@@ -7,6 +7,7 @@ curlev
 [![Clang-Tidy](https://github.com/delperugia/curlev/actions/workflows/clang-tidy.yml/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/clang-tidy.yml)
 [![Valgrind](https://github.com/delperugia/curlev/actions/workflows/valgrind.yml/badge.svg)](https://github.com/delperugia/curlev/actions/workflows/valgrind.yml)
 [![Codecov](https://codecov.io/gh/delperugia/curlev/graph/badge.svg?token=339AIQXBS3)](https://codecov.io/gh/delperugia/curlev)
+![MemorySanitizer](https://img.shields.io/badge/MemorySanitizer-enabled-blue)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A C++ HTTP library providing a flexible and easy-to-use interface for making HTTP requests.
@@ -185,6 +186,7 @@ cmake -B         build/  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMAND
 cmake --build    build/  -j
 ctest --test-dir build/  -T test -T coverage
 cmake --build    build/  --target cppcheck
+cmake --build    build/  --target clang-tidy
 cmake --build    build/  --target clean
 ```
 
