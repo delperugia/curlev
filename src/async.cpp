@@ -10,6 +10,7 @@
 
 #include "async.hpp"
 #include "wrapper.hpp"
+#include "utils/assert_return.hpp"
 #include "utils/curl_utils.hpp"
 #include "utils/string_utils.hpp"
 
@@ -138,7 +139,7 @@ void ASync::get_default( Options & p_options, Authentication & p_authentication,
 // Create a new easy handle that *must* be freed using return_handle().
 CURL * ASync::get_handle( WrapperBase * p_protocol ) const
 {
-  assert( p_protocol != nullptr );
+  ASSERT_RETURN( p_protocol != nullptr, nullptr ); // bad protocol
   //
   auto * curl = curl_easy_init();
   bool   ok   = true;
@@ -457,11 +458,10 @@ int ASync::multi_cb_socket(
     void *        p_user_data,
     void *        p_socket_data )
 {
+  ASSERT_RETURN( p_user_data != nullptr, -1 ); // not possible
+  //
   auto * self    = static_cast< ASync *       >( p_user_data   ); // CURLMOPT_SOCKETDATA
   auto * context = static_cast< CurlContext * >( p_socket_data ); // curl_multi_assign
-  //
-  if ( self == nullptr ) // not possible
-    return -1;
   //
   bool ok     = true;
   int  events = 0;
@@ -616,8 +616,8 @@ void ASync::uv_io_cb(
   int         /* status */,
   int         p_events )
 {
-  if ( p_handle == nullptr || p_handle->data == nullptr ) // not possible
-    return;
+  ASSERT_RETURN_VOID( p_handle != nullptr && p_handle->data != nullptr ); // not possible
+  //
   auto * context = static_cast< CurlContext * >( p_handle->data );
   //
   uv_timer_stop( &context->async.m_uv_timer );
@@ -640,8 +640,8 @@ void ASync::uv_io_cb(
 // m_uv_run_mutex is locked.
 void ASync::uv_timeout_cb( uv_timer_t * p_handle )
 {
-  if ( p_handle == nullptr || p_handle->data == nullptr ) // not possible
-    return;
+  ASSERT_RETURN_VOID( p_handle != nullptr && p_handle->data != nullptr ); // not possible
+  //
   auto * self = static_cast< ASync * >( p_handle->data );
   //
   // Inform multi that a timeout occurred
@@ -657,30 +657,31 @@ void ASync::uv_timeout_cb( uv_timer_t * p_handle )
 // Called by uv_run() when a request is programmed to restart by request_completed().
 // The timer used is the one in WrapperBase.
 // m_uv_run_mutex is locked.
-void ASync::uv_restart_cb( uv_timer_t * p_handle )
+void ASync::uv_restart_cb( uv_timer_t * p_handle ) // NOLINT( readability-function-cognitive-complexity )
 {
+  ASSERT_RETURN_VOID( p_handle != nullptr ); // not possible
+  //
   uv_close(
       reinterpret_cast< uv_handle_t * >( p_handle ), // NOLINT( cppcoreguidelines-pro-type-reinterpret-cast )
       []( uv_handle_t * handle )
       {
-        if ( handle             == nullptr ||
-             handle->data       == nullptr ||
-             handle->loop       == nullptr ||
-             handle->loop->data == nullptr ) // not possible
-          return;
+        ASSERT_RETURN_VOID( handle             != nullptr &&
+                            handle->data       != nullptr &&
+                            handle->loop       != nullptr &&
+                            handle->loop->data != nullptr ); // not possible
         //
         auto * curl = static_cast< CURL *  >( handle->data );
         auto * self = static_cast< ASync * >( handle->loop->data );
-        //
-        auto * wrapper = ASync::get_wrapper_from_curl( curl );
-        if ( wrapper == nullptr || ! *wrapper ) // not possible
-          return;
         //
         // Re-post the request
         if ( curl_multi_add_handle( self->m_multi_handle, curl ) == CURLM_OK ) // ok on nullptr
           return;
         //
         // On error, inform the Wrapper
+        auto * wrapper = ASync::get_wrapper_from_curl( curl );
+        //
+        ASSERT_RETURN_VOID( wrapper != nullptr && *wrapper ); // not possible
+        //
         self->post_to_wrapper( curl, wrapper, c_error_internal_restart );
       } );
 }
@@ -722,8 +723,7 @@ void ASync::destroy_curl_context( CurlContext * p_context )
         reinterpret_cast< uv_handle_t * >( &p_context->poll ), // NOLINT( cppcoreguidelines-pro-type-reinterpret-cast )
         []( uv_handle_t * handle )
         {
-          if ( handle == nullptr || handle->data == nullptr ) // not possible
-            return;
+          ASSERT_RETURN_VOID( handle != nullptr && handle->data != nullptr ); // not possible
           //
           auto * context = static_cast< CurlContext * >( handle->data );
           delete context;
@@ -914,9 +914,11 @@ void ASync::post_to_wrapper(
     t_wrapper_shared_ptr_ptr & p_wrapper,
     long                       p_result_code )
 {
-  assert( p_wrapper != nullptr && ( *p_wrapper ) );
+  ASSERT_RETURN_VOID( p_curl != nullptr ); // not possible
   //
   curl_easy_setopt( p_curl, CURLOPT_PRIVATE, nullptr ); // set when Wrapper start(), cleared here
+  //
+  ASSERT_RETURN_VOID( p_wrapper != nullptr && *p_wrapper ); // not possible
   //
   if ( ( *p_wrapper )->use_threaded_cb() ) // push it to CB queue for later delivery
   {
@@ -936,7 +938,7 @@ void ASync::post_to_wrapper(
 // m_uv_run_mutex may be locked.
 void ASync::invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code )
 {
-  assert( p_wrapper != nullptr && ( *p_wrapper ) );
+  ASSERT_RETURN_VOID( p_wrapper != nullptr && *p_wrapper );
   //
   try
   {

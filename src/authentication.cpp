@@ -4,8 +4,9 @@
  ********************************************************************/
 
 #include "authentication.hpp"
-#include "utils/string_utils.hpp"
+#include "utils/assert_return.hpp"
 #include "utils/curl_utils.hpp"
+#include "utils/string_utils.hpp"
 
 namespace curlev
 {
@@ -69,7 +70,7 @@ bool Authentication::apply( CURL * p_curl ) const
     ok = ok && easy_setopt( p_curl, CURLOPT_XOAUTH2_BEARER, m_secret.c_str() );
     break;
   default:
-    ok = false;
+    ASSERT_RETURN( false, false );
     break;
   }
   //

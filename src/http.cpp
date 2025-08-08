@@ -4,6 +4,7 @@
  ********************************************************************/
 
 #include "http.hpp"
+#include "utils/assert_return.hpp"
 #include "utils/curl_utils.hpp"
 
 namespace curlev
@@ -273,7 +274,6 @@ bool HTTP::fill_method()
   //
   switch ( m_request_method )
   {
-    default:
     case Method::none   : m_response_code = c_error_http_method_set;
                           return false;
     case Method::eGET   : method = "GET"   ; break;
@@ -281,6 +281,8 @@ bool HTTP::fill_method()
     case Method::ePOST  : method = "POST"  ; break;
     case Method::ePUT   : method = "PUT"   ; break;
     case Method::ePATCH : method = "PATCH" ; break;
+    default             : ASSERT_RETURN( false, false );
+                          break;
   }
   //
   return easy_setopt( m_curl, CURLOPT_CUSTOMREQUEST, method ); // doesn't have to be persistent

@@ -22,5 +22,9 @@ Checks: >
   -cppcoreguidelines-special-member-functions,
   misc-unused-parameters
 
+CheckOptions:
+- key:             cppcoreguidelines-avoid-do-while.IgnoreMacros
+  value:           'true'
+
 HeaderFilterRegex: '.*/curlev/include/.*'
 WarningsAsErrors:  ''

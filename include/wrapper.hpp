@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <condition_variable>
 #include <curl/curl.h>
 #include <functional>
@@ -13,6 +12,7 @@
 #include <mutex>
 
 #include "async.hpp"
+#include "utils/assert_return.hpp"
 #include "utils/map_utils.hpp"
 
 namespace curlev
@@ -156,10 +156,15 @@ class Wrapper: public WrapperBase
               if ( m_async.start_request( m_curl, cb_data ) )         // ASync processing starts here
                   return static_cast< Protocol & >( *this );
               //
-              m_exec_state    = State::idle;                          // ASync failed
-              m_response_code = c_error_internal_start;
+              m_exec_state = State::idle;                             // ASync failed
               delete cb_data;
             }
+            else
+            {
+              assert( false );
+            }
+            //
+            m_response_code = c_error_internal_start;
           }
           //
           // feat(erase_memory_secrets): m_authentication, m_certificates, m_options?
