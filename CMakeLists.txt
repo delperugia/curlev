@@ -16,9 +16,17 @@ find_package     ( CURL      REQUIRED                       )
 find_package     ( PkgConfig REQUIRED                       )
 pkg_check_modules( LIBUV     REQUIRED IMPORTED_TARGET libuv )
 
+# Adding Sanitizers
+if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+    add_compile_options(-fsanitize=undefined -fsanitize=address -fsanitize=leak)
+    add_link_options   (-fsanitize=undefined -fsanitize=address -fsanitize=leak)
+endif()
+
 # Library and test sources
 add_subdirectory( src )
-if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+
+option( BUILD_TESTING "Build the test executables" OFF )
+if ( BUILD_TESTING )
     add_subdirectory( tests )
 endif()
 

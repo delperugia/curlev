@@ -31,8 +31,8 @@ jobs:
 
       - name: Build
         run: |
-          cmake -B         build/  -DCMAKE_BUILD_TYPE=Debug
+          cmake -B         build/  -DCMAKE_BUILD_TYPE=Release
 
-      - name: Run Cppcheck on sources and tests
+      - name: Run Cppcheck on sources
         run: |
-          cmake --build build/  --config Debug  --target cppcheck
+          cmake --build build/  --config Release  --target cppcheck

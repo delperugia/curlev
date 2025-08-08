@@ -181,10 +181,9 @@ In a console, execute the following:
 ```sh
 git clone https://github.com/delperugia/curlev
 cd curlev/
-cmake -B         build/  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake -B         build/  -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_TESTING=ON
 cmake --build    build/  -j
 ctest --test-dir build/  -T test -T coverage
-ctest --test-dir build/  -T memcheck
 cmake --build    build/  --target cppcheck
 cmake --build    build/  --target clean
 ```
