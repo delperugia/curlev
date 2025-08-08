@@ -37,9 +37,8 @@ target_compile_options( curlev PRIVATE
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
         -Wall -Wextra -Wpedantic -Wcast-align -Wcast-qual -Wformat=2
         -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow
-        -Wswitch -Wswitch-default -Wundef
+        -Wswitch -Wswitch-default -Wundef -Werror
     >
-    $<$<CXX_COMPILER_ID:GNU>: -Wlogical-op >
 )
 
 if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
