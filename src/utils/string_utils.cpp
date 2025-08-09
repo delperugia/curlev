@@ -76,8 +76,8 @@ bool svtol( std::string_view p_string, long & p_value )
   if ( current < last ) // non digit found in p_string
     return false;
   //
-  p_value = negative ? -static_cast< long >( value ) :
-                        static_cast< long >( value );
+  p_value = negative ? static_cast< long >( -value ) :
+                       static_cast< long >(  value );
   return true;
 }
 
