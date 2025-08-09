@@ -8,9 +8,6 @@ project( curlev VERSION 0.1 LANGUAGES CXX )
 set( CMAKE_CXX_STANDARD          17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 
-include( CTest )
-enable_testing()
-
 # Mandatory packages
 find_package     ( CURL      REQUIRED                       )
 find_package     ( PkgConfig REQUIRED                       )
@@ -27,6 +24,8 @@ add_subdirectory( src )
 
 option( BUILD_TESTING "Build the test executables" OFF )
 if ( BUILD_TESTING )
+    include( CTest )
+    enable_testing()
     add_subdirectory( tests )
 endif()
 
