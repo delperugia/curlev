@@ -15,7 +15,7 @@ pkg_check_modules( LIBUV     REQUIRED IMPORTED_TARGET libuv )
 
 # Adding Sanitizers
 if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-    add_compile_options(-fsanitize=undefined -fsanitize=address -fsanitize=leak)
+    add_compile_options(-fsanitize=undefined -fsanitize=address -fsanitize=leak -fno-sanitize-recover=all)
     add_link_options   (-fsanitize=undefined -fsanitize=address -fsanitize=leak)
 endif()
 
