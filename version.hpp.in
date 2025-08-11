@@ -1,0 +1,12 @@
+/*********************************************************************
+ * Copyright (c) 2025, Pierre DEL PERUGIA and the curlev project contributors
+ * SPDX-License-Identifier: Apache-2.0
+ ********************************************************************/
+
+#pragma once
+
+#define CURLEV_VERSION_MAJOR  @PROJECT_VERSION_MAJOR@
+#define CURLEV_VERSION_MINOR  @PROJECT_VERSION_MINOR@
+#define CURLEV_VERSION_PATCH  @PROJECT_VERSION_PATCH@
+#define CURLEV_BUILD_TYPE     "@CMAKE_BUILD_TYPE@"
+#define CURLEV_VERSION_STRING "@CMAKE_PROJECT_VERSION@ @CMAKE_BUILD_TYPE@"

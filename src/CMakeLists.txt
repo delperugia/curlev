@@ -1,6 +1,9 @@
-#
+#********************************************************************
+# Copyright (c) 2025, Pierre DEL PERUGIA and the curlev project contributors
+# SPDX-License-Identifier: Apache-2.0
+#*******************************************************************
+
 # Sources
-#
 
 # Files
 set( SRC_FILES
@@ -47,5 +50,6 @@ endif()
 
 # Installation
 include( GNUInstallDirs )
-install( TARGETS   curlev                                   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+install( TARGETS   curlev                                   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}            )
 install( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../include/  DESTINATION         ${CMAKE_INSTALL_INCLUDEDIR}/curlev )
+install( FILES     ${CMAKE_BINARY_DIR}/include/version.hpp  DESTINATION         ${CMAKE_INSTALL_INCLUDEDIR}/curlev )

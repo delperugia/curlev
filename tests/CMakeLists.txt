@@ -1,6 +1,11 @@
-#
+#********************************************************************
+# Copyright (c) 2025, Pierre DEL PERUGIA and the curlev project contributors
+# SPDX-License-Identifier: Apache-2.0
+#*******************************************************************
+
 # Tests
-#
+
+include_directories( ${CMAKE_BINARY_DIR}/include/ )
 
 # Files
 set( TEST_1_FILES

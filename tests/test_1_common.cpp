@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include "version.hpp"
 #include "utils/string_utils.hpp"
 #include "utils/curl_utils.hpp"
 
