@@ -330,9 +330,8 @@ bool HTTP::fill_body()
       m_request_body         = encode_parameters( m_request_body_parameters );
     }
     //
-    ok = ok && easy_setopt( m_curl, CURLOPT_MIMEPOST     , nullptr                );
-    ok = ok && easy_setopt( m_curl, CURLOPT_POSTFIELDS   , m_request_body.c_str() ); // must be persistent
-    ok = ok && easy_setopt( m_curl, CURLOPT_POSTFIELDSIZE, m_request_body.size()  ); // will add the Content-Length header
+    ok = ok && easy_setopt( m_curl, CURLOPT_MIMEPOST, nullptr );
+    ok = ok && prepare_request_body(); // ASync will read from m_request_body
     //
     m_request_headers.insert_or_assign( "Content-Type", m_request_content_type );
   }

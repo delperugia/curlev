@@ -213,6 +213,12 @@ private:
   bool cb_init ();
   void cb_clear();
   //
+  // To read data to send during a transfer
+  static size_t curl_cb_read( void * p_ptr, size_t p_size, size_t p_nmemb, void * p_userdata );
+  //
+  // When needing to rewind read data
+  static int   curl_cb_seek( void * p_clientp, curl_off_t p_offset, int p_origin );
+  //
   // To store data received during a transfer
   static size_t curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, void * p_userdata );
   //

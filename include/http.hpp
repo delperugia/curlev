@@ -100,7 +100,7 @@ public:
   // be used.
   struct Response
   {
-    long            code;
+    long            code = 0;
     t_key_values_ci headers;
     std::string     redirect_url;
     std::string     content_type;
@@ -138,7 +138,6 @@ private:
   t_key_values  m_request_query_parameters;
   t_key_values  m_request_headers;
   std::string   m_request_content_type;
-  std::string   m_request_body;            // must be persistent (CURLOPT_POSTFIELDS)
   t_key_values  m_request_body_parameters; // has precedence over m_request_body
   MIME          m_request_mime;            // has precedence over m_request_body and m_request_body_parameters
   //

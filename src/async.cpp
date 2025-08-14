@@ -145,6 +145,10 @@ CURL * ASync::get_handle( WrapperBase * p_protocol ) const
   bool   ok   = true;
   //
   ok = ok && curl != nullptr;
+  ok = ok && easy_setopt( curl, CURLOPT_READFUNCTION  , curl_cb_read   );
+  ok = ok && easy_setopt( curl, CURLOPT_READDATA      , p_protocol     );
+  ok = ok && easy_setopt( curl, CURLOPT_SEEKFUNCTION  , curl_cb_seek   );
+  ok = ok && easy_setopt( curl, CURLOPT_SEEKDATA      , p_protocol     );
   ok = ok && easy_setopt( curl, CURLOPT_WRITEFUNCTION , curl_cb_write  );
   ok = ok && easy_setopt( curl, CURLOPT_WRITEDATA     , p_protocol     );
   ok = ok && easy_setopt( curl, CURLOPT_HEADERFUNCTION, curl_cb_header );
@@ -770,6 +774,44 @@ void ASync::cb_clear()
   //
   if ( m_cb_worker.joinable() )
     m_cb_worker.join();
+}
+
+//--------------------------------------------------------------------
+// To read data to send during a transfer.
+// Data is located in the Protocol and is a std::string.
+// m_uv_run_mutex is locked.
+size_t ASync::curl_cb_read( void * p_ptr, size_t p_size, size_t p_nmemb, void * p_userdata )
+{
+  if ( p_userdata == nullptr )
+    return CURL_READFUNC_ABORT;
+  //
+  auto * protocol = static_cast< WrapperBase * >( p_userdata );
+  auto   to_read  = std::min(
+                      p_size * p_nmemb,                                                   // requested
+                      protocol->m_request_body.size() - protocol->m_request_body_sent );  // remaining
+  //
+  memcpy( p_ptr, protocol->m_request_body.data() + protocol->m_request_body_sent, to_read );
+  protocol->m_request_body_sent += to_read;
+  //
+  return to_read;
+}
+
+//--------------------------------------------------------------------
+// When needing to rewind read data.
+// May happen when CURLOPT_FOLLOWLOCATION is triggered.
+int ASync::curl_cb_seek( void * p_clientp, curl_off_t p_offset, int p_origin )
+{
+  if ( p_origin != SEEK_SET ) // the only value should use
+    return CURL_SEEKFUNC_CANTSEEK;
+  //
+  auto * protocol = static_cast< WrapperBase * >( p_clientp );
+  //
+  if ( p_offset < 0 || static_cast< size_t >( p_offset ) >= protocol->m_request_body.size() )
+    return CURL_SEEKFUNC_CANTSEEK;
+  //
+  protocol->m_request_body_sent = p_offset;
+  //
+  return CURL_SEEKFUNC_OK;
 }
 
 //--------------------------------------------------------------------

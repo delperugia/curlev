@@ -13,6 +13,7 @@
 
 #include "async.hpp"
 #include "utils/assert_return.hpp"
+#include "utils/curl_utils.hpp"
 #include "utils/map_utils.hpp"
 
 namespace curlev
@@ -66,6 +67,10 @@ protected:
   //
   // Return true if a failed request can be retried
   virtual bool can_reattempt() = 0;
+  //
+  // Data sent during transfer by ASync's callbacks
+  std::string     m_request_body;               // must be persistent (CURLOPT_READDATA)
+  size_t          m_request_body_sent = 0;      // already sent
   //
   // Data received during transfer by ASync's callbacks
   t_key_values_ci m_response_headers;           // must be persistent (CURLOPT_HEADERDATA)
@@ -294,8 +299,10 @@ class Wrapper: public WrapperBase
       assert( ! m_exec_mutex.try_lock() );
       //
       // In WrapperBase
+      m_request_body    .clear();
       m_response_headers.clear();
       m_response_body   .clear();
+      m_request_body_sent     = 0;
       m_header_content_length = 0;
       //
       // In Wrapper
@@ -308,6 +315,24 @@ class Wrapper: public WrapperBase
       m_async.get_default( m_options, m_authentication, m_certificates ); // restore global defaults
       //
       clear_protocol();
+    }
+    //
+    // Enable m_request_body usage
+    bool prepare_request_body()
+    {
+      // libcurl doesn't expose the maximal value of curl_off_t (internally CURL_OFF_T_MAX )
+      constexpr int    bits = sizeof( curl_off_t ) * 8;
+      constexpr size_t max_val =
+          ( static_cast< curl_off_t >( 1 ) << ( bits - 2 ) ) - 1 +
+          ( static_cast< curl_off_t >( 1 ) << ( bits - 2 ) );
+      //
+      bool ok = true;
+      //
+      ok = ok && m_request_body.size() < max_val;
+      ok = ok && easy_setopt( m_curl, CURLOPT_UPLOAD          , 1L );
+      ok = ok && easy_setopt( m_curl, CURLOPT_INFILESIZE_LARGE, static_cast< curl_off_t >( m_request_body.size() ) ); // will add the Content-Length header
+      //
+      return ok;
     }
     //
     // When starting, applies the local configuration.
