@@ -162,7 +162,7 @@ TEST( http_advanced, rest )
   async.start();
   //
   for ( const auto & [ document, verb ] :
-        t_key_values{ { "get", "GET" }, { "delete", "DELETE" }, { "post", "POST" }, { "put", "PUT" }, { "patch", "PATCH" } } )
+        key_values{ { "get", "GET" }, { "delete", "DELETE" }, { "post", "POST" }, { "put", "PUT" }, { "patch", "PATCH" } } )
   {
     nlohmann::json json;
     //
@@ -178,7 +178,7 @@ TEST( http_advanced, rest )
   }
   //
   for ( const auto & [ document, verb ] :
-        t_key_values{ { "post", "POST" }, { "put", "PUT" }, { "patch", "PATCH" } } )
+        key_values{ { "post", "POST" }, { "put", "PUT" }, { "patch", "PATCH" } } )
   {
     nlohmann::json payload = nlohmann::json::parse( R"({ "a": "1", "b": "2" })" );
     nlohmann::json json;
