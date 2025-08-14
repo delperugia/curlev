@@ -14,7 +14,7 @@ namespace curlev
 // Expect a CSKV list of credential details. Example:
 //   sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret
 // if-else is twice faster than unordered_map in almost all cases.
-// NOLINTBEGIN(readability-misleading-indentation)
+// NOLINTBEGIN( readability-misleading-indentation )
 bool Certificates::set( const std::string & p_cskv )
 {
   return parse_cskv(
@@ -42,7 +42,7 @@ bool Certificates::set( const std::string & p_cskv )
       return true;
     } );
 }
-// NOLINTEND(readability-misleading-indentation)
+// NOLINTEND( readability-misleading-indentation )
 
 //--------------------------------------------------------------------
 // Apply credential to curl easy handle.

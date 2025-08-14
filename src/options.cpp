@@ -20,7 +20,7 @@ constexpr auto c_max_redirect = 5L;
 // Expect a CSKV list of options to set. Example:
 //   follow_location=1,insecure=1
 // if-else is twice faster than unordered_map in almost all cases.
-// NOLINTBEGIN(readability-misleading-indentation)
+// NOLINTBEGIN( readability-misleading-indentation )
 bool Options::set( const std::string & p_cskv )
 {
   return parse_cskv(
@@ -44,7 +44,7 @@ bool Options::set( const std::string & p_cskv )
       return ok;
     } );
 }
-// NOLINTEND(readability-misleading-indentation)
+// NOLINTEND( readability-misleading-indentation )
 
 //--------------------------------------------------------------------
 // Apply the configured options to the given CURL easy handle.

@@ -21,7 +21,7 @@ HTTP::~HTTP()
 
 //--------------------------------------------------------------------
 // Calling using a GET
-HTTP & HTTP::GET( const std::string & p_url, const t_key_values & p_query_parameters )
+HTTP & HTTP::GET( const std::string & p_url, const key_values & p_query_parameters )
 {
   do_if_idle( [ & ]() {
     clear(); // clear Wrapper and HTTP
@@ -36,7 +36,7 @@ HTTP & HTTP::GET( const std::string & p_url, const t_key_values & p_query_parame
 
 //--------------------------------------------------------------------
 // Calling using a DELETE
-HTTP & HTTP::DELETE( const std::string & p_url, const t_key_values & p_query_parameters )
+HTTP & HTTP::DELETE( const std::string & p_url, const key_values & p_query_parameters )
 {
   do_if_idle( [ & ]() {
     clear(); // clear Wrapper and HTTP
@@ -109,7 +109,7 @@ HTTP & HTTP::PUT(
 
 //--------------------------------------------------------------------
 // Add headers to the request
-HTTP & HTTP::add_headers( const t_key_values & p_headers )
+HTTP & HTTP::add_headers( const key_values & p_headers )
 {
   do_if_idle( [ & ]() {
     m_request_headers.insert( p_headers.begin(), p_headers.end() );
@@ -120,7 +120,7 @@ HTTP & HTTP::add_headers( const t_key_values & p_headers )
 
 //--------------------------------------------------------------------
 // Add query parameters to the request
-HTTP & HTTP::add_query_parameters( const t_key_values & p_query_parameters )
+HTTP & HTTP::add_query_parameters( const key_values & p_query_parameters )
 {
   do_if_idle( [ & ]() {
     m_request_query_parameters.insert( p_query_parameters.begin(), p_query_parameters.end() );
@@ -132,7 +132,7 @@ HTTP & HTTP::add_query_parameters( const t_key_values & p_query_parameters )
 //--------------------------------------------------------------------
 // Add body parameters to the request.
 // Do not use with MIME nor raw body requests.
-HTTP & HTTP::add_body_parameters( const t_key_values & p_body_parameter )
+HTTP & HTTP::add_body_parameters( const key_values & p_body_parameter )
 {
   do_if_idle( [ & ]() {
     m_request_body_parameters.insert( p_body_parameter.begin(), p_body_parameter.end() );
@@ -157,18 +157,18 @@ HTTP & HTTP::add_mime_parameters( const mime::parts & p_parts )
 // These accessors return references for efficiency, directly exposing the object's
 // internal. They must only be used after the request has fully completed to ensure data
 // consistency and avoid unstable values during ongoing operations.
-static const std::string     c_empty_string;
-static const t_key_values_ci c_empty_key_values_ci;
+static const std::string   c_empty_string;
+static const key_values_ci c_empty_key_values_ci;
 
-const t_key_values_ci & HTTP::get_headers     () const noexcept { return is_running() ? c_empty_key_values_ci : m_response_headers;      }
-const std::string     & HTTP::get_content_type() const noexcept { return is_running() ? c_empty_string        : m_response_content_type; }
-const std::string     & HTTP::get_redirect_url() const noexcept { return is_running() ? c_empty_string        : m_response_redirect_url; }
-const std::string     & HTTP::get_body        () const noexcept { return is_running() ? c_empty_string        : m_response_body;         }
+const key_values_ci & HTTP::get_headers     () const noexcept { return is_running() ? c_empty_key_values_ci : m_response_headers;      }
+const std::string   & HTTP::get_content_type() const noexcept { return is_running() ? c_empty_string        : m_response_content_type; }
+const std::string   & HTTP::get_redirect_url() const noexcept { return is_running() ? c_empty_string        : m_response_redirect_url; }
+const std::string   & HTTP::get_body        () const noexcept { return is_running() ? c_empty_string        : m_response_body;         }
 
 //--------------------------------------------------------------------
-std::future< HTTP::Response > HTTP::launch()
+std::future< HTTP::response > HTTP::launch()
 {
-  auto promise = std::make_shared< std::promise< HTTP::Response > >();
+  auto promise = std::make_shared< std::promise< HTTP::response > >();
   auto future  = promise->get_future();
   //
   threaded_callback( false ). // because the callback in start() is fast
@@ -183,14 +183,14 @@ std::future< HTTP::Response > HTTP::launch()
         // (see Wrapper::cb_protocol)
         auto & http = const_cast< HTTP & >( p_http ); // NOLINT( cppcoreguidelines-pro-type-const-cast )
         //
-        Response response;
-        response.code         = http.get_code();
-        response.headers      = std::move( http.m_response_headers      );
-        response.redirect_url = std::move( http.m_response_redirect_url );
-        response.content_type = std::move( http.m_response_content_type );
-        response.body         = std::move( http.m_response_body         );
+        response resp;
+        resp.code         = http.get_code();
+        resp.headers      = std::move( http.m_response_headers      );
+        resp.redirect_url = std::move( http.m_response_redirect_url );
+        resp.content_type = std::move( http.m_response_content_type );
+        resp.body         = std::move( http.m_response_body         );
         //
-        promise->set_value( std::move( response ) );
+        promise->set_value( std::move( resp ) );
       } );
   //
   return future;
@@ -382,11 +382,11 @@ namespace
     //
     return p_string.length() > max_int ?
       max_int :
-      static_cast< int >( p_string.length() ); // NOLINT(bugprone-narrowing-conversions)
+      static_cast< int >( p_string.length() ); // NOLINT( bugprone-narrowing-conversions )
   }
 }
 
-std::string HTTP::encode_parameters( const t_key_values & p_parameters )
+std::string HTTP::encode_parameters( const key_values & p_parameters )
 {
   std::string encoded;
   //
@@ -415,8 +415,8 @@ std::string HTTP::encode_parameters( const t_key_values & p_parameters )
 //--------------------------------------------------------------------
 // Add parameters as query parameters to the given URL
 std::string HTTP::url_with_parameters(
-    const std::string &  p_url,
-    const t_key_values & p_parameters )
+    const std::string & p_url,
+    const key_values &  p_parameters )
 {
   if ( p_parameters.empty() )
     return p_url;

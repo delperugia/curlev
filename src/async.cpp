@@ -464,8 +464,8 @@ int ASync::multi_cb_socket(
 {
   ASSERT_RETURN( p_user_data != nullptr, -1 ); // not possible
   //
-  auto * self    = static_cast< ASync *       >( p_user_data   ); // CURLMOPT_SOCKETDATA
-  auto * context = static_cast< CurlContext * >( p_socket_data ); // curl_multi_assign
+  auto * self    = static_cast< ASync *        >( p_user_data   ); // CURLMOPT_SOCKETDATA
+  auto * context = static_cast< curl_context * >( p_socket_data ); // curl_multi_assign
   //
   bool ok     = true;
   int  events = 0;
@@ -622,7 +622,7 @@ void ASync::uv_io_cb(
 {
   ASSERT_RETURN_VOID( p_handle != nullptr && p_handle->data != nullptr ); // not possible
   //
-  auto * context = static_cast< CurlContext * >( p_handle->data );
+  auto * context = static_cast< curl_context * >( p_handle->data );
   //
   uv_timer_stop( &context->async.m_uv_timer );
   //
@@ -695,9 +695,9 @@ void ASync::uv_restart_cb( uv_timer_t * p_handle ) // NOLINT( readability-functi
 //  - as multi socket data (curl_multi_assign)
 //  - in UV poll member data (here)
 // m_uv_run_mutex is locked.
-ASync::CurlContext * ASync::create_curl_context( curl_socket_t p_socket )
+ASync::curl_context * ASync::create_curl_context( curl_socket_t p_socket )
 {
-  auto * context = new ( std::nothrow ) CurlContext( *this, p_socket );
+  auto * context = new ( std::nothrow ) curl_context( *this, p_socket );
   if ( context == nullptr )
     return nullptr;
   //
@@ -718,7 +718,7 @@ ASync::CurlContext * ASync::create_curl_context( curl_socket_t p_socket )
 // Delete a context created by create_curl_context.
 // Ok on nullptr.
 // m_uv_run_mutex is locked.
-void ASync::destroy_curl_context( CurlContext * p_context )
+void ASync::destroy_curl_context( curl_context * p_context )
 {
   if ( p_context != nullptr )
   {
@@ -729,7 +729,7 @@ void ASync::destroy_curl_context( CurlContext * p_context )
         {
           ASSERT_RETURN_VOID( handle != nullptr && handle->data != nullptr ); // not possible
           //
-          auto * context = static_cast< CurlContext * >( handle->data );
+          auto * context = static_cast< curl_context * >( handle->data );
           delete context;
         } );
   }

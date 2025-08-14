@@ -16,7 +16,7 @@ namespace curlev
 //--------------------------------------------------------------------
 // When using REST functions using external JSON parsers, this function
 // allows to uniformize syntax for idempotent verbs
-// NOLINTBEGIN(readability-misleading-indentation)
+// NOLINTBEGIN( readability-misleading-indentation )
 HTTP &
   HTTP::REST( const std::string & p_uri,
               const std::string & p_verb )
@@ -38,11 +38,11 @@ HTTP &
   //
   return *this;
 }
-// NOLINTEND(readability-misleading-indentation)
+// NOLINTEND( readability-misleading-indentation )
 
 //--------------------------------------------------------------------
 // When using external JSON parser, once the JSON text is generated, prepare the query
-// NOLINTBEGIN(readability-misleading-indentation)
+// NOLINTBEGIN( readability-misleading-indentation )
 HTTP &
     HTTP::REST( const std::string &  p_uri,
                 const std::string &  p_verb,
@@ -66,7 +66,7 @@ HTTP &
   //
   return *this;
 }
-// NOLINTEND(readability-misleading-indentation)
+// NOLINTEND( readability-misleading-indentation )
 
 //--------------------------------------------------------------------
 // JSON convenient functions for nlohmann/json
@@ -95,7 +95,7 @@ bool HTTP::get_json( nlohmann::json & p_json ) const noexcept
 }
 
 //--------------------------------------------------------------------
-bool HTTP::Response::get_json( nlohmann::json & p_json ) const noexcept
+bool HTTP::response::get_json( nlohmann::json & p_json ) const noexcept
 {
   p_json = nlohmann::json::parse( body, nullptr, false ); // no exception
   //
@@ -141,7 +141,7 @@ bool HTTP::get_json( rapidjson::Document & p_json ) const noexcept
 }
 
 //--------------------------------------------------------------------
-bool HTTP::Response::get_json( rapidjson::Document & p_json ) const noexcept
+bool HTTP::response::get_json( rapidjson::Document & p_json ) const noexcept
 {
   return ! p_json.Parse( body.c_str() ).HasParseError();
 }

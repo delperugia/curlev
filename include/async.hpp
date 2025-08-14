@@ -185,19 +185,19 @@ private:
   //
   // Context shared between multi and uv
   //
-  struct CurlContext : private non_transferable
+  struct curl_context : private non_transferable
   {
     ASync &       async;
     curl_socket_t curl;
     uv_poll_t     poll = {};
     //
-    CurlContext( ASync & p_async, curl_socket_t p_curl ) :
+    curl_context( ASync & p_async, curl_socket_t p_curl ) :
       async( p_async ), curl( p_curl ){}
   };
   //
-  CurlContext * create_curl_context ( curl_socket_t p_socket );
+  curl_context * create_curl_context ( curl_socket_t p_socket );
   static
-  void          destroy_curl_context( CurlContext * p_context ); // cppcheck-suppress functionStatic
+  void           destroy_curl_context( curl_context * p_context ); // cppcheck-suppress functionStatic
   //
   // Callback thread
   //

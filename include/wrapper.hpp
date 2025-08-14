@@ -69,13 +69,13 @@ protected:
   virtual bool can_reattempt() = 0;
   //
   // Data sent during transfer by ASync's callbacks
-  std::string     m_request_body;               // must be persistent (CURLOPT_READDATA)
-  size_t          m_request_body_sent = 0;      // already sent
+  std::string   m_request_body;               // must be persistent (CURLOPT_READDATA)
+  size_t        m_request_body_sent = 0;      // already sent
   //
   // Data received during transfer by ASync's callbacks
-  t_key_values_ci m_response_headers;           // must be persistent (CURLOPT_HEADERDATA)
-  std::string     m_response_body;              // must be persistent (CURLOPT_WRITEDATA)
-  size_t          m_header_content_length = 0;  // set to the received Content-Length header, if received; reset when receiving body
+  key_values_ci m_response_headers;           // must be persistent (CURLOPT_HEADERDATA)
+  std::string   m_response_body;              // must be persistent (CURLOPT_WRITEDATA)
+  size_t        m_header_content_length = 0;  // set to the received Content-Length header, if received; reset when receiving body
   //
   // Timer used to control the delay before a failed request re-attempt.
   // Set by ASync::get_handle; its data is the curl handle
