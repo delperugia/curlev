@@ -952,9 +952,9 @@ void ASync::request_completed( CURL * p_curl, long p_result_code )
 //  2] call the Wrapper from UV worker thread.
 // m_uv_run_mutex is locked.
 void ASync::post_to_wrapper(
-    CURL *                     p_curl,
-    t_wrapper_shared_ptr_ptr & p_wrapper,
-    long                       p_result_code )
+    CURL *                   p_curl,
+    wrapper_shared_ptr_ptr & p_wrapper,
+    long                     p_result_code )
 {
   ASSERT_RETURN_VOID( p_curl != nullptr ); // not possible
   //
@@ -978,7 +978,9 @@ void ASync::post_to_wrapper(
 //--------------------------------------------------------------------
 // Call the wrapper, delete the shared_ptr.
 // m_uv_run_mutex may be locked.
-void ASync::invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code )
+void ASync::invoke_wrapper(
+  wrapper_shared_ptr_ptr & p_wrapper,
+  long                     p_result_code )
 {
   ASSERT_RETURN_VOID( p_wrapper != nullptr && *p_wrapper );
   //
@@ -1001,14 +1003,14 @@ void ASync::invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_
 //--------------------------------------------------------------------
 // Retrieve the Wrapper from the curl handle
 // It is set when Wrapper start(), and cleared in post_to_wrapper()
-ASync::t_wrapper_shared_ptr_ptr ASync::get_wrapper_from_curl( CURL * p_curl )
+ASync::wrapper_shared_ptr_ptr ASync::get_wrapper_from_curl( CURL * p_curl )
 {
   void * cb_data = nullptr;
   if ( curl_easy_getinfo( p_curl, CURLINFO_PRIVATE, &cb_data ) != CURLE_OK ||
        cb_data == nullptr ) // already notified
     return nullptr;
   //
-  return static_cast< ASync::t_wrapper_shared_ptr_ptr >( cb_data ); // allocated by Wrapper start()
+  return static_cast< ASync::wrapper_shared_ptr_ptr >( cb_data ); // allocated by Wrapper start()
 }
 
 } // namespace curlev

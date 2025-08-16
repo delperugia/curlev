@@ -58,10 +58,10 @@ the three methods `options()`, `authentication()` and `certificates()`.
 
 ### Authentication
 
-The string expected by the `authentication()` is a key-value comma
+The string expected by `authentication()` is a key-value comma
 separated string with the following keys available:
 
-| Name   | Comment                                         | libcurl option
+| Name   | Comment                                         | libcurl options
 |--------|-------------------------------------------------|--------------------
 | mode   | "none", "basic", "digest" or "bearer"           | CURLAUTH_NONE, CURLAUTH_BASIC, CURLAUTH_DIGEST or CURLAUTH_BEARER
 | user   | for "basic" and "digest" modes only: user login | CURLOPT_USERNAME
@@ -73,10 +73,10 @@ For example:
 
 ### Options
 
-The string expected by the `options()` is a key-value comma
+The string expected by `options()` is a key-value comma
 separated string with the following keys available:
 
-| Name               | Default | Unit         | Comment                             | libcurl option
+| Name               | Default | Unit         | Comment                             | libcurl options
 |--------------------|---------|--------------|-------------------------------------|---------------------
 | accept_compression | 1       | 0 or 1       | activate compression                | CURLOPT_ACCEPT_ENCODING
 | connect_timeout    | 30000   | milliseconds | connection timeout                  | CURLOPT_CONNECTTIMEOUT_MS
@@ -101,10 +101,10 @@ Notes:
 
 ### Certificates
 
-The string expected by the `certificates()` is a key-value comma
+The string expected by `certificates()` is a key-value comma
 separated string with the following keys available:
 
-| Connection | Usage    | Key               | Comment                                        | libcurl option
+| Connection | Usage    | Key               | Comment                                        | libcurl options
 |------------|----------|-------------------|------------------------------------------------|---------------------------
 | -          | global   | engine            | engine or provider name                        | CURLOPT_SSLENGINE
 | direct     | public   | sslcert           | file                                           | CURLOPT_SSLCERT
@@ -497,13 +497,15 @@ An email with a plain text message and an attachment.
 
 ## Authentication, options, and certificates
 
-The same methods as in `ASync` are available to configure authentication, options, and certificates: `options()`, `authentication()` and `certificates()`.
+The same methods as in `ASync` are available to configure authentication, options,
+and certificates: `options()`, `authentication()` and `certificates()`.
 
 They use the same syntax.
 
 ## Executing the request
 
-Once the request is ready, it can be started using `start()` (asynchronous), `exec()` (synchronous), or `launch()` (future):
+Once the request is ready, it can be started using `start()` (asynchronous),
+`exec()` (synchronous), or `launch()` (future):
 
 See HTTP's `Executing the request` for more details.
 Executing the request](##-Executing-the-request)

@@ -7,7 +7,7 @@ Thank you for your interest in contributing! Please follow these guidelines to h
 1. **Fork the repository** and create your branch from `main`.
 2. **Describe your changes** clearly in your pull request.
 
-## Code Formatting
+## Coding convention
 
 - Follow the project's naming conventions.
 - Use `clang-format` to format your code, prioritizing clarity and ease of reading.
@@ -15,6 +15,18 @@ Thank you for your interest in contributing! Please follow these guidelines to h
 - Remove unused code and imports.
 - Run linters before submitting (`cmake` targets `cppcheck` and `clang-tidy`).
 - If needed, update the documentation.
+
+### Naming
+
+| Element         | Convention
+|-----------------|--------------------------------------------------
+| classes         | UpperCamelCase
+| structs & using | snake_case
+| parameters      | `p_` prefix
+| members         | `m_` prefix
+| constants       | `c_` prefix
+| comments        | inline: lower case first letter<br>block: upper case first letter<br>multiline: with terminal punctuation
+| units           | suffixed (`_s`, `_ms`, `_kb`, ...)
 
 ## Adding Tests
 

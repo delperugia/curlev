@@ -201,12 +201,12 @@ private:
   //
   // Callback thread
   //
-  using t_wrapper_shared_ptr_ptr = std::shared_ptr< WrapperBase > *;              // the Protocol object to call
-  using t_cb_job                 = std::tuple< t_wrapper_shared_ptr_ptr, long >;  // the Protocol and the result
+  using wrapper_shared_ptr_ptr = std::shared_ptr< WrapperBase > *;            // the Protocol object to call
+  using cb_job                 = std::tuple< wrapper_shared_ptr_ptr, long >;  // the Protocol and the result
   //
   mutable std::mutex              m_cb_mutex;
   mutable std::condition_variable m_cb_cv;
-  std::deque< t_cb_job >          m_cb_queue;
+  std::deque< cb_job >            m_cb_queue;
   bool                            m_cb_running = false; // worker thread is running
   std::thread                     m_cb_worker;
   //
@@ -232,13 +232,13 @@ private:
   void request_completed( CURL * p_curl, long p_result_code );
   //
   // Returns the operation outcome to the wrapper, immediately or delayed
-  void post_to_wrapper( CURL * p_curl, t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code );
+  void post_to_wrapper( CURL * p_curl, wrapper_shared_ptr_ptr & p_wrapper, long p_result_code );
   //
   // Call the wrapper, delete the shared_ptr
-  void invoke_wrapper( t_wrapper_shared_ptr_ptr & p_wrapper, long p_result_code );
+  void invoke_wrapper( wrapper_shared_ptr_ptr & p_wrapper, long p_result_code );
   //
   // Retrieve the Wrapper from the curl handle
-  static t_wrapper_shared_ptr_ptr get_wrapper_from_curl( CURL * p_curl );
+  static wrapper_shared_ptr_ptr get_wrapper_from_curl( CURL * p_curl );
 };
 
 } // namespace curlev

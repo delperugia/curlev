@@ -108,7 +108,7 @@ class Wrapper: public WrapperBase
     };
     //
   public:
-    using t_cb_user = std::function< void( const Protocol & ) >;
+    using cb_user = std::function< void( const Protocol & ) >;
     //
     explicit Wrapper( ASync & p_async ) :
       WrapperBase(),
@@ -140,7 +140,7 @@ class Wrapper: public WrapperBase
     // To ensure persistency, a new shared pointer is created and passed to ASync.
     // This increases the reference counter of the shared pointer, and thus the class continues
     // to exist even if the share pointer owned by the user goes out of scope and is reset.
-    Protocol & start( t_cb_user && p_user_cb = nullptr )
+    Protocol & start( cb_user && p_user_cb = nullptr )
     {
       {
         std::lock_guard lock( m_exec_mutex );
@@ -476,8 +476,8 @@ class Wrapper: public WrapperBase
     std::weak_ptr< Protocol > m_self_weak; // set on self at creation, used to create and pass a shared_ptr to ASync
     //
     // Optional user CB invoked from async_cb
-    bool      m_user_cb_threaded  = true;
-    t_cb_user m_user_cb           = nullptr;
+    bool    m_user_cb_threaded  = true;
+    cb_user m_user_cb           = nullptr;
     //
     // Options
     size_t   m_response_size_max = c_default_response_size_max;
