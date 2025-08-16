@@ -53,11 +53,88 @@ while a `CURL` handle still has a reference on the `CURLSH` handle).
 
 ## Default configuration
 
-The default configuration of the `HTTP` instances can be set in `ASync` using
-the two methods `options()`, `authentication()` and `certificates()`.
-The parameters are the same as the ones described in `HTTP`.
+The default configuration of the various protocol instances can be set in `ASync` using
+the three methods `options()`, `authentication()` and `certificates()`.
 
-# Creating an HTTP instance
+### Authentication
+
+The string expected by the `authentication()` is a key-value comma
+separated string with the following keys available:
+
+| Name   | Comment                                         | libcurl option
+|--------|-------------------------------------------------|--------------------
+| mode   | "none", "basic", "digest" or "bearer"           | CURLAUTH_NONE, CURLAUTH_BASIC, CURLAUTH_DIGEST or CURLAUTH_BEARER
+| user   | for "basic" and "digest" modes only: user login | CURLOPT_USERNAME
+| secret | password or token                               | CURLOPT_PASSWORD or CURLOPT_XOAUTH2_BEARER
+
+For example:
+- mode=basic,user=joe,secret=abc123
+- mode=bearer,secret=ABCDEFHIJKLMNOQRSTUVWXYZ
+
+### Options
+
+The string expected by the `options()` is a key-value comma
+separated string with the following keys available:
+
+| Name               | Default | Unit         | Comment                             | libcurl option
+|--------------------|---------|--------------|-------------------------------------|---------------------
+| accept_compression | 1       | 0 or 1       | activate compression                | CURLOPT_ACCEPT_ENCODING
+| connect_timeout    | 30000   | milliseconds | connection timeout                  | CURLOPT_CONNECTTIMEOUT_MS
+| cookies            | 0       | 0 or 1       | receive and resend cookies          | CURLOPT_COOKIEFILE
+| follow_location    | 0       | 0, 1, 2, 3   | follow HTTP 3xx redirects           | CURLOPT_FOLLOWLOCATION (ALL, OBEYCODE, FIRSTONLY)
+| insecure           | 0       | 0 or 1       | disables certificate validation     | CURLOPT_SSL_VERIFYHOST and CURLOPT_SSL_VERIFYPEER
+| maxredirs          | 5       | count        | maximum number of redirects allowed | CURLOPT_MAXREDIRS
+| proxy              |         | string       | the SOCKS or HTTP URl to a proxy    | CURLOPT_PROXY
+| timeout            | 30000   | milliseconds | receive data timeout                | CURLOPT_TIMEOUT_MS
+| verbose            | 0       | 0 or 1       | debug log on console                | CURLOPT_VERBOSE
+
+For example:
+- follow_location=1,timeout=5000
+- insecure=1
+- proxy=socks5://user123:pass456@192.168.1.100:1080
+
+Notes:
+- accept_compression: all built-in supported encodings are accepted
+- cookies:            no initial file is specified when activated
+- proxy:              see https://curl.se/libcurl/c/CURLOPT_PROXY.html
+- follow_location:    see modes in https://curl.se/libcurl/c/CURLOPT_FOLLOWLOCATION.html
+
+### Certificates
+
+The string expected by the `certificates()` is a key-value comma
+separated string with the following keys available:
+
+| Connection | Usage    | Key               | Comment                                        | libcurl option
+|------------|----------|-------------------|------------------------------------------------|---------------------------
+| -          | global   | engine            | engine or provider name                        | CURLOPT_SSLENGINE
+| direct     | public   | sslcert           | file                                           | CURLOPT_SSLCERT
+| "          | "        | sslcerttype       | "PEM", "DER" or "P12", default "PEM"           | CURLOPT_SSLCERTTYPE
+| "          | private  | sslkey            | file or id                                     | CURLOPT_SSLKEY
+| "          | "        | sslkeytype        | "PEM", "DER", "ENG" or "PROV", default "PEM"   | CURLOPT_SSLKEYTYPE
+| "          | "        | keypasswd         | -                                              | CURLOPT_KEYPASSWD
+| "          | CA       | cainfo            | file                                           | CURLOPT_CAINFO
+| "          | "        | capath            | folder                                         | CURLOPT_CAPATH
+| proxy      | public   | proxy_sslcert     | file                                           | CURLOPT_PROXY_SSLCERT
+| "          | "        | proxy_sslcerttype | "PEM", "DER" or "P12", default "PEM"           | CURLOPT_PROXY_SSLCERTTYPE
+| "          | private  | proxy_sslkey      | file or id                                     | CURLOPT_PROXY_SSLKEY
+| "          | "        | proxy_sslkeytype  | "PEM", "DER", "ENG" or "PROV", default "PEM"   | CURLOPT_PROXY_SSLKEYTYPE
+| "          | "        | proxy_keypasswd   | -                                              | CURLOPT_PROXY_KEYPASSWD
+| "          | CA       | proxy_cainfo      | file                                           | CURLOPT_PROXY_CAINFO
+| "          | "        | proxy_capath      | folder                                         | CURLOPT_PROXY_CAPATH
+
+For example:
+ - sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret
+
+Note: before `libcurl` 7.84.0 it is not possible to reset Certificate Authorities to their default
+values. If one of the keys `cainfo`, `capath`, `proxy_cainfo` or `proxy_capath` is changed in a request,
+it must be changed for all the requests made using the same HTTP object.
+
+# HTTP requests
+
+`libcurl` supports HTTP/1, HTTP/2 and HTTP/3.
+URL are prefixed by schemas `http://` or `https://`.
+
+## Creating an instance
 
 The static method `create()` returns a `shared_ptr` on the new object. Using a `shared_ptr`
 and its reference counter allows to have an object that can continues to run detached from
@@ -67,7 +144,7 @@ the creation context.
 auto http = HTTP::create( async );  // async is the instance of ASync
 ```
 
-# Building the request
+## Building the request
 
 On the `HTTP` object, you first have to call one of the HTTP methods.
 This will restart a new request sessions.
@@ -99,7 +176,7 @@ are available:
 - `options( opt_string )`:          set options
 - `certificates( cert_string )`:    set SSL certificates
 
-## REST
+### REST
 
 If `curlev` was compiled with RapidJSON or nlohmann/json, the `HTTP` object
 has an extra method `REST()`.
@@ -117,7 +194,7 @@ http->REST( "http://www.httpbin.org/post", "POST", payload ).exec();
 std::cout << http->get_code() << " " << http->get_body() << std::endl;
 ```
 
-## Adding headers and parameters
+### Adding headers and parameters
 
 `add_headers()`, `add_query_parameters()` and `add_body_parameters()`
 expect an unordered map of keys/parameters and values: `std::unordered_map< std::string, std::string >`:
@@ -132,7 +209,7 @@ add_query_parameters( { { "p1", "1" },
 `add_query_parameters()` will add them as query parameters in the URL,
 `add_body_parameters()` in the request body as `application/x-www-form-urlencoded`.
 
-## Adding MIME parts
+### Adding MIME parts
 
 The `add_mime_parameters` method expects a vector of MIME parts:
 - `mime::parameter` to add a simple name/value parameter
@@ -155,80 +232,14 @@ add_mime_parameters( { mime::parameter{ "p1", "1" },
                        mime::file     { "p2", "/tmp/uZ7hHC2", "text/plain", "f.txt" } } )
 ```
 
-## Adding authentication
+### Adding authentication, options and certificates
 
-The string expected by the `authentication()` is a key-value comma
-separated string with the following keys available:
+The same three methods `options()`, `authentication()` and `certificates()` present in
+`ASync` are also present in `HTTP` and allows to override the default configuration.
 
-| Name   | Comment                                         | libcurl option
-|--------|-------------------------------------------------|--------------------
-| mode   | "none", "basic", "digest" or "bearer"           | CURLAUTH_NONE, CURLAUTH_BASIC, CURLAUTH_DIGEST or CURLAUTH_BEARER
-| user   | for "basic" and "digest" modes only: user login | CURLOPT_USERNAME
-| secret | password or token                               | CURLOPT_PASSWORD or CURLOPT_XOAUTH2_BEARER
+They use the same syntax.
 
-For example:
-- mode=basic,user=joe,secret=abc123
-- mode=bearer,secret=ABCDEFHIJKLMNOQRSTUVWXYZ
-
-## Setting options
-
-The string expected by the `options()` is a key-value comma
-separated string with the following keys available:
-
-| Name               | Default | Unit         | Comment                             | libcurl option
-|--------------------|---------|--------------|-------------------------------------|---------------------
-| accept_compression | 1       | 0 or 1       | activate compression                | CURLOPT_ACCEPT_ENCODING
-| connect_timeout    | 30000   | milliseconds | connection timeout                  | CURLOPT_CONNECTTIMEOUT_MS
-| cookies            | 0       | 0 or 1       | receive and resend cookies          | CURLOPT_COOKIEFILE
-| follow_location    | 0       | 0, 1, 2, 3   | follow HTTP 3xx redirects           | CURLOPT_FOLLOWLOCATION (ALL, OBEYCODE, FIRSTONLY)
-| insecure           | 0       | 0 or 1       | disables certificate validation     | CURLOPT_SSL_VERIFYHOST and CURLOPT_SSL_VERIFYPEER
-| maxredirs          | 5       | count        | maximum number of redirects allowed | CURLOPT_MAXREDIRS
-| proxy              |         | string       | the SOCKS or HTTP URl to a proxy    | CURLOPT_PROXY
-| timeout            | 30000   | milliseconds | receive data timeout                | CURLOPT_TIMEOUT_MS
-| verbose            | 0       | 0 or 1       | debug log on console                | CURLOPT_VERBOSE
-
-For example:
-- follow_location=1,timeout=5000
-- insecure=1
-- proxy=socks5://user123:pass456@192.168.1.100:1080
-
-Notes:
-- accept_compression: all built-in supported encodings are accepted
-- cookies:            no initial file is specified when activated
-- proxy:              see https://curl.se/libcurl/c/CURLOPT_PROXY.html
-- follow_location:    see modes in https://curl.se/libcurl/c/CURLOPT_FOLLOWLOCATION.html
-
-## Setting certificates
-
-The string expected by the `certificates()` is a key-value comma
-separated string with the following keys available:
-
-| Connection | Usage    | Key               | Comment                                        | libcurl option
-|------------|----------|-------------------|------------------------------------------------|---------------------------
-| -          | global   | engine            | engine or provider name                        | CURLOPT_SSLENGINE
-| direct     | public   | sslcert           | file                                           | CURLOPT_SSLCERT
-| "          | "        | sslcerttype       | "PEM", "DER" or "P12", default "PEM"           | CURLOPT_SSLCERTTYPE
-| "          | private  | sslkey            | file or id                                     | CURLOPT_SSLKEY
-| "          | "        | sslkeytype        | "PEM", "DER", "ENG" or "PROV", default "PEM"   | CURLOPT_SSLKEYTYPE
-| "          | "        | keypasswd         | -                                              | CURLOPT_KEYPASSWD
-| "          | CA       | cainfo            | file                                           | CURLOPT_CAINFO
-| "          | "        | capath            | folder                                         | CURLOPT_CAPATH
-| proxy      | public   | proxy_sslcert     | file                                           | CURLOPT_PROXY_SSLCERT
-| "          | "        | proxy_sslcerttype | "PEM", "DER" or "P12", default "PEM"           | CURLOPT_PROXY_SSLCERTTYPE
-| "          | private  | proxy_sslkey      | file or id                                     | CURLOPT_PROXY_SSLKEY
-| "          | "        | proxy_sslkeytype  | "PEM", "DER", "ENG" or "PROV", default "PEM"   | CURLOPT_PROXY_SSLKEYTYPE
-| "          | "        | proxy_keypasswd   | -                                              | CURLOPT_PROXY_KEYPASSWD
-| "          | CA       | proxy_cainfo      | file                                           | CURLOPT_PROXY_CAINFO
-| "          | "        | proxy_capath      | folder                                         | CURLOPT_PROXY_CAPATH
-
-For example:
- - sslcert=client.pem,sslkey=key.pem,keypasswd=s3cret
-
-Note: before `libcurl` 7.84.0 it is not possible to reset Certificate Authorities to their default
-values. If one of the keys `cainfo`, `capath`, `proxy_cainfo` or `proxy_capath` is changed in a request,
-it must be changed for all the requests made using the same HTTP object.
-
-# Executing the request
+## Executing the request
 
 Once the request is ready, it can be started using `start()`.
 The request then runs asynchronously. This method accepts a callback function
@@ -247,7 +258,7 @@ The `HTTP` object can be configured to retry automatically if the request
 fails, if there no risk that the request has been executed (it retries
 on connection error, not on timeout). The method to use is `set_retries()`.
 
-## Callback
+### Callback
 
 If a callback is passed to `start()`, it is invoked before
 the `join()` is released.
@@ -270,7 +281,7 @@ http->GET( "http://www.httpbin.org/get",
 
 The callback receives as parameter a const reference on the HTTP object.
 
-# Retrieving the response
+## Retrieving the response
 
 Once the request is finished, you can use:
 - `get_code()`:         get HTTP response code, or one of the libcurl error codes
@@ -290,7 +301,7 @@ not available anymore in the `HTTP` object.
 Note: the maximal received response size is set y default to 2MB, but can
 be changed by using `maximal_response_size()` in `HTTP`.
 
-## REST
+### REST
 
 If `curlev` was compiled with RapidJSON or nlohmann/json, the `HTTP` object
 has an extra method `get_json()`, which retrieve either a `rapidjson::Document`
@@ -305,11 +316,11 @@ if ( http->get_json( json ) )
   std::cout << json["user"]["name"] << std::endl;
 ```
 
-# Aborting a request
+## Aborting a request
 
 A request can be aborted while running by calling the `abort()` method.
 
-# Examples
+## Examples
 
 Assuming the following code:
 
@@ -399,4 +410,159 @@ auto code =
         .exec()
         .get_code();
 std::cout << code << " " << http->get_body() << std::endl;
+```
+
+# SMTP requests
+
+`libcurl` supports SMTP and SMTPS protocols for sending emails.
+URLs are prefixed by the schemas `smtp://` or `smtps://`.
+
+## Creating an instance
+
+The static method `create()` returns a `shared_ptr` to a new `SMTP` object.
+As with HTTP, using a `shared_ptr` allows the object to run detached from
+the creation context.
+
+```cpp
+auto smtp = SMTP::create( async );  // async is the instance of ASync
+```
+
+## Building the request
+
+On the `SMTP` object, you must first call one of the `SEND()` methods
+to start a new email request session:
+
+`SEND()` has two forms:
+
+- To send an email using MIME parts, the method expects:
+  - URL
+  - sender (an `smtp::address` struct)
+  - a list of recipients (vector of `smtp::address` structs)
+  - a subject
+  - a MIME document
+- To send a simple raw email (RFC5322 message):
+  - URL
+  - sender
+  - a vector or recipients
+  - the message
+
+You can add custom headers (for MIME requests) using:
+
+```cpp
+smtp->add_headers( { {"Priority", "urgent"} } );
+```
+
+### Address format
+
+The `smtp::address` struct accepts email addresses with or without display names:
+
+- `Mary Smith <mary@x.test>`
+- `"Mary Smith" <mary@x.test>`
+- `<mary@x.test>`
+- `mary@x.test`
+
+### MIME document
+
+`SEND()` expects a vector of MIME parts: either a list of `mime::data`
+and `mime::file`, or `mime::alternatives` containing `mime::data`, or
+a mix.
+
+Typical configurations are:
+
+An email without attachment, with a plain text and an HTML version of a message.
+```cpp
+{ mime::alternatives{
+    mime::data{ "", "Hello"       , "text/plain", "" },
+    mime::data{ "", "<b>Hello</b>", "text/html" , "" }
+  }
+ }
+```
+
+An email with attachment, with a plain text and an HTML version of a message.
+```cpp
+{ mime::alternatives{
+    mime::data{ "", "Hello"       , "text/plain", "" },
+    mime::data{ "", "<b>Hello</b>", "text/html" , "" }
+  }
+  mime::file{ "", "/tmp/content.dat", "text/plain" , "a.txt"  }
+}
+```
+
+An email with a plain text message and an attachment.
+```cpp
+{ mime::data{ "", "Hello"           , "text/plain", ""        },
+  mime::file{ "", "/tmp/content.dat", "text/plain" , "a.txt"  }
+}
+```
+
+## Authentication, options, and certificates
+
+The same methods as in `ASync` are available to configure authentication, options, and certificates: `options()`, `authentication()` and `certificates()`.
+
+They use the same syntax.
+
+## Executing the request
+
+Once the request is ready, it can be started using `start()` (asynchronous), `exec()` (synchronous), or `launch()` (future):
+
+See HTTP's `Executing the request` for more details.
+Executing the request](##-Executing-the-request)
+
+## Retrieving the response
+
+After the request completes, you can retrieve the SMTP response code:
+
+```cpp
+long code = smtp->get_code();
+```
+
+Or, if using `launch()`, from the returned `response` struct:
+```cpp
+auto resp = smtp->launch().get();
+long code = resp.code;
+```
+
+## Example
+
+Assuming the following code:
+
+```cpp
+#include <curlev/http.hpp>
+using namespace curlev;
+```
+
+Starting the ASync instance:
+```cpp
+ASync async;
+async.start();
+```
+
+Sending an email synchronously:
+```cpp
+auto smtp = SMTP::create( async );
+auto code = smtp->SEND(
+    "smtps://smtp.example.com:465",
+    smtp::address("John Smith <john.smith@example.com>"),
+    { smtp::address("alice@example.org") },
+    "Test email",
+    { mime::data{ "", "Hello, Alice!", "text/plain", "" } }
+  )
+  .authentication("mode=basic,user=john.smith,secret=yourpassword")
+  .exec()
+  .get_code();
+std::cout << code << std::endl;
+```
+
+To send a raw email (RFC5322 message):
+```cpp
+smtp->SEND(
+    "smtp://smtp.example.com:25",
+    smtp::address("john.smith@example.com"),
+    { smtp::address("alice@example.org") },
+    "From: John Smith <john.smith@example.com>\r\n"
+    "To: Alice <alice@example.org>\r\n"
+    "Subject: Test\r\n"
+    "\r\n"
+    "Hello, world!"
+).exec();
 ```

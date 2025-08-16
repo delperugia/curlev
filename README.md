@@ -10,15 +10,15 @@ curlev
 ![MemorySanitizer](https://img.shields.io/badge/MemorySanitizer-enabled-blue)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-A C++ HTTP library providing a flexible and easy-to-use interface for making HTTP requests.
-It combines the power of `libcurl` for HTTP operations with `libuv` for asynchronous I/O,
+A C++ library providing a flexible and easy-to-use interface for making Internet requests.
+It combines the power of `libcurl` for transfer operations with `libuv` for asynchronous I/O,
 offering both synchronous and asynchronous request handling with minimal overhead.
 
 Key features:
 
 - Event driven (uses 4 times less CPU and 2 times less RAM in some [cases](docs/internals.md#performances))
 - Synchronous and asynchronous requests with callback support
-- Supports all standard HTTP methods (GET, POST, PUT, PATCH, DELETE)
+- Supports HTTP and SMTP
 - Handles query parameters, form data, MIME handling, and raw bodies
 - REST functions using common JSON parsers
 - Custom headers and authentication
@@ -130,9 +130,6 @@ int main( int argc, char ** argv )
 ```
 
 The complete reference manual can be found [here](docs/reference_manual.md).
-
-Its architecture and code are ready to give access to the other protocols
-provided by `libcurl`, but only HTTP is available today.
 
 # Installing and compiling
 

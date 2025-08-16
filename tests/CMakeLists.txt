@@ -9,11 +9,12 @@ include_directories( ${CMAKE_BINARY_DIR}/include/ )
 
 # Files
 set( TEST_1_FILES
-     test_utils.cpp
-     test_1_common.cpp
-     test_1_http_basic.cpp
-     test_1_http_advanced.cpp
-     test_1_http_complex.cpp
+    test_utils.cpp
+    test_1_common.cpp
+    test_1_http_basic.cpp
+    test_1_http_advanced.cpp
+    test_1_http_complex.cpp
+    test_1_smtp.cpp
 )
 
 # Tests are optionals, depending on the presence of some packages

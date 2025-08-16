@@ -12,7 +12,7 @@ namespace curlev
 {
 
 // Removes leading and trailing white spaces (spaces, tabulations...) from a string
-std::string_view trim( std::string_view p_string );
+std::string_view trim( std::string_view p_string, int ( *p_iswhite )( int ) = ::isspace );
 
 // Converts a std::string_view into a long. Returns false on error.
 bool svtol( std::string_view p_string, long & p_value );

@@ -35,10 +35,10 @@ namespace
 
 //--------------------------------------------------------------------
 // Removes leading and trailing white spaces (spaces, tabulations...) from a string
-std::string_view trim( std::string_view p_string )
+std::string_view trim( std::string_view p_string, int ( *p_iswhite )( int ) )
 {
-  const auto * begin = std::find_if_not( p_string.begin() , p_string.end() , ::isspace );
-  const auto * end   = std::find_if_not( p_string.rbegin(), p_string.rend(), ::isspace ).base();
+  const auto * begin = std::find_if_not( p_string.begin() , p_string.end() , p_iswhite );
+  const auto * end   = std::find_if_not( p_string.rbegin(), p_string.rend(), p_iswhite ).base();
   //
   return ( begin < end ) ? std::string_view( begin, end - begin ) : std::string_view();
 }

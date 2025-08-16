@@ -306,7 +306,7 @@ bool HTTP::fill_headers()
   {
     curl_slist_free_all( m_curl_headers ); // ok on nullptr
     m_curl_headers  = nullptr;
-    m_response_code = c_error_http_headers_set;
+    m_response_code = c_error_headers_set;
   }
   //
   return ok;
@@ -364,7 +364,7 @@ bool HTTP::fill_body_mime()
     //
     curl_mime_free( m_curl_mime );
     m_curl_mime     = nullptr;
-    m_response_code = c_error_http_mime_set;
+    m_response_code = c_error_mime_set;
   }
   //
   return ok;
