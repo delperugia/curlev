@@ -108,7 +108,6 @@ SMTP & SMTP::SEND(
         m_request_to      = p_to;
         m_request_subject = p_subject;
         m_request_mime.add_parts( p_parts );
-        m_request_body.clear();
       } );
   return *this;
 }
@@ -130,8 +129,9 @@ SMTP & SMTP::SEND(
         m_request_url     = p_url;
         m_request_from    = p_from;
         m_request_to      = p_to;
-        m_request_body    = p_body;
         m_request_mime.clear();
+        //
+        set_request_body( p_body );
       } );
   return *this;
 }
@@ -215,7 +215,6 @@ void SMTP::clear_protocol()
   m_request_to     .clear();
   m_request_subject.clear();
   m_request_headers.clear();
-  m_request_body   .clear();
   m_request_mime   .clear();
 }
 

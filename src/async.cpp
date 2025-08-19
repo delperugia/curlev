@@ -782,15 +782,18 @@ void ASync::cb_clear()
 // m_uv_run_mutex is locked.
 size_t ASync::curl_cb_read( void * p_ptr, size_t p_size, size_t p_nmemb, void * p_userdata )
 {
-  if ( p_userdata == nullptr )
-    return CURL_READFUNC_ABORT;
+  ASSERT_RETURN( p_userdata != nullptr, CURL_READFUNC_ABORT );
   //
   auto * protocol = static_cast< WrapperBase * >( p_userdata );
-  auto   to_read  = std::min(
-                      p_size * p_nmemb,                                                   // requested
-                      protocol->m_request_body.size() - protocol->m_request_body_sent );  // remaining
   //
-  memcpy( p_ptr, protocol->m_request_body.data() + protocol->m_request_body_sent, to_read );
+  ASSERT_RETURN( protocol->m_request_body.size() > protocol->m_request_body_sent, CURL_READFUNC_ABORT );
+  //
+  auto to_read = std::min(
+      p_size * p_nmemb,                                                  // requested
+      protocol->m_request_body.size() - protocol->m_request_body_sent ); // remaining
+  //
+  // FlawFinder reports a CWE-120, but to_read is properly calculated above
+  memcpy( p_ptr, protocol->m_request_body.data() + protocol->m_request_body_sent, to_read ); /* flawfinder: ignore */
   protocol->m_request_body_sent += to_read;
   //
   return to_read;
@@ -801,6 +804,8 @@ size_t ASync::curl_cb_read( void * p_ptr, size_t p_size, size_t p_nmemb, void * 
 // May happen when CURLOPT_FOLLOWLOCATION is triggered.
 int ASync::curl_cb_seek( void * p_clientp, curl_off_t p_offset, int p_origin )
 {
+  ASSERT_RETURN( p_clientp != nullptr, CURL_SEEKFUNC_FAIL );
+  //
   if ( p_origin != SEEK_SET ) // the only value should use
     return CURL_SEEKFUNC_CANTSEEK;
   //
@@ -820,8 +825,7 @@ int ASync::curl_cb_seek( void * p_clientp, curl_off_t p_offset, int p_origin )
 // m_uv_run_mutex is locked.
 size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, void * p_userdata )
 {
-  if ( p_userdata == nullptr )
-    return CURL_WRITEFUNC_ERROR;
+  ASSERT_RETURN( p_userdata != nullptr, CURL_WRITEFUNC_ERROR );
   //
   auto *     protocol = static_cast< WrapperBase * >( p_userdata );
   const auto to_add   = p_size * p_nmemb;
@@ -859,10 +863,9 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
 // m_uv_run_mutex is locked.
 size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nitems, void * p_userdata )
 {
-  static const std::string c_content_length = "content-length";
+  ASSERT_RETURN( p_userdata != nullptr, CURL_WRITEFUNC_ERROR );
   //
-  if ( p_userdata == nullptr )
-    return CURL_WRITEFUNC_ERROR;
+  static const std::string c_content_length = "content-length";
   //
   auto * protocol = static_cast< WrapperBase * >( p_userdata );
   auto   line     = std::string_view( p_buffer, p_size * p_nitems );

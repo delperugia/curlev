@@ -61,8 +61,9 @@ HTTP & HTTP::PATCH(
     //
     m_request_method       = Method::ePATCH;
     m_request_url          = p_url;
-    m_request_body         = p_body;
     m_request_content_type = p_content_type;
+    //
+    set_request_body( p_body );
   } );
   //
   return *this;
@@ -80,8 +81,9 @@ HTTP & HTTP::POST(
     //
     m_request_method       = Method::ePOST;
     m_request_url          = p_url;
-    m_request_body         = p_body;
     m_request_content_type = p_content_type;
+    //
+    set_request_body( p_body );
   } );
   //
   return *this;
@@ -99,8 +101,9 @@ HTTP & HTTP::PUT(
     //
     m_request_method       = Method::ePUT;
     m_request_url          = p_url;
-    m_request_body         = p_body;
     m_request_content_type = p_content_type;
+    //
+    set_request_body( p_body );
   } );
   //
   return *this;
@@ -160,10 +163,10 @@ HTTP & HTTP::add_mime_parameters( const mime::parts & p_parts )
 static const std::string   c_empty_string;
 static const key_values_ci c_empty_key_values_ci;
 
-const key_values_ci & HTTP::get_headers     () const noexcept { return is_running() ? c_empty_key_values_ci : m_response_headers;      }
+const key_values_ci & HTTP::get_headers     () const noexcept { return is_running() ? c_empty_key_values_ci : response_headers();      }
+const std::string   & HTTP::get_body        () const noexcept { return is_running() ? c_empty_string        : response_body();         }
 const std::string   & HTTP::get_content_type() const noexcept { return is_running() ? c_empty_string        : m_response_content_type; }
 const std::string   & HTTP::get_redirect_url() const noexcept { return is_running() ? c_empty_string        : m_response_redirect_url; }
-const std::string   & HTTP::get_body        () const noexcept { return is_running() ? c_empty_string        : m_response_body;         }
 
 //--------------------------------------------------------------------
 std::future< HTTP::response > HTTP::launch()
@@ -184,11 +187,11 @@ std::future< HTTP::response > HTTP::launch()
         auto & http = const_cast< HTTP & >( p_http ); // NOLINT( cppcoreguidelines-pro-type-const-cast )
         //
         response resp;
+        http.take_response_headers( resp.headers );
+        http.take_response_body   ( resp.body    );
         resp.code         = http.get_code();
-        resp.headers      = std::move( http.m_response_headers      );
         resp.redirect_url = std::move( http.m_response_redirect_url );
         resp.content_type = std::move( http.m_response_content_type );
-        resp.body         = std::move( http.m_response_body         );
         //
         promise->set_value( std::move( resp ) );
       } );
@@ -246,14 +249,11 @@ void HTTP::clear_protocol()
     m_request_query_parameters.clear();
     m_request_headers         .clear();
     m_request_content_type    .clear();
-    m_request_body            .clear();
     m_request_body_parameters .clear();
     m_request_mime            .clear();
     //
-    m_response_headers        .clear();
     m_response_content_type   .clear();
     m_response_redirect_url   .clear();
-    m_response_body           .clear();
 }
 
 //--------------------------------------------------------------------
@@ -327,7 +327,8 @@ bool HTTP::fill_body()
     if ( ! m_request_body_parameters.empty() ) // has precedence over m_request_body
     {
       m_request_content_type = "application/x-www-form-urlencoded";
-      m_request_body         = encode_parameters( m_request_body_parameters );
+      //
+      set_request_body( encode_parameters( m_request_body_parameters ) );
     }
     //
     ok = ok && easy_setopt( m_curl, CURLOPT_MIMEPOST, nullptr );

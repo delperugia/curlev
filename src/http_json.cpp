@@ -58,9 +58,10 @@ HTTP &
   do_if_idle( [ & ]() {
     clear();
     //
+    set_request_body( std::move( p_body ) );
+    //
     m_request_method       = method;
     m_request_url          = p_uri;
-    m_request_body         = std::move( p_body );
     m_request_content_type = "application/json";
   } );
   //
@@ -89,7 +90,7 @@ bool HTTP::get_json( nlohmann::json & p_json ) const noexcept
   if ( is_running() )
     return false;
   //
-  p_json = nlohmann::json::parse( m_response_body, nullptr, false ); // no exception
+  p_json = nlohmann::json::parse( response_body(), nullptr, false ); // no exception
   //
   return ! p_json.is_discarded();
 }
@@ -137,7 +138,7 @@ bool HTTP::get_json( rapidjson::Document & p_json ) const noexcept
   if ( is_running() )
     return false;
   //
-  return ! p_json.Parse( m_response_body.c_str() ).HasParseError();
+  return ! p_json.Parse( response_body().c_str() ).HasParseError();
 }
 
 //--------------------------------------------------------------------

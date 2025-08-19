@@ -69,6 +69,45 @@ protected:
   // Return true if a failed request can be retried
   virtual bool can_reattempt() = 0;
   //
+  // Accessors
+  const std::string &   request_body()     const { return m_request_body;     }
+  const key_values_ci & response_headers() const { return m_response_headers; }
+  const std::string &   response_body()    const { return m_response_body;    }
+  //
+  // Mutators
+  void set_request_body( const std::string & p_body )
+  {
+    m_request_body      = p_body;
+    m_request_body_sent = 0;
+  }
+  //
+  void set_request_body( std::string && p_body )
+  {
+    m_request_body      = std::move( p_body );
+    m_request_body_sent = 0;
+  }
+  //
+  void take_response_headers( key_values_ci & p_headers )
+  {
+    p_headers = std::move( m_response_headers );
+  }
+  //
+  void take_response_body( std::string & p_body )
+  {
+    p_body = std::move( m_response_body );
+  }
+  //
+  // Called byw Wrapper to reset the protocol before starting a new transfer
+  void clear_base()
+  {
+    m_request_body    .clear();
+    m_response_headers.clear();
+    m_response_body   .clear();
+    m_request_body_sent     = 0;
+    m_header_content_length = 0;
+  }
+  //
+private:
   // Data sent during transfer by ASync's callbacks
   std::string   m_request_body;               // must be persistent (CURLOPT_READDATA)
   size_t        m_request_body_sent = 0;      // already sent
@@ -300,11 +339,7 @@ class Wrapper: public WrapperBase
       assert( ! m_exec_mutex.try_lock() );
       //
       // In WrapperBase
-      m_request_body    .clear();
-      m_response_headers.clear();
-      m_response_body   .clear();
-      m_request_body_sent     = 0;
-      m_header_content_length = 0;
+      clear_base();
       //
       // In Wrapper
       m_request_retries   = 0;
@@ -315,6 +350,7 @@ class Wrapper: public WrapperBase
       //
       m_async.get_default( m_options, m_authentication, m_certificates ); // restore global defaults
       //
+      // In derived protocol
       clear_protocol();
     }
     //
@@ -329,9 +365,9 @@ class Wrapper: public WrapperBase
       //
       bool ok = true;
       //
-      ok = ok && m_request_body.size() < max_val;
+      ok = ok && request_body().size() < max_val;
       ok = ok && easy_setopt( m_curl, CURLOPT_UPLOAD          , 1L );
-      ok = ok && easy_setopt( m_curl, CURLOPT_INFILESIZE_LARGE, static_cast< curl_off_t >( m_request_body.size() ) ); // will add the Content-Length header
+      ok = ok && easy_setopt( m_curl, CURLOPT_INFILESIZE_LARGE, static_cast< curl_off_t >( request_body().size() ) ); // will add the Content-Length header
       //
       return ok;
     }
