@@ -14,15 +14,18 @@ namespace curlev
 namespace
 {
 
-  // Current date using RFC2822 format, UTC
+  // Current date using RFC2822 format, local
   std::string date()
   {
-    std::time_t     now    = std::time( nullptr );
-    const std::tm * gmtime = std::gmtime( &now );
+    std::time_t     now       = std::time( nullptr );
+    const std::tm * localtime = std::localtime( &now );
+    //
+    ASSERT_RETURN( localtime != nullptr, "" );
     //
     // NOLINTBEGIN
-    char buffer[ 64 ];
-    std::strftime( buffer, sizeof( buffer ), "%a, %d %b %Y %H:%M:%S +0000", gmtime );
+    char buffer[ 64 ];  /* flawfinder: ignore / buffer size is passed to strftime */
+    //
+    ASSERT_RETURN( std::strftime( buffer, sizeof( buffer ), "%a, %d %b %Y %H:%M:%S %z", localtime ) > 0, "" );
     //
     return buffer;
     // NOLINTEND
