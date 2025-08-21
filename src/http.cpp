@@ -30,7 +30,6 @@ HTTP & HTTP::REQUEST( const std::string & p_method, std::string p_url, const key
     //
     ok = ok && easy_setopt( m_curl, CURLOPT_CUSTOMREQUEST, p_method.c_str() ); // doesn't have to be persistent
     ok = ok && easy_setopt( m_curl, CURLOPT_URL          , p_url   .c_str() ); // doesn't have to be persistent
-// todo remove    ok = ok && easy_setopt( m_curl, CURLOPT_HTTPGET      , 1L               );
     //
     if ( ! ok && m_response_code == c_success )
       m_response_code = c_error_url_set;
@@ -96,13 +95,10 @@ HTTP & HTTP::set_mime( const mime::parts & p_parts )
     //
     m_curl_mime = curl_mime_init( m_curl );
     //
-    MIME mime;
-    mime.add_parts( p_parts );
-    //
     bool ok = true;
     //
     ok = ok && m_curl_mime != nullptr;
-    ok = ok && mime.apply( m_curl, m_curl_mime );
+    ok = ok && mime::apply( m_curl, m_curl_mime, p_parts );
     ok = ok && easy_setopt( m_curl, CURLOPT_MIMEPOST, m_curl_mime ); // must be persistent
     //
     if ( ! ok && m_response_code == c_success )

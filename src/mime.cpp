@@ -94,14 +94,17 @@ namespace
   }
 } // namespace
 
+namespace mime
+{
+
 //--------------------------------------------------------------------
 // Apply the configured parts to the given CURL easy handle.
 // It returns false if any option fails to set.
-bool MIME::apply( CURL * p_curl, curl_mime * p_curl_mime ) const
+bool apply( CURL * p_curl, curl_mime * p_curl_mime, const mime::parts & p_parts )
 {
   bool ok = true;
   //
-  for ( const auto & part : m_parts )
+  for ( const auto & a_part : p_parts )
   {
     curl_mimepart * mime_part = curl_mime_addpart( p_curl_mime );     // create a part
     //
@@ -110,17 +113,12 @@ bool MIME::apply( CURL * p_curl, curl_mime * p_curl_mime ) const
     std::visit( [ &ok, p_curl, mime_part ]( const auto & visited ) {
                   ok = ok && read_part( p_curl, mime_part, visited ); // and read it
                 },
-                part );
+                a_part );
   }
   //
   return ok;
 }
 
-//--------------------------------------------------------------------
-// Add several parts to the MIME document
-void MIME::add_parts( const mime::parts & p_parts )
-{
-  m_parts.insert( m_parts.end(), p_parts.begin(), p_parts.end() );
-}
+} // namespace mime
 
 } // namespace curlev
