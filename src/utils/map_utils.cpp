@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************/
 
+#include <array>
 #include <cctype>
+#include <cstdint>
 
 #include "utils/map_utils.hpp"
 #include "utils/string_utils.hpp"
@@ -51,13 +53,13 @@ namespace
   {
     for ( char c : p_string )
     {
-      if ( std::isalnum( c ) || c == '-' || c == '.' || c == '_' || c == '~' )
+      if ( std::isalnum( c ) != 0 || c == '-' || c == '.' || c == '_' || c == '~' )
       {
         p_text += c;
       }
       else
       {
-        const char * encoded[ 256 ] = {
+        static std::array encoded = {
             "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07", "%08", "%09", "%0A", "%0B", "%0C", "%0D", "%0E", "%0F",
             "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17", "%18", "%19", "%1A", "%1B", "%1C", "%1D", "%1E", "%1F",
             "%20", "%21", "%22", "%23", "%24", "%25", "%26", "%27", "%28", "%29", "%2A", "%2B", "%2C", "%2D", "%2E", "%2F",
@@ -76,7 +78,7 @@ namespace
             "%F0", "%F1", "%F2", "%F3", "%F4", "%F5", "%F6", "%F7", "%F8", "%F9", "%FA", "%FB", "%FC", "%FD", "%FE", "%FF"
         };
         //
-        p_text += encoded[ static_cast< unsigned char >( c ) ];
+        p_text += encoded[ static_cast< uint8_t >( c ) ]; /* index is guaranteed to be 0-255 */
       }
     }
   }
@@ -97,7 +99,7 @@ void append_url_encoded(
   //
   for ( const auto & [ key, value ] : p_parameters )
   {
-    if ( separator )
+    if ( separator != 0 )
       p_text += separator;
     separator = p_subsequent_separator;
     //

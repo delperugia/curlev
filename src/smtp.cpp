@@ -23,7 +23,7 @@ namespace
     ASSERT_RETURN( localtime != nullptr, "" );
     //
     // NOLINTBEGIN
-    char buffer[ 64 ];  /* flawfinder: ignore / buffer size is passed to strftime */
+    char buffer[ 64 ]; /* flawfinder: ignore / buffer size is passed to strftime */
     //
     ASSERT_RETURN( std::strftime( buffer, sizeof( buffer ), "%a, %d %b %Y %H:%M:%S %z", localtime ) > 0, "" );
     //
