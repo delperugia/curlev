@@ -238,7 +238,8 @@ TEST( http_basic, post )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->POST( c_server_httpbun + "post", { { "a", "1" }, { "b", "2" } } ).exec().get_code();
+    auto code = http->POST( c_server_httpbun + "post" )
+                    .set_parameters( { { "a", "1" }, { "b", "2" } } ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
@@ -251,8 +252,7 @@ TEST( http_basic, post )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->POST( c_server_httpbun + "post", {} )
-                    .add_query_parameters( { { "a", "1" }, { "b", "2" } } )
+    auto code = http->POST( c_server_httpbun + "post", { { "a", "1" }, { "b", "2" } } )
                     .exec()
                     .get_code();
     ASSERT_EQ( code, 200 );
@@ -267,8 +267,8 @@ TEST( http_basic, post )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->POST( c_server_httpbun + "post", { { "a", "1" } } )
-                    .add_query_parameters( { { "b", "2" } } )
+    auto code = http->POST( c_server_httpbun + "post", { { "b", "2" } } )
+                    .set_parameters( { { "a", "1" } } )
                     .exec()
                     .get_code();
     ASSERT_EQ( code, 200 );
@@ -283,9 +283,9 @@ TEST( http_basic, post )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->POST( c_server_httpbun + "post", { { "b1", "1" } } )
-                    .add_query_parameters(     { { "q1", "2" } } )
-                    .add_body_parameters (     { { "b2", "3" } } )
+    auto code = http->POST( c_server_httpbun + "post", { { "q1", "2" } } )
+                    .set_parameters ( { { "b1", "1" },
+                                        { "b2", "3" } } )
                     .exec()
                     .get_code();
     ASSERT_EQ( code, 200 );
@@ -310,7 +310,8 @@ TEST( http_basic, put_patch )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->PATCH( c_server_httpbun + "patch", { { "a", "a1" }, { "b", "a2" } } ).exec().get_code();
+    auto code = http->PATCH( c_server_httpbun + "patch" )
+                    .set_parameters( { { "a", "a1" }, { "b", "a2" } } ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
@@ -323,7 +324,8 @@ TEST( http_basic, put_patch )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->PUT( c_server_httpbun + "put", { { "a", "u1" } } ).exec().get_code();
+    auto code = http->PUT( c_server_httpbun + "put" )
+                    .set_parameters( { { "a", "u1" } } ).exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
@@ -350,7 +352,7 @@ TEST( http_basic, post_mime )
     auto http = HTTP::create( async );
     auto code =
         http->POST( c_server_httpbun + "post" )
-            .add_mime_parameters( { mime::parameter{ "m1", "40" } } )
+            .set_mime( { mime::parameter{ "m1", "40" } } )
             .exec()
             .get_code();
     ASSERT_EQ( code, 200 );
@@ -365,10 +367,9 @@ TEST( http_basic, post_mime )
   {
     auto http = HTTP::create( async );
     auto code =
-        http->POST( c_server_httpbun + "post" )
-            .add_mime_parameters( { mime::parameter{ "m2", "42" },
-                                    mime::parameter{ "m3", "43" } } )
-            .add_query_parameters( { { "q4", "44" } } )
+        http->POST( c_server_httpbun + "post", { { "q4", "44" } } )
+            .set_mime( { mime::parameter{ "m2", "42" },
+                         mime::parameter{ "m3", "43" } } )
             .exec()
             .get_code();
     ASSERT_EQ( code, 200 );
@@ -386,7 +387,7 @@ TEST( http_basic, post_mime )
     auto http = HTTP::create( async );
     auto code =
         http->POST( c_server_httpbun + "post" )
-            .add_mime_parameters( { mime::data{ "f1", "Hello!", "text/plain", "f1.txt" } } )
+            .set_mime( { mime::data{ "f1", "Hello!", "text/plain", "f1.txt" } } )
             .exec()
             .get_code();
     ASSERT_EQ( code, 200 );
@@ -403,11 +404,10 @@ TEST( http_basic, post_mime )
   {
     auto http = HTTP::create( async );
     auto code =
-        http->POST( c_server_httpbun + "post" )
-            .add_mime_parameters( { mime::parameter{ "m21", "51" },
-                                    mime::parameter{ "m22", "52" },
-                                    mime::file     { "f21", PROJECT_ROOT_DIR "/tests/data.txt", "text/html", "f21.txt" } } )
-            .add_query_parameters( { { "q23", "33" } } )
+        http->POST( c_server_httpbun + "post", { { "q23", "33" } } )
+            .set_mime( { mime::parameter{ "m21", "51" },
+                         mime::parameter{ "m22", "52" },
+                         mime::file     { "f21", PROJECT_ROOT_DIR "/tests/data.txt", "text/html", "f21.txt" } } )
             .exec()
             .get_code();
     ASSERT_EQ( code, 200 );
@@ -428,10 +428,10 @@ TEST( http_basic, post_mime )
     auto http = HTTP::create( async );
     auto code =
         http->POST( c_server_httpbun + "payload" )
-            .add_mime_parameters( { mime::alternatives{
-                                      mime::data{ "", "text", "text/plain", ""},
-                                      mime::data{ "", "html", "text/html" , ""}, },
-                                    mime::file     { "f21", PROJECT_ROOT_DIR "/tests/data.txt", "text/html", "f21.txt" } } )
+            .set_mime( { mime::alternatives{
+                           mime::data{ "", "text", "text/plain", ""},
+                           mime::data{ "", "html", "text/html" , ""}, },
+                         mime::file     { "f21", PROJECT_ROOT_DIR "/tests/data.txt", "text/html", "f21.txt" } } )
             .exec()
             .get_code();
     ASSERT_EQ( code, 200 );

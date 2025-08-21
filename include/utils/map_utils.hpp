@@ -22,4 +22,15 @@ struct hash_ci
 using key_values    = std::unordered_map< std::string, std::string >;
 using key_values_ci = std::unordered_map< std::string, std::string, hash_ci, hash_ci >;
 
+// Converts keys and values in parameters and add them to the given p_text.
+// Each key/value is prepended by a separator:
+//  - p_first_separator between p_text and the firs key/value
+//  - p_subsequent_separator between subsequent keys/values
+// p_first_separator and p_subsequent_separator can be set to 0 to add nothing.
+void append_url_encoded(
+    std::string &      p_text,
+    const key_values & p_parameters,
+    char               p_first_separator      = 0,
+    char               p_subsequent_separator = '&');
+
 } // namespace curlev

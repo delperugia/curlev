@@ -14,62 +14,6 @@ namespace curlev
 {
 
 //--------------------------------------------------------------------
-// When using REST functions using external JSON parsers, this function
-// allows to uniformize syntax for idempotent verbs
-// NOLINTBEGIN( readability-misleading-indentation )
-HTTP &
-  HTTP::REST( const std::string & p_uri,
-              const std::string & p_verb )
-{
-  HTTP::Method method = Method::none;
-  //
-       if ( p_verb == "GET"    ) method = Method::eGET;
-  else if ( p_verb == "DELETE" ) method = Method::eDELETE;
-  else if ( p_verb == "POST"   ) method = Method::ePOST;
-  else if ( p_verb == "PUT"    ) method = Method::ePUT;
-  else if ( p_verb == "PATCH"  ) method = Method::ePATCH; // bad practice since there is no body
-  //
-  do_if_idle( [ & ]() {
-    clear();
-    //
-    m_request_method = method;
-    m_request_url    = p_uri;
-  } );
-  //
-  return *this;
-}
-// NOLINTEND( readability-misleading-indentation )
-
-//--------------------------------------------------------------------
-// When using external JSON parser, once the JSON text is generated, prepare the query
-// NOLINTBEGIN( readability-misleading-indentation )
-HTTP &
-    HTTP::REST( const std::string &  p_uri,
-                const std::string &  p_verb,
-                std::string &&       p_body )
-{
-  HTTP::Method method = Method::none;
-  //
-  // GET and DELETE can't have body
-       if ( p_verb == "POST"  ) method = Method::ePOST;
-  else if ( p_verb == "PUT"   ) method = Method::ePUT;
-  else if ( p_verb == "PATCH" ) method = Method::ePATCH;
-  //
-  do_if_idle( [ & ]() {
-    clear();
-    //
-    set_request_body( std::move( p_body ) );
-    //
-    m_request_method       = method;
-    m_request_url          = p_uri;
-    m_request_content_type = "application/json";
-  } );
-  //
-  return *this;
-}
-// NOLINTEND( readability-misleading-indentation )
-
-//--------------------------------------------------------------------
 // JSON convenient functions for nlohmann/json
 //--------------------------------------------------------------------
 
@@ -77,11 +21,13 @@ HTTP &
 
 //--------------------------------------------------------------------
 HTTP & HTTP::REST(
-    const std::string &    p_uri,
+    const std::string &    p_url,
     const std::string &    p_verb,
-    const nlohmann::json & p_json )
+    const nlohmann::json & p_json,
+    const key_values &     p_query_parameters )
 {
-  return REST( p_uri, p_verb, p_json.dump() );
+  return REQUEST( p_verb, p_url, p_query_parameters )
+        .set_body( "application/json", p_json.dump() );
 }
 
 //--------------------------------------------------------------------
@@ -125,11 +71,13 @@ namespace
 
 //--------------------------------------------------------------------
 HTTP & HTTP::REST(
-    const std::string &         p_uri,
+    const std::string &         p_url,
     const std::string &         p_verb,
-    const rapidjson::Document & p_json )
+    const rapidjson::Document & p_json,
+    const key_values &          p_query_parameters )
 {
-  return REST( p_uri, p_verb, serialize( p_json ) );
+  return REQUEST( p_verb, p_url, p_query_parameters )
+        .set_body( "application/json", serialize( p_json ) );
 }
 
 //--------------------------------------------------------------------

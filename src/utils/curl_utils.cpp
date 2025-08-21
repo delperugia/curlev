@@ -19,7 +19,7 @@ bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_stri
   if ( p_string.empty() ) // nothing to do
     return false;
   //
-  curl_slist * temp = curl_slist_append( p_list, p_string.c_str() );
+  curl_slist * temp = curl_slist_append( p_list, p_string.c_str() ); // doesn't have to be persistent
   if ( temp == nullptr ) // allocation failed
     return false;
   //

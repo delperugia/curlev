@@ -18,6 +18,31 @@
 using namespace curlev;
 
 //--------------------------------------------------------------------
+TEST( http_advanced, request )
+{
+  ASync async;
+  async.start();
+  //
+  for ( const auto & [ document, verb ] :
+        key_values{ { "get", "GET" }, { "delete", "DELETE" }, { "post", "POST" }, { "put", "PUT" }, { "patch", "PATCH" } } )
+  {
+    nlohmann::json json;
+    //
+    auto http = HTTP::create( async );
+    auto code = http->REQUEST( verb, c_server_httpbun + document ).exec().get_code();
+    ASSERT_EQ( code, 200 );
+    ASSERT_TRUE( http->get_json( json ) );
+    //
+    EXPECT_EQ( json["method"]      , verb );
+    EXPECT_EQ( json["args" ].size(), 0    );
+    EXPECT_EQ( json["form" ].size(), 0    );
+    EXPECT_EQ( json["files"].size(), 0    );
+  }
+  //
+  async.stop();
+}
+
+//--------------------------------------------------------------------
 TEST( http_advanced, results )
 {
   ASync async;
@@ -27,7 +52,7 @@ TEST( http_advanced, results )
     auto http = HTTP::create( async );
     auto code = http->exec().get_code();
     //
-    EXPECT_EQ( code, c_error_http_method_set );
+    EXPECT_EQ( code, CURLE_URL_MALFORMAT );
   }
   //
   {
@@ -89,9 +114,8 @@ TEST( http_advanced, headers )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->GET( c_server_httpbun + "response-headers" )
-                    .add_query_parameters( { { "X-Tst-31", "41" },
-                                             { "X-Tst-32", "42" } } )
+    auto code = http->GET( c_server_httpbun + "response-headers", { { "X-Tst-31", "41" },
+                                                                   { "X-Tst-32", "42" } } )
                     .exec()
                     .get_code();
     //
@@ -120,8 +144,9 @@ TEST( http_advanced, post_json )
     const std::string payload = R"({ { "a", "1" }, { "b", "2" } })";
     //
     auto http = HTTP::create( async );
-    auto code = http->POST( c_server_httpbun + "post",
-                            "application/json", payload ).exec().get_code();
+    auto code = http->POST( c_server_httpbun + "post" )
+                          .set_body( "application/json", std::string( payload ) )
+                          .exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 0 );
@@ -136,10 +161,10 @@ TEST( http_advanced, post_json )
     const std::string payload = R"({ { "a", "1" }, { "b", "2" } })";
     //
     auto http = HTTP::create( async );
-    auto code = http->POST( c_server_httpbun + "post",
-                            "application/json", payload )
-                    .add_query_parameters( { { "c", "3" },
-                                             { "d", "4" } } ).exec().get_code();
+    auto code = http->POST( c_server_httpbun + "post", { { "c", "3" },
+                                                         { "d", "4" } } )
+                          .set_body( "application/json", std::string( payload ) )
+                          .exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( json_count( http->get_body(), "$.args"  ), 2 );
@@ -162,30 +187,14 @@ TEST( http_advanced, rest )
   async.start();
   //
   for ( const auto & [ document, verb ] :
-        key_values{ { "get", "GET" }, { "delete", "DELETE" }, { "post", "POST" }, { "put", "PUT" }, { "patch", "PATCH" } } )
-  {
-    nlohmann::json json;
-    //
-    auto http = HTTP::create( async );
-    auto code = http->REST( c_server_httpbun + document, verb ).exec().get_code();
-    ASSERT_EQ( code, 200 );
-    ASSERT_TRUE( http->get_json( json ) );
-    //
-    EXPECT_EQ( json["method"]      , verb );
-    EXPECT_EQ( json["args" ].size(), 0    );
-    EXPECT_EQ( json["form" ].size(), 0    );
-    EXPECT_EQ( json["files"].size(), 0    );
-  }
-  //
-  for ( const auto & [ document, verb ] :
         key_values{ { "post", "POST" }, { "put", "PUT" }, { "patch", "PATCH" } } )
   {
     nlohmann::json payload = nlohmann::json::parse( R"({ "a": "1", "b": "2" })" );
     nlohmann::json json;
     //
     auto http = HTTP::create( async );
-    auto code = http->REST( c_server_httpbun + document, verb, payload )
-                     .add_query_parameters( { { "c", "3" } } ).exec().get_code();
+    auto code = http->REST( c_server_httpbun + document, verb, payload, { { "c", "3" } } )
+                     .exec().get_code();
     ASSERT_EQ( code, 200 );
     ASSERT_TRUE( http->get_json( json ) );
     //
@@ -202,8 +211,8 @@ TEST( http_advanced, rest )
     payload.Parse( R"({ "a": "1", "b": "2" })" );
     //
     auto http = HTTP::create( async );
-    auto code = http->REST( c_server_httpbun + "post", "POST", payload )
-                     .add_query_parameters( { { "c", "3" } } ).exec().get_code();
+    auto code = http->REST( c_server_httpbun + "post", "POST", payload, { { "c", "3" } } )
+                     .exec().get_code();
     ASSERT_EQ( code, 200 );
     ASSERT_TRUE( http->get_json( json ) );
     //
@@ -354,10 +363,14 @@ TEST( http_advanced, consecutive )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->POST( c_server_httpbun + "payload", "plain/text", "123" ).exec().get_code();
+    auto code = http->POST( c_server_httpbun + "payload" )
+                    .set_body( "plain/text", "123" )
+                    .exec().get_code();
     ASSERT_EQ( code, 200 );
     //
-    code = http->POST( c_server_httpbun + "payload", "plain/text", "456" ).exec().get_code();
+    code = http->POST( c_server_httpbun + "payload" )
+                    .set_body( "plain/text", "456" )
+                    .exec().get_code();
     ASSERT_EQ( code, 200 );
     //
     EXPECT_EQ( http->get_body(), "456" );

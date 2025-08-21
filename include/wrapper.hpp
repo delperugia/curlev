@@ -34,10 +34,11 @@ constexpr long c_error_options_format             = -24; // bad options format s
 constexpr long c_error_options_set                = -25; // bad option value
 
 constexpr long c_error_user_callback              = -30; // callback crashed
-constexpr long c_error_headers_set                = -31; // bad header
-constexpr long c_error_mime_set                   = -33; // bad MIME value
-constexpr long c_error_http_method_set            = -32; // bad method
-constexpr long c_error_smtp_recipient_set         = -34; // bad recipient
+constexpr long c_error_url_set                    = -31; // error setting URL (and method/parameters)
+constexpr long c_error_headers_set                = -32; // error adding headers
+constexpr long c_error_body_set                   = -33; // error adding body
+constexpr long c_error_mime_set                   = -34; // error adding MIME body
+constexpr long c_error_recipients_set             = -35; // error adding recipients
 
 // The default maximal received response size
 constexpr auto c_default_response_size_max        = 2'000'000;

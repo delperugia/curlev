@@ -103,35 +103,57 @@ SMTP & SMTP::SEND(
       {
         clear(); // clear Wrapper and SMTP
         //
-        m_request_url     = p_url;
-        m_request_from    = p_from;
-        m_request_to      = p_to;
-        m_request_subject = p_subject;
-        m_request_mime.add_parts( p_parts );
+        bool ok = true;
+        //
+        // Set URL
+        ok = ok && easy_setopt( m_curl, CURLOPT_URL, p_url.c_str() ); // doesn't have to be persistent
+        //
+        // Set MAIL FROM
+        ok = ok && easy_setopt( m_curl, CURLOPT_MAIL_FROM, p_from.get_addr_spec().c_str() ); // doesn't have to be persistent
+        //
+        // Set RCPT TO
+        ok = ok && fill_recipients( p_to ); // can set m_response_code
+        //
+        // Set body
+        ok = ok && fill_headers( p_subject, p_from, p_to ); // set extra headers (including From and To),  can set m_response_code
+        ok = ok && fill_body_mime( p_parts );               // can set m_response_code
+        //
+        if ( ! ok && m_response_code == c_success )
+          m_response_code = c_error_url_set;
       } );
   return *this;
 }
 
 //--------------------------------------------------------------------
-// Send a simple, raw, email
-// p_body should be a rfc5322 message
+// Send a simple, raw, email.
+// p_body should be a rfc5322 message.
 SMTP & SMTP::SEND(
     const std::string &      p_url,
     const smtp::address &    p_from,
     const smtp::recipients & p_to,
-    const std::string &      p_body )
+          std::string &&     p_body )
 {
   do_if_idle(
       [ & ]()
       {
         clear(); // clear Wrapper and SMTP
         //
-        m_request_url     = p_url;
-        m_request_from    = p_from;
-        m_request_to      = p_to;
-        m_request_mime.clear();
+        bool ok = true;
         //
-        set_request_body( p_body );
+        // Set URL
+        ok = ok && easy_setopt( m_curl, CURLOPT_URL, p_url.c_str() ); // doesn't have to be persistent
+        //
+        // Set MAIL FROM
+        ok = ok && easy_setopt( m_curl, CURLOPT_MAIL_FROM, p_from.get_addr_spec().c_str() ); // doesn't have to be persistent
+        //
+        // Set RCPT TO
+        ok = ok && fill_recipients( p_to ); // can set m_response_code
+        //
+        // Set body
+        ok = ok && fill_body( std::move( p_body ) ); // can set m_response_code
+        //
+        if ( ! ok && m_response_code == c_success )
+          m_response_code = c_error_url_set;
       } );
   return *this;
 }
@@ -141,7 +163,13 @@ SMTP & SMTP::SEND(
 SMTP & SMTP::add_headers( const key_values & p_headers )
 {
   do_if_idle( [ & ]() {
-    m_request_headers.insert( p_headers.begin(), p_headers.end() );
+    bool ok = true;
+    //
+    for ( const auto & header : p_headers )
+      ok = ok && curl_slist_checked_append( m_curl_headers, header.first + ": " + header.second );
+    //
+    if ( ! ok && m_response_code == c_success )
+          m_response_code = c_error_headers_set;
   } );
   //
   return *this;
@@ -172,25 +200,8 @@ bool SMTP::prepare_protocol()
 {
   bool ok = true;
   //
-  // Set URL
-  ok = ok && easy_setopt( m_curl, CURLOPT_URL, m_request_url.c_str() );
-  //
-  // Set MAIL FROM
-  ok = ok && easy_setopt( m_curl, CURLOPT_MAIL_FROM, m_request_from.get_addr_spec().c_str() ); // doesn't have to be persistent
-  //
-  // Set RCPT TO
-  ok = ok && fill_recipients();
-  //
-  // Set body or MIME
-  if ( m_request_mime.empty() )
-  {
-    ok = ok && fill_body();
-  }
-  else
-  {
-    ok = ok && fill_headers(); // set extra headers (including From and To)
-    ok = ok && fill_body_mime();
-  }
+  ok = ok && easy_setopt( m_curl, CURLOPT_MAIL_RCPT , m_curl_recipients ); // must be persistent
+  ok = ok && easy_setopt( m_curl, CURLOPT_HTTPHEADER, m_curl_headers    ); // must be persistent
   //
   return ok;
 }
@@ -209,13 +220,6 @@ void SMTP::finalize_protocol()
 void SMTP::clear_protocol()
 {
   release_curl_extras();
-  //
-  m_request_url    .clear();
-  m_request_from   .clear();
-  m_request_to     .clear();
-  m_request_subject.clear();
-  m_request_headers.clear();
-  m_request_mime   .clear();
 }
 
 //--------------------------------------------------------------------
@@ -232,93 +236,78 @@ void SMTP::release_curl_extras()
 
 //--------------------------------------------------------------------
 // Send the SMTP recipients
-bool SMTP::fill_recipients()
+bool SMTP::fill_recipients( const smtp::recipients & p_to )
 {
-  curl_slist_free_all( m_curl_recipients ); // ok on nullptr
-  m_curl_recipients = nullptr;
-  //
   bool ok = true;
   //
-  for ( const auto & address : m_request_to )
+  for ( const auto & address : p_to )
     ok = ok && curl_slist_checked_append( m_curl_recipients, address.get_addr_spec() );
   //
-  ok = ok && easy_setopt( m_curl, CURLOPT_MAIL_RCPT, m_curl_recipients ); // must be persistent
-  //
-  if ( ! ok )
-  {
-    curl_slist_free_all( m_curl_recipients ); // ok on nullptr
-    m_curl_recipients  = nullptr;
-    m_response_code = c_error_smtp_recipient_set;
-  }
+  if ( ! ok && m_response_code == c_success )
+    m_response_code = c_error_recipients_set;
   //
   return ok;
 }
 
 //--------------------------------------------------------------------
 // Send the headers of the rfc5322 body
-bool SMTP::fill_headers()
+bool SMTP::fill_headers(
+    const std::string &      p_subject,
+    const smtp::address &    p_from,
+    const smtp::recipients & p_to )
 {
-  // Start by adding system headers
-  //
-  m_request_headers.insert_or_assign( "Date"   , date()                         );
-  m_request_headers.insert_or_assign( "Subject", m_request_subject              );
-  m_request_headers.insert_or_assign( "From"   , m_request_from.get_name_addr() );
-  //
-  for ( const auto & address : m_request_to )
-    m_request_headers.insert_or_assign( "To", address.get_name_addr() );
-  //
-  // Then pass them to curl
-  //
-  curl_slist_free_all( m_curl_headers ); // ok on nullptr
-  m_curl_headers = nullptr;
-  //
   bool ok = true;
   //
-  for ( const auto & header : m_request_headers )
-    ok = ok && curl_slist_checked_append( m_curl_headers, header.first + ": " + header.second );
+  ok = ok && curl_slist_checked_append( m_curl_headers, "Date: "    + date()                 );
+  ok = ok && curl_slist_checked_append( m_curl_headers, "Subject: " + p_subject              );
+  ok = ok && curl_slist_checked_append( m_curl_headers, "From: "    + p_from.get_name_addr() );
   //
-  ok = ok && easy_setopt( m_curl, CURLOPT_HTTPHEADER, m_curl_headers ); // must be persistent
+  for ( const auto & address : p_to )
+    ok = ok && curl_slist_checked_append( m_curl_headers, "To: " + address.get_name_addr() );
   //
-  if ( ! ok )
-  {
-    curl_slist_free_all( m_curl_headers ); // ok on nullptr
-    m_curl_headers  = nullptr;
+  if ( ! ok && m_response_code == c_success )
     m_response_code = c_error_headers_set;
-  }
   //
   return ok;
 }
 
 //--------------------------------------------------------------------
 // Send the body of the rfc5322 body
-bool SMTP::fill_body_mime()
+bool SMTP::fill_body_mime( const mime::parts & p_parts )
 {
-  curl_mime_free( m_curl_mime ); // ok on nullptr
+  ASSERT_RETURN( m_curl_mime == nullptr, false );
+  //
   m_curl_mime = curl_mime_init( m_curl );
+  //
+  MIME mime;
+  mime.add_parts( p_parts );
   //
   bool ok = true;
   //
   ok = ok && m_curl_mime != nullptr;
-  ok = ok && m_request_mime.apply( m_curl, m_curl_mime );
+  ok = ok && mime.apply( m_curl, m_curl_mime );
   ok = ok && easy_setopt( m_curl, CURLOPT_MIMEPOST, m_curl_mime ); // must be persistent
   //
-  if ( ! ok )
-  {
-    curl_easy_setopt( m_curl, CURLOPT_MIMEPOST, nullptr );
-    //
-    curl_mime_free( m_curl_mime ); // ok on nullptr
-    m_curl_mime     = nullptr;
+  if ( ! ok && m_response_code == c_success )
     m_response_code = c_error_mime_set;
-  }
   //
   return ok;
 }
 
 //--------------------------------------------------------------------
-// Send the rfc5322 message (headers + body)
-bool SMTP::fill_body()
+// Set the received raw body
+bool SMTP::fill_body( std::string && p_body )
 {
-  return prepare_request_body(); // ASync will read from m_request_body
+  set_request_body( std::move( p_body ) );
+  //
+  bool ok = true;
+  //
+  ok = ok && prepare_request_body(); // ASync will read from m_request_body
+  //
+  if ( ! ok && m_response_code == c_success )
+    m_response_code = c_error_body_set;
+  //
+  return ok;
 }
 
 } // namespace curlev

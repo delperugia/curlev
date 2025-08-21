@@ -6,8 +6,9 @@
 #include <gtest/gtest.h>
 
 #include "version.hpp"
-#include "utils/string_utils.hpp"
 #include "utils/curl_utils.hpp"
+#include "utils/map_utils.hpp"
+#include "utils/string_utils.hpp"
 
 using namespace curlev;
 
@@ -269,4 +270,52 @@ TEST( common, curl_slist_checked_append )
   EXPECT_STREQ( slist->next->data, "Header2: value2" );
   //
   curl_slist_free_all( slist );
+}
+
+//--------------------------------------------------------------------
+
+std::string enc( std::string r, const key_values & p, char f, char s )
+{
+  append_url_encoded( r, p, f, s );
+  return r;
+}
+
+TEST( common, url_encode )
+{
+  EXPECT_EQ( enc( "", {}            , 0, '&'), ""    );
+  EXPECT_EQ( enc( "", {{ "a", "1" }}, 0, '&'), "a=1" );
+  EXPECT_EQ( enc( "", {{ "a", "1" },
+                       { "b", "2" }}, 0, '&'), "b=2&a=1" );
+  //
+  EXPECT_EQ( enc( "url", {}            , '?', '&'), "url"    );
+  EXPECT_EQ( enc( "url", {{ "a", "1" }}, '?', '&'), "url?a=1" );
+  EXPECT_EQ( enc( "url", {{ "a", "1" },
+                          { "b", "2" }}, '?', '&'), "url?b=2&a=1" );
+  //
+  EXPECT_EQ( enc( "url?c=3", {}            , '&', '&'), "url?c=3"    );
+  EXPECT_EQ( enc( "url?c=3", {{ "a", "1" }}, '&', '&'), "url?c=3&a=1" );
+  EXPECT_EQ( enc( "url?c=3", {{ "a", "1" },
+                              { "b", "2" }}, '&', '&'), "url?c=3&b=2&a=1" );
+  //
+  EXPECT_EQ( enc( "", {{ "a", "abc123"             }}, 0, 0), "a=abc123");
+  EXPECT_EQ( enc( "", {{ "a", "MixedCASE123!@#"    }}, 0, 0), "a=MixedCASE123%21%40%23");
+  EXPECT_EQ( enc( "", {{ "a", "hello world"        }}, 0, 0), "a=hello%20world");
+  EXPECT_EQ( enc( "", {{ "a", ":/?#[]@!$&'()*+,;=" }}, 0, 0), "a=%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%2C%3B%3D");
+  EXPECT_EQ( enc( "", {{ "a", "<>%{}|\\^~[]`"      }}, 0, 0), "a=%3C%3E%25%7B%7D%7C%5C%5E~%5B%5D%60");
+  EXPECT_EQ( enc( "", {{ "a", "é"                  }}, 0, 0), "a=%C3%A9");
+  EXPECT_EQ( enc( "", {{ "a", "ü"                  }}, 0, 0), "a=%C3%BC");
+  EXPECT_EQ( enc( "", {{ "a", "漢"                 }}, 0, 0), "a=%E6%BC%A2");
+  EXPECT_EQ( enc( "", {{ "a", "C++ > Java"         }}, 0, 0), "a=C%2B%2B%20%3E%20Java");
+  EXPECT_EQ( enc( "", {{ "a", "already%20encoded"  }}, 0, 0), "a=already%2520encoded");
+  //
+  EXPECT_EQ( enc( "", {{ "abc123"            , "x" }}, 0, 0), "abc123=x");
+  EXPECT_EQ( enc( "", {{ "MixedCASE123!@#"   , "x" }}, 0, 0), "MixedCASE123%21%40%23=x");
+  EXPECT_EQ( enc( "", {{ "hello world"       , "x" }}, 0, 0), "hello%20world=x");
+  EXPECT_EQ( enc( "", {{ ":/?#[]@!$&'()*+,;=", "x" }}, 0, 0), "%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%2C%3B%3D=x");
+  EXPECT_EQ( enc( "", {{ "<>%{}|\\^~[]`"     , "x" }}, 0, 0), "%3C%3E%25%7B%7D%7C%5C%5E~%5B%5D%60=x");
+  EXPECT_EQ( enc( "", {{ "é"                 , "x" }}, 0, 0), "%C3%A9=x");
+  EXPECT_EQ( enc( "", {{ "ü"                 , "x" }}, 0, 0), "%C3%BC=x");
+  EXPECT_EQ( enc( "", {{ "漢"                , "x" }}, 0, 0), "%E6%BC%A2=x");
+  EXPECT_EQ( enc( "", {{ "C++ > Java"        , "x" }}, 0, 0), "C%2B%2B%20%3E%20Java=x");
+  EXPECT_EQ( enc( "", {{ "already%20encoded" , "x" }}, 0, 0), "already%2520encoded=x");
 }

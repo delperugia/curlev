@@ -11,7 +11,7 @@ The only header to include is `curlev/http.hpp`.
  - To do a request:
    - create an `HTTP` object using `HTTP::create()`
    - call one of `GET()`, `DELETE()`, `POST()`, `PUT()` or `PATCH()` (or `REST()`)
-   - optionally call `add_headers()`, `add_..._parameters()`, `options()`, `headers()`...
+   - optionally call `add_headers()`, `set_...()`, `options()`, `headers()`...
    - call `exec()` (synchronous), `start()`/`join()` (asynchronous), or `launch()` (future)
    - call the `get_...()` methods
 - Notes:
@@ -151,39 +151,48 @@ This will restart a new request sessions.
 Available methods are `GET()`, `DELETE()`, `POST()`, `PUT()` and `PATCH()`.
 
 `GET()` and `DELETE()` are requests without body and expect an URL and
-an optional map of parameters to send on the query string.
+an optional map of parameters to send in the query string.
 
-`DELETE()`, `POST()`, `PUT()` and `PATCH()` have three forms:
-1. URL
-2. URL, content type and body
-3. URL and a map of parameters to send in the body as `application/x-www-form-urlencoded`
+`DELETE()`, `POST()`, `PUT()` and `PATCH()` are request (usually) with
+a body. These methods expect an URL and an optional map of parameters
+to send in the query string. One of the following method must then be
+called to specify the body:
+
+1. set_body           to pass a raw body
+2. set_parameters     to add body parameters as `application/x-www-form-urlencoded`
+3. set_mime           to pass MIME parts
+
+Then if needed, one or several of the following configuration methods
+are available:
+
+- `add_headers( headers )`:         add headers
+- `authentication( auth_string )`:  set authentication
+- `options( opt_string )`:          set options
+- `certificates( cert_string )`:    set SSL certificates
 
 Examples:
 
 ```cpp
 auto http = HTTP::create( async );
-http->GET( "http://www.httpbin.org/get" ).exec();
+http->GET( "http://www.httpbin.org/get", { { "a", "1" }, { "b", "2" } } )
+    .exec();
 std::cout << http->get_code() << " " << http->get_body() << std::endl;
 ```
 
-Then if needed, one or several of the following configuration methods
-are available:
-- `add_headers( headers )`:         add headers
-- `add_query_parameters( params )`: add query parameters
-- `add_body_parameters( params )`:  add body parameters (forms 1 and 3 only)
-- `add_mime_parameters( parts )`:   add MIME parts to the body (form 1 only)
-- `authentication( auth_string )`:  set authentication
-- `options( opt_string )`:          set options
-- `certificates( cert_string )`:    set SSL certificates
+```cpp
+auto http = HTTP::create( async );
+http->POST( "http://www.httpbin.org/post" )
+    .set_parameters( { { "a", "1" }, { "b", "2" } } )
+    .exec();
+std::cout << http->get_code() << " " << http->get_body() << std::endl;
+```
 
 ### REST
 
 If `curlev` was compiled with RapidJSON or nlohmann/json, the `HTTP` object
-has an extra method `REST()`.
-
-`REST()` has two forms:
-1. URI, verb (any of 'GET', 'DELETE', 'PATCH', 'POST' or 'PUT')
-2. URI, verb (only 'PATCH', 'POST' or 'PUT') and a JSON object (a `rapidjson::Document` or a `nlohmann::json`)
+has an extra method `REST()` expecting an URL, a verb,
+a JSON object (a `rapidjson::Document` or a `nlohmann::json`),
+and an optional map of parameters to send in the query string.
 
 Example:
 ```cpp
@@ -196,40 +205,38 @@ std::cout << http->get_code() << " " << http->get_body() << std::endl;
 
 ### Adding headers and parameters
 
-`add_headers()`, `add_query_parameters()` and `add_body_parameters()`
-expect an unordered map of keys/parameters and values: `std::unordered_map< std::string, std::string >`:
+The optional parameter of the HTTP methods, `add_headers()` and
+`set_parameters` expect an unordered map of keys/parameters
+and values known as `curlev::key_values`.
 
 ```cpp
 add_headers( { { "Accept"         , "text/html" },
                { "Accept-Language", "en-US"     } } ).
-add_query_parameters( { { "p1", "1" },
-                        { "p2", "2" } } )
+set_parameters( { { "p1", "1" },
+                  { "p2", "2" } } )
 ```
-
-`add_query_parameters()` will add them as query parameters in the URL,
-`add_body_parameters()` in the request body as `application/x-www-form-urlencoded`.
 
 ### Adding MIME parts
 
-The `add_mime_parameters` method expects a vector of MIME parts:
+The `set_mime` method expects a vector of MIME parts:
 - `mime::parameter` to add a simple name/value parameter
   - fields are: `name`, `value`
 ```cpp
-add_mime_parameters( { mime::parameter{ "p1", "1" },
-                       mime::parameter{ "p2", "2" } } )
+set_mime( { mime::parameter{ "p1", "1" },
+            mime::parameter{ "p2", "2" } } )
 ```
 - `mime::data`      to add data part, with an optional Content-Type and remote file name
   - fields are: `name`, `data`, `content_type`, `filename`
 ```cpp
-add_mime_parameters( { mime::parameter{ "p1", "1" },
-                       mime::data     { "p2", "Hello, world!", "text/plain", "f.txt" } } )
+set_mime( { mime::parameter{ "p1", "1" },
+            mime::data     { "p2", "Hello, world!", "text/plain", "f.txt" } } )
 ```
 - `mime::file`      to read data from a file as a part, with an optional Content-Type and remote file name
   - fields are: `name`, `filedata`, `content_type`, `filename`
   - default `filename` is the base name of `filedata`
 ```cpp
-add_mime_parameters( { mime::parameter{ "p1", "1" },
-                       mime::file     { "p2", "/tmp/uZ7hHC2", "text/plain", "f.txt" } } )
+set_mime( { mime::parameter{ "p1", "1" },
+            mime::file     { "p2", "/tmp/uZ7hHC2", "text/plain", "f.txt" } } )
 ```
 
 ### Adding authentication, options and certificates
@@ -301,6 +308,14 @@ not available anymore in the `HTTP` object.
 Note: the maximal received response size is set y default to 2MB, but can
 be changed by using `maximal_response_size()` in `HTTP`.
 
+Note: headers are available a case insensitive unsorted map, allowing
+to retrieve a header independently of its case:
+
+```cpp
+  auto ct = http->get_headers().at( "Content-Type" );
+  auto ct = http->get_headers().at( "content-type" );
+```
+
 ### REST
 
 If `curlev` was compiled with RapidJSON or nlohmann/json, the `HTTP` object
@@ -350,8 +365,8 @@ A POST with `application/x-www-form-urlencoded` parameters.
 ```cpp
 auto http = HTTP::create( async );
 auto code =
-    http->POST( "http://www.httpbin.org/post",
-                { { "name", "Alice" }, { "role", "admin" } } )
+    http->POST( "http://www.httpbin.org/post" )
+        .set_parameters( { { "name", "Alice" }, { "role", "admin" } } )
         .exec()
         .get_code();
 std::cout << code << " " << http->get_body() << std::endl;
@@ -386,9 +401,9 @@ Posting a MIME document:
 std::string data = read_file( "alice.jpg" );
 auto        code =
     http->POST( "http://www.httpbin.org/post" )
-        .add_mime_parameters( { mime::parameter{ "name", "Alice" },
-                                mime::parameter{ "role", "admin" },
-                                mime::file     { "picture", "img/69073875.jpg", "image/jpeg", "alice.jpg" } } )
+        .set_mime( { mime::parameter{ "name", "Alice" },
+                     mime::parameter{ "role", "admin" },
+                     mime::file     { "picture", "img/69073875.jpg", "image/jpeg", "alice.jpg" } } )
         .exec()
         .get_code();
 std::cout << code << " " << http->get_body() << std::endl;
@@ -398,11 +413,10 @@ A complex request:
 ```cpp
 auto http = HTTP::create( async );
 auto code =
-    http->POST( "http://www.httpbin.org/get" )
-        .add_body_parameters ( { { "name", "Alice" },
-                                 { "role", "admin" } } )
-        .add_query_parameters( { { "from", "12" },
-                                 { "to"  , "23" } } )
+    http->POST( "http://www.httpbin.org/get", { { "from", "12" },
+                                                { "to"  , "23" } } )
+        .set_parameters ( { { "name", "Alice" },
+                            { "role", "admin" } } )
         .add_headers         ( { { "Accept"         , "text/html" },
                                  { "Accept-Language", "en-US"     } } )
         .authentication      ( "mode=basic,user=joe,secret=abc123" )
@@ -446,10 +460,12 @@ to start a new email request session:
   - a vector or recipients
   - the message
 
-You can add custom headers (for MIME requests) using:
+You can add custom headers (for MIME requests) using `add_headers()`
+which expects an unordered map of keys
+and values known as `curlev::key_values`.
 
 ```cpp
-smtp->add_headers( { {"Priority", "urgent"} } );
+smtp->add_headers( { { "Priority", "urgent" } } );
 ```
 
 ### Address format

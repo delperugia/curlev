@@ -105,10 +105,10 @@ protocol-specific wrappers:
 - Serves as the base class for all protocol wrappers, enabling polymorphic handling by `ASync`
 - Ensures a consistent interface for asynchronous operations across different protocols
 
-# HTTP class
+# HTTP and SMTP classes
 
-This specialization of `Wrapper` implements the HTTP protocol.
-The `Wrapper` invokes HTTP just before starting a request to
+These specializations of `Wrapper` implement the HTTP and SMTP protocols.
+The `Wrapper` invokes thme just before starting a request to
 finish configuring the curl easy handle, and just after
 to retrieve protocol specific details.
 

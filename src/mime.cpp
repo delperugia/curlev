@@ -14,27 +14,27 @@ namespace
 
   bool mime_name( curl_mimepart * p_mime_part, const std::string & p_name )
   {
-    return p_name.empty() || CURLE_OK == curl_mime_name( p_mime_part, p_name.c_str() );
+    return p_name.empty() || CURLE_OK == curl_mime_name( p_mime_part, p_name.c_str() ); // doesn't have to be persistent
   }
 
   bool mime_type( curl_mimepart * p_mime_part, const std::string & p_type )
   {
-    return p_type.empty() || CURLE_OK == curl_mime_type( p_mime_part, p_type.c_str() );
+    return p_type.empty() || CURLE_OK == curl_mime_type( p_mime_part, p_type.c_str() ); // doesn't have to be persistent
   }
 
   bool mime_filename( curl_mimepart * p_mime_part, const std::string & p_filename )
   {
-    return p_filename.empty() || CURLE_OK == curl_mime_filename( p_mime_part, p_filename.c_str() );
+    return p_filename.empty() || CURLE_OK == curl_mime_filename( p_mime_part, p_filename.c_str() ); // doesn't have to be persistent
   }
 
   bool mime_filedata( curl_mimepart * p_mime_part, const std::string & p_filedata )
   {
-    return p_filedata.empty() || CURLE_OK == curl_mime_filedata( p_mime_part, p_filedata.c_str() );
+    return p_filedata.empty() || CURLE_OK == curl_mime_filedata( p_mime_part, p_filedata.c_str() ); // doesn't have to be persistent
   }
 
   bool mime_data( curl_mimepart * p_mime_part, const std::string & p_data )
   {
-    return p_data.empty() || CURLE_OK == curl_mime_data( p_mime_part, p_data.c_str(), p_data.length() );
+    return p_data.empty() || CURLE_OK == curl_mime_data( p_mime_part, p_data.c_str(), p_data.length() ); // doesn't have to be persistent
   }
 } // namespace
 

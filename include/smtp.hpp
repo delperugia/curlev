@@ -70,7 +70,7 @@ public:
       const std::string &      p_url,
       const smtp::address &    p_from,
       const smtp::recipients & p_to,
-      const std::string &      p_body );
+            std::string &&     p_body );
   //
   // Add headers to the email. Only for requests [1]
   SMTP & add_headers( const key_values & p_headers );
@@ -96,33 +96,28 @@ protected:
   void clear_protocol() override;
   //
 private:
-  // Data used when sending the request
-  std::string      m_request_url;
-  smtp::address    m_request_from;
-  smtp::recipients m_request_to;
-  std::string      m_request_subject;
-  key_values       m_request_headers;
-  MIME             m_request_mime;
-  //
   // Extra curl handles used when sending the request
-  curl_slist *     m_curl_recipients = nullptr; // must be persistent (CURLOPT_MAIL_RCPT)
-  curl_slist *     m_curl_headers    = nullptr; // must be persistent (CURLOPT_HTTPHEADER)
-  curl_mime *      m_curl_mime       = nullptr; // must be persistent (CURLOPT_MIMEPOST)
+  curl_slist * m_curl_recipients = nullptr; // must be persistent (CURLOPT_MAIL_RCPT)
+  curl_slist * m_curl_headers    = nullptr; // must be persistent (CURLOPT_HTTPHEADER)
+  curl_mime *  m_curl_mime       = nullptr; // must be persistent (CURLOPT_MIMEPOST)
   //
   // Release extra curl handles that were used during the operation
   void release_curl_extras();
   //
   // Add all recipients to the request
-  bool fill_recipients();
+  bool fill_recipients( const smtp::recipients & p_to );
   //
   // Add all headers to the request
-  bool fill_headers();
+  bool fill_headers(
+      const std::string &      p_subject,
+      const smtp::address &    p_from,
+      const smtp::recipients & p_to );
   //
   // Build the MIME body
-  bool fill_body_mime();
+  bool fill_body_mime( const mime::parts & p_parts );
   //
-  // Build the body
-  bool fill_body();
+  // Set the received raw body
+  bool fill_body( std::string && p_body );
 };
 
 } // namespace curlev
