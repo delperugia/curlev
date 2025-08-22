@@ -75,7 +75,7 @@ TEST( smtp, send )
   {
     auto smtp = SMTP::create( async );
     //
-    auto code =
+    auto future =
       smtp->SEND(
         "smtp://localhost:2525",
         smtp::address( "sender@example.com" ),
@@ -86,10 +86,11 @@ TEST( smtp, send )
         "Subject: SMTP example message\r\n"
         "\r\n"
         "The body of the message.\r\n" )
-      .exec()
-      .get_code();
+      .launch();
     //
-    EXPECT_EQ( code, 7 );
+    auto response = future.get();
+    //
+    EXPECT_EQ( response.code, 7 );
   }
   //
   {
@@ -107,6 +108,7 @@ TEST( smtp, send )
                     },
                     mime::data{ "a.txt", "abc123", "text/plain" , "a.txt"  }
                   } )
+      .add_headers( { { "Priority", "urgent" } } )
       .exec()
       .get_code();
     //

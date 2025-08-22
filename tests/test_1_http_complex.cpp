@@ -151,6 +151,18 @@ TEST( http_complex, redirect )
     EXPECT_EQ(  http->get_redirect_url(), "http://somewhere.com/" );
   }
   //
+  {
+    // Note that this code also test curl_cb_seek
+    auto http = HTTP::create( async );
+    auto code = http->POST( c_server_httpbun + "redirect", { { "url", c_server_httpbun + "payload" } } )
+                     .set_body( "text/plain", std::string( 256, 'A' ) )
+                     .options( "follow_location=1" )
+                     .exec().get_code();
+    ASSERT_EQ( code, 200 );
+    //
+    EXPECT_EQ( http->get_body().size(), 256 );
+  }
+  //
   async.stop();
 }
 
