@@ -16,6 +16,11 @@ constexpr auto c_timeout_ms = 30000L;
 // Default maximum number of network redirect
 constexpr auto c_max_redirect = 5L;
 
+// Constant was rename in 8.2.0
+#ifndef CURLOPT_MAIL_RCPT_ALLOWFAILS
+#define CURLOPT_MAIL_RCPT_ALLOWFAILS CURLOPT_MAIL_RCPT_ALLLOWFAILS
+#endif
+
 //--------------------------------------------------------------------
 // Expect a CSKV list of options to set. Example:
 //   follow_location=1,insecure=1
@@ -36,6 +41,7 @@ bool Options::set( const std::string & p_cskv )
       else if ( key == "maxredirs"          ) ok                   = svtol( value, m_maxredirs );
       else if ( key == "proxy"              ) m_proxy              = value;
       else if ( key == "cookies"            ) m_cookies            = ( value == "1" );
+      else if ( key == "rcpt_allow_fails"   ) m_rcpt_allow_fails   = ( value == "1" );
       else if ( key == "accept_compression" ) m_accept_compression = ( value == "1" );
       else if ( key == "verbose"            ) m_verbose            = ( value == "1" );
       else
@@ -53,16 +59,17 @@ bool Options::apply( CURL * p_curl ) const
 {
   bool ok = true;
   //
-  ok = ok && easy_setopt( p_curl, CURLOPT_ACCEPT_ENCODING  , m_accept_compression ? "" : nullptr              );
-  ok = ok && easy_setopt( p_curl, CURLOPT_CONNECTTIMEOUT_MS, m_connect_timeout                                );
-  ok = ok && easy_setopt( p_curl, CURLOPT_COOKIEFILE       , m_cookies            ? "" : nullptr              );
-  ok = ok && easy_setopt( p_curl, CURLOPT_FOLLOWLOCATION   , m_follow_location                                ); // follow 30x
-  ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYHOST   , m_insecure           ? 0L : 2L                   );
-  ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYPEER   , m_insecure           ? 0L : 1L                   );
-  ok = ok && easy_setopt( p_curl, CURLOPT_MAXREDIRS        , m_maxredirs                                      );
-  ok = ok && easy_setopt( p_curl, CURLOPT_PROXY            , m_proxy.empty()      ? nullptr : m_proxy.c_str() );
-  ok = ok && easy_setopt( p_curl, CURLOPT_TIMEOUT_MS       , m_timeout                                        );
-  ok = ok && easy_setopt( p_curl, CURLOPT_VERBOSE          , m_verbose            ? 1L : 0L                   );
+  ok = ok && easy_setopt( p_curl, CURLOPT_ACCEPT_ENCODING     , m_accept_compression ? "" : nullptr              );
+  ok = ok && easy_setopt( p_curl, CURLOPT_CONNECTTIMEOUT_MS   , m_connect_timeout                                );
+  ok = ok && easy_setopt( p_curl, CURLOPT_COOKIEFILE          , m_cookies            ? "" : nullptr              );
+  ok = ok && easy_setopt( p_curl, CURLOPT_FOLLOWLOCATION      , m_follow_location                                ); // follow 30x
+  ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYHOST      , m_insecure           ? 0L : 2L                   );
+  ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYPEER      , m_insecure           ? 0L : 1L                   );
+  ok = ok && easy_setopt( p_curl, CURLOPT_MAXREDIRS           , m_maxredirs                                      );
+  ok = ok && easy_setopt( p_curl, CURLOPT_PROXY               , m_proxy.empty()      ? nullptr : m_proxy.c_str() );
+  ok = ok && easy_setopt( p_curl, CURLOPT_MAIL_RCPT_ALLOWFAILS, m_rcpt_allow_fails   ? 1L : 0L                   );
+  ok = ok && easy_setopt( p_curl, CURLOPT_TIMEOUT_MS          , m_timeout                                        );
+  ok = ok && easy_setopt( p_curl, CURLOPT_VERBOSE             , m_verbose            ? 1L : 0L                   );
   //
   return ok;
 }
@@ -78,6 +85,7 @@ void Options::set_default()
   m_insecure           = false;           // disables certificate validation
   m_maxredirs          = c_max_redirect;  // maximum number of redirects allowed
   m_proxy              .clear();          // the SOCKS or HTTP URl to a proxy
+  m_rcpt_allow_fails   = false;           // continue if some recipients fail
   m_timeout            = c_timeout_ms;    // in milliseconds
   m_verbose            = false;           // debug log on console
 }

@@ -31,6 +31,7 @@ public:
   //   insecure           0        0 or 1        disables certificate validation
   //   maxredirs          5        count         maximum number of redirects allowed
   //   proxy                       string        the SOCKS or HTTP URl to a proxy
+  //   rcpt_allow_fails   0        0 or 1        continue if some recipients fail
   //   timeout            30000    milliseconds  receive data timeout
   //   verbose            0        0 or 1        debug log on console
   bool set( const std::string & p_cskv );
@@ -49,6 +50,7 @@ private:
   bool        m_insecure           = false;
   long        m_maxredirs          = 0;
   std::string m_proxy;
+  bool        m_rcpt_allow_fails   = false;
   long        m_timeout            = 0;
   bool        m_verbose            = false;
 };

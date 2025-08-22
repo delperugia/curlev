@@ -85,6 +85,7 @@ separated string with the following keys available:
 | insecure           | 0       | 0 or 1       | disables certificate validation     | CURLOPT_SSL_VERIFYHOST and CURLOPT_SSL_VERIFYPEER
 | maxredirs          | 5       | count        | maximum number of redirects allowed | CURLOPT_MAXREDIRS
 | proxy              |         | string       | the SOCKS or HTTP URl to a proxy    | CURLOPT_PROXY
+| rcpt_allow_fails   | 0       | 0 or 1       | continue if some recipients fail    | CURLOPT_MAIL_RCPT_ALLOWFAILS
 | timeout            | 30000   | milliseconds | receive data timeout                | CURLOPT_TIMEOUT_MS
 | verbose            | 0       | 0 or 1       | debug log on console                | CURLOPT_VERBOSE
 
