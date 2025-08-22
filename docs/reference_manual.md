@@ -478,6 +478,14 @@ The `smtp::address` struct accepts email addresses with or without display names
 - `<mary@x.test>`
 - `mary@x.test`
 
+`smtp::address` also accepts the recipient mode (To, Cc, or Bcc).
+This is only used with the [1] form of SEND since this is part of
+the RFC5322 body message, and not of SMTP.
+
+```cpp
+auto a = smtp::address( "<boss@nil.test>", smtp::address::Mode::cc );
+```
+
 ### MIME document
 
 `SEND()` expects a vector of MIME parts: either a list of `mime::data`

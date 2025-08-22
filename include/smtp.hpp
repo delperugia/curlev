@@ -21,8 +21,11 @@ namespace curlev
     // An email, possibly with a display name
     struct address
     {
-      std::string address_spec; // john.smith@example.org
-      std::string display_name; // John Smith
+      enum class Mode { to, cc, bcc };
+      //
+      std::string address_spec;    // john.smith@example.org
+      std::string display_name;    // John Smith
+      Mode        mode = Mode::to; // type of recipient
       //
       address() = default;
       //
@@ -31,7 +34,8 @@ namespace curlev
       // - "Mary Smith" <mary@x.test>"
       // - <mary@x.test>
       // - mary@x.test
-      explicit address( std::string_view p_text );
+      // p_mode is only used when using the [1] form of SEND
+      explicit address( std::string_view p_text, Mode p_mode = Mode::to );
       //
       // Same syntax as constructor
       address & operator=( std::string_view p_text );
@@ -112,7 +116,7 @@ private:
   bool fill_headers(
       const std::string &      p_subject,
       const smtp::address &    p_from,
-      const smtp::recipients & p_to );
+      const smtp::recipients & p_recipients );
   //
   // Build the MIME body
   bool fill_body_mime( const mime::parts & p_parts );

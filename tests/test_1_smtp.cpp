@@ -100,7 +100,8 @@ TEST( smtp, send )
       smtp->SEND( "smtp://localhost:2525",
                   smtp::address( "sender@example.com" ),
                   { smtp::address( "Joe Q. Public <john.q.public@example.com> )" ),
-                    smtp::address( "<boss@nil.test>" ) },
+                    smtp::address( "<boss@nil.test>" , smtp::address::Mode::cc  ),
+                    smtp::address( "archive@test.com", smtp::address::Mode::bcc ) },
                   "Test Subject",
                   { mime::alternatives{
                       mime::data{ "", "Hello"       , "text/plain", "" },

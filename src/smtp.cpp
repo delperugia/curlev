@@ -39,7 +39,8 @@ namespace
 // - "Mary Smith" <mary@x.test>"
 // - <mary@x.test>
 // - mary@x.test
-smtp::address::address( std::string_view p_text )
+// p_mode is only used when using the [1] form of SEND
+smtp::address::address( std::string_view p_text, Mode p_mode )
 {
   auto start   = p_text.find( '<' );
   auto end     = p_text.find( '>' );
@@ -54,6 +55,8 @@ smtp::address::address( std::string_view p_text )
   {
     address_spec = trim( p_text );
   }
+  //
+  mode = p_mode;
 }
 
 //--------------------------------------------------------------------
@@ -256,7 +259,7 @@ bool SMTP::fill_recipients( const smtp::recipients & p_to )
 bool SMTP::fill_headers(
     const std::string &      p_subject,
     const smtp::address &    p_from,
-    const smtp::recipients & p_to )
+    const smtp::recipients & p_recipients )
 {
   bool ok = true;
   //
@@ -264,8 +267,18 @@ bool SMTP::fill_headers(
   ok = ok && curl_slist_checked_append( m_curl_headers, "Subject: " + p_subject              );
   ok = ok && curl_slist_checked_append( m_curl_headers, "From: "    + p_from.get_name_addr() );
   //
-  for ( const auto & address : p_to )
-    ok = ok && curl_slist_checked_append( m_curl_headers, "To: " + address.get_name_addr() );
+  for ( const auto & recipient : p_recipients )
+  {
+    const char * prefix = nullptr;
+    //
+    switch( recipient.mode )
+    {
+      case smtp::address::Mode::cc:  prefix = "Cc: " ; break;
+      case smtp::address::Mode::bcc: prefix = "Bcc: "; break;
+      default:                       prefix = "To: " ; break;
+    }
+    ok = ok && curl_slist_checked_append( m_curl_headers, prefix + recipient.get_name_addr() );
+  }
   //
   if ( ! ok && m_response_code == c_success )
     m_response_code = c_error_headers_set;

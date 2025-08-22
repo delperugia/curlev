@@ -43,15 +43,15 @@ public:
   void set_default();
   //
 private:
-  bool        m_accept_compression = true;
-  long        m_connect_timeout    = 0;
-  bool        m_cookies            = false;
-  long        m_follow_location    = 0;
-  bool        m_insecure           = false;
-  long        m_maxredirs          = 0;
   std::string m_proxy;
-  bool        m_rcpt_allow_fails   = false;
+  long        m_connect_timeout    = 0;
+  long        m_follow_location    = 0;
+  long        m_maxredirs          = 0;
   long        m_timeout            = 0;
+  bool        m_accept_compression = true;
+  bool        m_cookies            = false;
+  bool        m_insecure           = false;
+  bool        m_rcpt_allow_fails   = false;
   bool        m_verbose            = false;
 };
 
