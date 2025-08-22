@@ -57,10 +57,12 @@ smtp::address::address( std::string_view p_text )
 }
 
 //--------------------------------------------------------------------
-void smtp::address::clear()
+// Same syntax as constructor
+smtp::address & smtp::address::operator=( std::string_view p_text )
 {
-  address_spec.clear();
-  display_name.clear();
+  *this = smtp::address( p_text );
+  //
+  return *this;
 }
 
 //--------------------------------------------------------------------

@@ -33,7 +33,8 @@ namespace curlev
       // - mary@x.test
       explicit address( std::string_view p_text );
       //
-      void clear();
+      // Same syntax as constructor
+      address & operator=( std::string_view p_text );
       //
       // Returns the address enclosed in angle brackets, possibly with a quoted display name
       [[nodiscard]] std::string get_name_addr() const; // "Mary Smith" <mary@x.test> or <jdoe@example.org>

@@ -59,7 +59,7 @@ TEST( smtp, address )
   EXPECT_EQ( a.get_name_addr(), R"("Joe Q. Public" <john.q.public@example.com>)" );
   EXPECT_EQ( a.get_addr_spec(),  R"(<john.q.public@example.com>)" );
   //
-  a = smtp::address( R"( "Giant; "Big" Box" <sysservices@example.net> )" );
+  a = R"( "Giant; "Big" Box" <sysservices@example.net> )";
   EXPECT_EQ( a.address_spec, "sysservices@example.net"  );
   EXPECT_EQ( a.display_name, "Giant; \"Big\" Box" );
   EXPECT_EQ( a.get_name_addr(), R"("Giant; "Big" Box" <sysservices@example.net>)" );
