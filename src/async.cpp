@@ -88,7 +88,7 @@ bool ASync::start()
 // Stop the worker thread used by UV and CB, clear share and multi of curl.
 // Ensure all UV handles are released.
 // Clean curl.
-bool ASync::stop( unsigned p_timeout_ms /* = 30000 */)
+bool ASync::stop( unsigned p_timeout_ms )
 {
   bool forced = ! wait_pending_requests( p_timeout_ms );
   //
@@ -410,15 +410,13 @@ void ASync::multi_fetch_messages()
   //
   while ( ( message = curl_multi_info_read( m_multi_handle, &pending ) ) != nullptr )
   {
-    switch ( message->msg )
+    if ( message->msg == CURLMSG_DONE )
     {
-    case CURLMSG_DONE:
       curl_multi_remove_handle( m_multi_handle, message->easy_handle );
       //
-      request_completed( message->easy_handle, outcome_code( message ) ); // wrapper can be deleted here, easy_handle may be invalid
-      break;
-    default:
-      break;
+      request_completed(
+          message->easy_handle,
+          outcome_code( message ) ); // wrapper can be deleted here, easy_handle may be invalid
     }
   }
 }
@@ -932,6 +930,7 @@ void ASync::request_completed( CURL * p_curl, long p_result_code )
   if ( wrapper == nullptr || ! *wrapper )
     return;
   //
+  // Check the maximum number or reattempts and the result code
   if ( ( *wrapper )->can_reattempt() && safe_to_restart_outcome( p_result_code ) )
   {
     bool ok = true;
