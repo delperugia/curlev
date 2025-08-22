@@ -8,7 +8,7 @@
 cmake_minimum_required( VERSION 3.15 )
 project(
     curlev
-    VERSION     0.6.3
+    VERSION     0.6.4
     DESCRIPTION "An event-based C++ wrapper for libcurl"
     LANGUAGES   CXX
 )

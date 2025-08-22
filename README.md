@@ -16,7 +16,7 @@ offering both synchronous and asynchronous request handling with minimal overhea
 
 Key features:
 
-- Event driven (uses 4 times less CPU and 2 times less RAM in some [cases](docs/internals.md#performances))
+- Event driven (uses 4 times less CPU and 2 times less RAM than the best [libraries](docs/internals.md#performances))
 - Synchronous and asynchronous requests with callback support
 - Supports HTTP and SMTP
 - Handles query parameters, form data, MIME handling, and raw bodies

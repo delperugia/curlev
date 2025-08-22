@@ -16,11 +16,6 @@ constexpr auto c_timeout_ms = 30000L;
 // Default maximum number of network redirect
 constexpr auto c_max_redirect = 5L;
 
-// Constant was rename in 8.2.0
-#ifndef CURLOPT_MAIL_RCPT_ALLOWFAILS
-#define CURLOPT_MAIL_RCPT_ALLOWFAILS CURLOPT_MAIL_RCPT_ALLLOWFAILS
-#endif
-
 //--------------------------------------------------------------------
 // Expect a CSKV list of options to set. Example:
 //   follow_location=1,insecure=1
@@ -67,9 +62,15 @@ bool Options::apply( CURL * p_curl ) const
   ok = ok && easy_setopt( p_curl, CURLOPT_SSL_VERIFYPEER      , m_insecure           ? 0L : 1L                   );
   ok = ok && easy_setopt( p_curl, CURLOPT_MAXREDIRS           , m_maxredirs                                      );
   ok = ok && easy_setopt( p_curl, CURLOPT_PROXY               , m_proxy.empty()      ? nullptr : m_proxy.c_str() );
-  ok = ok && easy_setopt( p_curl, CURLOPT_MAIL_RCPT_ALLOWFAILS, m_rcpt_allow_fails   ? 1L : 0L                   );
   ok = ok && easy_setopt( p_curl, CURLOPT_TIMEOUT_MS          , m_timeout                                        );
   ok = ok && easy_setopt( p_curl, CURLOPT_VERBOSE             , m_verbose            ? 1L : 0L                   );
+  //
+  // Constant was added in 7.69.0, renamed in 8.2.0
+#if LIBCURL_VERSION_NUM >= CURL_VERSION_BITS( 8, 2, 0 )
+  ok = ok && easy_setopt( p_curl, CURLOPT_MAIL_RCPT_ALLOWFAILS , m_rcpt_allow_fails  ? 1L : 0L                   );
+#elif LIBCURL_VERSION_NUM >= CURL_VERSION_BITS( 7, 69, 0 )
+  ok = ok && easy_setopt( p_curl, CURLOPT_MAIL_RCPT_ALLLOWFAILS, m_rcpt_allow_fails  ? 1L : 0L                   );
+#endif
   //
   return ok;
 }
