@@ -2,20 +2,21 @@ curlev - reference manual
 =========================
 
 All classes and functions are inside the namespace `curlev`.
-The only header to include is `curlev/http.hpp`.
+The only headers to include are `curlev/http.hpp`,
+or `curlev/smtp.hpp`.
 
-# Quickstart guide
+# Quickstart guide (for HTTP)
 
  - Include <curlev/http.hpp>
  - Instantiate a global `ASync` object
  - To do a request:
    - create an `HTTP` object using `HTTP::create()`
    - call one of `GET()`, `DELETE()`, `POST()`, `PUT()` or `PATCH()` (or `REST()`)
-   - optionally call `add_headers()`, `set_...()`, `options()`, `headers()`...
+   - optionally call `add_headers()`, `set_...()`, `options()`...
    - call `exec()` (synchronous), `start()`/`join()` (asynchronous), or `launch()` (future)
    - call the `get_...()` methods
 - Notes:
-  - if used, the callback in `start()` must be as short as possible
+  - if the callback in `start()` is set, it must be as fast as possible
   - `ASync`'s `stop()` must be called after all `HTTP` objects are released
 
 # Starting
@@ -154,7 +155,7 @@ Available methods are `GET()`, `DELETE()`, `POST()`, `PUT()` and `PATCH()`.
 `GET()` and `DELETE()` are requests without body and expect an URL and
 an optional map of parameters to send in the query string.
 
-`DELETE()`, `POST()`, `PUT()` and `PATCH()` are request (usually) with
+`DELETE()`, `POST()`, `PUT()` and `PATCH()` are requests (usually) with
 a body. These methods expect an URL and an optional map of parameters
 to send in the query string. One of the following method must then be
 called to specify the body:
@@ -163,7 +164,7 @@ called to specify the body:
 2. set_parameters     to add body parameters as `application/x-www-form-urlencoded`
 3. set_mime           to pass MIME parts
 
-Then if needed, one or several of the following configuration methods
+Then, if needed, one or several of the following configuration methods
 are available:
 
 - `add_headers( headers )`:         add headers
@@ -206,9 +207,10 @@ std::cout << http->get_code() << " " << http->get_body() << std::endl;
 
 ### Adding headers and parameters
 
-The optional parameter of the HTTP methods, `add_headers()` and
-`set_parameters` expect an unordered map of keys/parameters
-and values known as `curlev::key_values`.
+The optional query parameters of the HTTP methods,
+and the `add_headers()` and `set_parameters` methods
+expect an unordered map of keys/parameters and values
+known as `curlev::key_values`.
 
 ```cpp
 add_headers( { { "Accept"         , "text/html" },
@@ -220,18 +222,21 @@ set_parameters( { { "p1", "1" },
 ### Adding MIME parts
 
 The `set_mime` method expects a vector of MIME parts:
+
 - `mime::parameter` to add a simple name/value parameter
   - fields are: `name`, `value`
 ```cpp
 set_mime( { mime::parameter{ "p1", "1" },
             mime::parameter{ "p2", "2" } } )
 ```
+
 - `mime::data`      to add data part, with an optional Content-Type and remote file name
   - fields are: `name`, `data`, `content_type`, `filename`
 ```cpp
 set_mime( { mime::parameter{ "p1", "1" },
             mime::data     { "p2", "Hello, world!", "text/plain", "f.txt" } } )
 ```
+
 - `mime::file`      to read data from a file as a part, with an optional Content-Type and remote file name
   - fields are: `name`, `filedata`, `content_type`, `filename`
   - default `filename` is the base name of `filedata`
@@ -243,7 +248,7 @@ set_mime( { mime::parameter{ "p1", "1" },
 ### Adding authentication, options and certificates
 
 The same three methods `options()`, `authentication()` and `certificates()` present in
-`ASync` are also present in `HTTP` and allows to override the default configuration.
+`ASync` are also present in `HTTP`, and allows to override the default configuration.
 
 They use the same syntax.
 
