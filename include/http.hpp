@@ -17,6 +17,8 @@
   #include <rapidjson/document.h>
 #endif
 
+#include "utils/map_utils.hpp"
+#include "async.hpp"
 #include "mime.hpp"
 #include "wrapper.hpp"
 

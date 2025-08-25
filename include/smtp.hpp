@@ -10,6 +10,8 @@
 #include <future>
 #include <string>
 
+#include "utils/map_utils.hpp"
+#include "async.hpp"
 #include "mime.hpp"
 #include "wrapper.hpp"
 
