@@ -187,8 +187,8 @@ void HTTP::clear_protocol()
 {
     release_curl_extras();
     //
-    m_response_content_type   .clear();
-    m_response_redirect_url   .clear();
+    m_response_content_type.clear();
+    m_response_redirect_url.clear();
 }
 
 //--------------------------------------------------------------------

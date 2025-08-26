@@ -85,12 +85,12 @@ bool svtol( std::string_view p_string, long & p_value )
 // The unsigned version of svtol
 bool svtoul( std::string_view p_string, unsigned long & p_value )
 {
-  constexpr auto base     = 10U;
-  constexpr auto max      = std::numeric_limits< unsigned long >::max(); // 4294967295
+  constexpr auto base    = 10U;
+  constexpr auto max     = std::numeric_limits< unsigned long >::max(); // 4294967295
   //
-  unsigned long  value    = 0;
-  const auto *   current  = p_string.data();
-  const auto *   last     = p_string.data() + p_string.size();
+  unsigned long  value   = 0;
+  const auto *   current = p_string.data();
+  const auto *   last    = p_string.data() + p_string.size();
   //
   if ( current == last ) // p_string is ""
     return false;
@@ -115,7 +115,7 @@ bool svtoul( std::string_view p_string, unsigned long & p_value )
 }
 
 //--------------------------------------------------------------------
-// Checks is two ASCII strings are equal, ignoring case differences.
+// Checks if two ASCII strings are equal, ignoring case differences.
 // strcasecmp is ~5 times faster than std::lexicographical_compare.
 bool equal_ascii_ci( const std::string & p_a, const std::string & p_b )
 {

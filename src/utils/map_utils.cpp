@@ -38,7 +38,6 @@ bool hash_ci::operator()( const std::string & p_a, const std::string & p_b ) con
   return equal_ascii_ci( p_a, p_b );
 }
 
-
 //--------------------------------------------------------------------
 // Converts keys and values in parameters and add them to the given p_text.
 // Each key/value is prepended by a separator:
@@ -78,7 +77,7 @@ namespace
             "%F0", "%F1", "%F2", "%F3", "%F4", "%F5", "%F6", "%F7", "%F8", "%F9", "%FA", "%FB", "%FC", "%FD", "%FE", "%FF"
         };
         //
-        p_text += encoded[ static_cast< uint8_t >( c ) ]; /* index is guaranteed to be 0-255 */
+        p_text += encoded[ static_cast< uint8_t >( c ) ]; // index is guaranteed to be 0-255
       }
     }
   }
