@@ -61,26 +61,24 @@ class SMTP : public Wrapper< SMTP >
 public:
   ~SMTP() override;
   //
-  // The first step is to call one of these methods:
-  //
-  // [1] Send an email with MIME parts (attachments, HTML, etc.)
+  // The first step is to call the SEND method:
   SMTP & SEND(
-      const std::string &      p_url,
-      const smtp::address &    p_from,
+      const std::string &   p_url,
+      const smtp::address & p_from );
+  //
+  // Add headers to the email. Only for MIME emails
+  SMTP & add_headers( const key_values & p_headers );
+  //
+  // Adding body to a request. Only one of them must be used.
+  //
+  SMTP & set_mime(
       const smtp::recipients & p_to,
       const std::string &      p_subject,
       const mime::parts &      p_parts );
   //
-  // [2] Send a simple, raw, email
-  // p_body should be a rfc5322 message
-  SMTP & SEND(
-      const std::string &      p_url,
-      const smtp::address &    p_from,
+  SMTP & set_body(
       const smtp::recipients & p_to,
             std::string &&     p_body );
-  //
-  // Add headers to the email. Only for requests [1]
-  SMTP & add_headers( const key_values & p_headers );
   //
   struct response
   {
@@ -107,6 +105,8 @@ private:
   curl_slist * m_curl_recipients = nullptr; // must be persistent (CURLOPT_MAIL_RCPT)
   curl_slist * m_curl_headers    = nullptr; // must be persistent (CURLOPT_HTTPHEADER)
   curl_mime *  m_curl_mime       = nullptr; // must be persistent (CURLOPT_MIMEPOST)
+  //
+  smtp::address m_request_sender;  // the From field
   //
   // Release extra curl handles that were used during the operation
   void release_curl_extras();

@@ -76,16 +76,15 @@ TEST( smtp, send )
     auto smtp = SMTP::create( async );
     //
     auto future =
-      smtp->SEND(
-        "smtp://localhost:2525",
-        smtp::address( "sender@example.com" ),
-        { smtp::address( "address@example.com" ) },
-        "Date: Mon, 29 Nov 2010 21:54:29 +1100\r\n"
-        "To: address@example.com\r\n"
-        "From: sender@example.com\r\n"
-        "Subject: SMTP example message\r\n"
-        "\r\n"
-        "The body of the message.\r\n" )
+      smtp->SEND( "smtp://localhost:2525",
+                  smtp::address( "sender@example.com" ) )
+          .set_body( { smtp::address( "address@example.com" ) },
+                     "Date: Mon, 29 Nov 2010 21:54:29 +1100\r\n"
+                     "To: address@example.com\r\n"
+                     "From: sender@example.com\r\n"
+                     "Subject: SMTP example message\r\n"
+                     "\r\n"
+                     "The body of the message.\r\n" )
       .launch();
     //
     auto response = future.get();
@@ -98,17 +97,17 @@ TEST( smtp, send )
     //
     auto code =
       smtp->SEND( "smtp://localhost:2525",
-                  smtp::address( "sender@example.com" ),
-                  { smtp::address( "Joe Q. Public <john.q.public@example.com> )" ),
-                    smtp::address( "<boss@nil.test>" , smtp::address::Mode::cc  ),
-                    smtp::address( "archive@test.com", smtp::address::Mode::bcc ) },
-                  "Test Subject",
-                  { mime::alternatives{
-                      mime::data{ "", "Hello"       , "text/plain", "" },
-                      mime::data{ "", "<b>Hello</b>", "text/html" , "" }
-                    },
-                    mime::data{ "a.txt", "abc123", "text/plain" , "a.txt"  }
-                  } )
+                  smtp::address( "sender@example.com" ) )
+          .set_mime( { smtp::address( "Joe Q. Public <john.q.public@example.com> )" ),
+                       smtp::address( "<boss@nil.test>" , smtp::address::Mode::cc  ),
+                       smtp::address( "archive@test.com", smtp::address::Mode::bcc ) },
+                     "Test Subject",
+                     { mime::alternatives{
+                         mime::data{ "", "Hello"       , "text/plain", "" },
+                         mime::data{ "", "<b>Hello</b>", "text/html" , "" }
+                       },
+                       mime::data{ "a.txt", "abc123", "text/plain" , "a.txt"  }
+                     } )
       .add_headers( { { "Priority", "urgent" } } )
       .exec()
       .get_code();

@@ -449,25 +449,14 @@ auto smtp = SMTP::create( async );  // async is the instance of ASync
 
 ## Building the request
 
-On the `SMTP` object, you must first call one of the `SEND()` methods
+On the `SMTP` object, you must first call the `SEND()` method
 to start a new email request session:
 
-`SEND()` has two forms:
+Then you can either add a MIME body or a raw body using `set_mime` or
+`set_body`.
 
-- To send an email using MIME parts, the method expects:
-  - URL
-  - sender (an `smtp::address` struct)
-  - a list of recipients (vector of `smtp::address` structs)
-  - a subject
-  - a MIME document
-- To send a simple raw email (RFC5322 message):
-  - URL
-  - sender
-  - a vector or recipients
-  - the message
-
-You can add custom headers (for MIME requests) using `add_headers()`
-which expects an unordered map of keys
+If adding a MIME body, it is possible to  add custom headers
+using `add_headers()` which expects an unordered map of keys
 and values known as `curlev::key_values`.
 
 ```cpp

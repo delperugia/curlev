@@ -95,13 +95,10 @@ SMTP::~SMTP()
 }
 
 //--------------------------------------------------------------------
-// Send an email with MIME parts (attachments, HTML, etc.)
+// Setup the request with the URL and sender
 SMTP & SMTP::SEND(
-    const std::string &      p_url,
-    const smtp::address &    p_from,
-    const smtp::recipients & p_to,
-    const std::string &      p_subject,
-    const mime::parts &      p_parts )
+    const std::string &   p_url,
+    const smtp::address & p_from )
 {
   do_if_idle(
       [ & ]()
@@ -116,50 +113,12 @@ SMTP & SMTP::SEND(
         // Set MAIL FROM
         ok = ok && easy_setopt( m_curl, CURLOPT_MAIL_FROM, p_from.get_addr_spec().c_str() ); // doesn't have to be persistent
         //
-        // Set RCPT TO
-        ok = ok && fill_recipients( p_to ); // can set m_response_code
-        //
-        // Set body
-        ok = ok && fill_headers( p_subject, p_from, p_to ); // set extra headers (including From and To),  can set m_response_code
-        ok = ok && fill_body_mime( p_parts );               // can set m_response_code
-        //
         if ( ! ok && m_response_code == c_success )
           m_response_code = c_error_url_set;
+        //
+        m_request_sender = p_from; // may be used later if adding a MIME body
       } );
-  return *this;
-}
-
-//--------------------------------------------------------------------
-// Send a simple, raw, email.
-// p_body should be a rfc5322 message.
-SMTP & SMTP::SEND(
-    const std::string &      p_url,
-    const smtp::address &    p_from,
-    const smtp::recipients & p_to,
-          std::string &&     p_body )
-{
-  do_if_idle(
-      [ & ]()
-      {
-        clear(); // clear Wrapper and SMTP
-        //
-        bool ok = true;
-        //
-        // Set URL
-        ok = ok && easy_setopt( m_curl, CURLOPT_URL, p_url.c_str() ); // doesn't have to be persistent
-        //
-        // Set MAIL FROM
-        ok = ok && easy_setopt( m_curl, CURLOPT_MAIL_FROM, p_from.get_addr_spec().c_str() ); // doesn't have to be persistent
-        //
-        // Set RCPT TO
-        ok = ok && fill_recipients( p_to ); // can set m_response_code
-        //
-        // Set body
-        ok = ok && fill_body( std::move( p_body ) ); // can set m_response_code
-        //
-        if ( ! ok && m_response_code == c_success )
-          m_response_code = c_error_url_set;
-      } );
+  //
   return *this;
 }
 
@@ -175,6 +134,55 @@ SMTP & SMTP::add_headers( const key_values & p_headers )
     //
     if ( ! ok && m_response_code == c_success )
           m_response_code = c_error_headers_set;
+  } );
+  //
+  return *this;
+}
+
+//--------------------------------------------------------------------
+// Set MIME parts to the body of the request
+SMTP & SMTP::set_mime(
+    const smtp::recipients & p_to,
+    const std::string &      p_subject,
+    const mime::parts &      p_parts )
+{
+  do_if_idle( [ & ]() {
+    ASSERT_RETURN_VOID( m_curl_mime == nullptr && request_body().empty() ); // avoid setting body twice
+    //
+    bool ok = true;
+    //
+    // Set RCPT TO
+    ok = ok && fill_recipients( p_to ); // can set m_response_code
+    //
+    // Set body
+    ok = ok && fill_headers( p_subject, m_request_sender, p_to ); // set extra headers (including From and To),  can set m_response_code
+    ok = ok && fill_body_mime( p_parts );                         // can set m_response_code
+    //
+    if ( ! ok && m_response_code == c_success )
+      m_response_code = c_error_mime_set;
+  } );
+  //
+  return *this;
+}
+
+//--------------------------------------------------------------------
+// Set a raw body
+SMTP & SMTP::set_body( const smtp::recipients & p_to,
+                             std::string &&     p_body )
+{
+  do_if_idle( [ & ]() {
+    ASSERT_RETURN_VOID( m_curl_mime == nullptr && request_body().empty() ); // avoid setting body twice
+    //
+    bool ok = true;
+    //
+    // Set RCPT TO
+    ok = ok && fill_recipients( p_to ); // can set m_response_code
+    //
+    // Set body
+    ok = ok && fill_body( std::move( p_body ) ); // can set m_response_code
+    //
+    if ( ! ok && m_response_code == c_success )
+      m_response_code = c_error_body_set;
   } );
   //
   return *this;
