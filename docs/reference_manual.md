@@ -21,9 +21,11 @@ or `curlev/smtp.hpp`.
 
 # Starting
 
-The `libcurl` and `libuv` libraries must be started before any other operations,
-usually when the application starts. Usually a single instance of `ASync` is needed,
-but several can be created if needed. An instance is started using:
+An instance of `ASync` must be started before any other operations,
+usually when the application starts.
+A single instance of `ASync` is usually needed,
+but several can be created if needed.
+An instance is started using:
 
 ```cpp
 m_async.start();
@@ -48,7 +50,7 @@ http->GET( c_server + "get" ).exec().get_code();
 async.stop();
 ```
 
-causes a leak because `http` (which holds an easy curl handle) still exist
+causes a leak because `http` (which holds an easy curl handle) still exists
 when `ASync` (and libcurl) is stopped (technically `curl_share_cleanup` is called
 while a `CURL` handle still has a reference on the `CURLSH` handle).
 
@@ -56,6 +58,7 @@ while a `CURL` handle still has a reference on the `CURLSH` handle).
 
 The default configuration of the various protocol instances can be set in `ASync` using
 the three methods `options()`, `authentication()` and `certificates()`.
+When `HTTP` and `SMTP` instances are later created, they will use it.
 
 ### Authentication
 
@@ -160,17 +163,17 @@ a body. These methods expect an URL and an optional map of parameters
 to send in the query string. One of the following method must then be
 called to specify the body:
 
-1. set_body           to pass a raw body
-2. set_parameters     to add body parameters as `application/x-www-form-urlencoded`
-3. set_mime           to pass MIME parts
+1. set_body        to pass a raw body
+2. set_parameters  to add body parameters as `application/x-www-form-urlencoded`
+3. set_mime        to pass MIME parts
 
 Then, if needed, one or several of the following configuration methods
-are available:
+can be invoked:
 
-- `add_headers( headers )`:         add headers
-- `authentication( auth_string )`:  set authentication
-- `options( opt_string )`:          set options
-- `certificates( cert_string )`:    set SSL certificates
+- `add_headers( headers )`         to add headers
+- `authentication( auth_string )`  to set authentication
+- `options( opt_string )`          to set options
+- `certificates( cert_string )`    to set SSL certificates
 
 Examples:
 
@@ -208,7 +211,7 @@ std::cout << http->get_code() << " " << http->get_body() << std::endl;
 ### Adding headers and parameters
 
 The optional query parameters of the HTTP methods,
-and the `add_headers()` and `set_parameters` methods
+and the `add_headers()` and `set_parameters()` methods
 expect an unordered map of keys/parameters and values
 known as `curlev::key_values`.
 
@@ -252,7 +255,7 @@ The same three methods `options()`, `authentication()` and `certificates()` pres
 
 They use the same syntax.
 
-## Executing the request
+## Executing the HTTP request
 
 Once the request is ready, it can be started using `start()`.
 The request then runs asynchronously. This method accepts a callback function
@@ -267,9 +270,10 @@ Or a `std::future` can be retrieved using `launch()`.
 While a request is running, all methods except `join()` are ignored
 (as a side effect `exec()` behaves like `join()`).
 
-The `HTTP` object can be configured to retry automatically if the request
-fails, if there no risk that the request has been executed (it retries
-on connection error, not on timeout). The method to use is `set_retries()`.
+The `HTTP` object can be configured to retry automatically if the request fails,
+and if there no risk that the request has been partially or totally executed
+(it retries on connection error, not on timeout).
+The method to use is `set_retries()`, it is disabled by default.
 
 ### Callback
 
@@ -318,8 +322,8 @@ Note: headers are available a case insensitive unsorted map, allowing
 to retrieve a header independently of its case:
 
 ```cpp
-  auto ct = http->get_headers().at( "Content-Type" );
-  auto ct = http->get_headers().at( "content-type" );
+auto ct = http->get_headers().at( "Content-Type" );
+auto ct = http->get_headers().at( "content-type" );
 ```
 
 ### REST
@@ -328,7 +332,7 @@ If `curlev` was compiled with RapidJSON or nlohmann/json, the `HTTP` object
 has an extra method `get_json()`, which retrieve either a `rapidjson::Document`
 or a `nlohmann::json`.
 
-This method returns false if the parsing of the received by fails.
+This method returns `false` if the parsing of the received by fails.
 
 ```cpp
 nlohmann::json json;
@@ -450,14 +454,14 @@ auto smtp = SMTP::create( async );  // async is the instance of ASync
 ## Building the request
 
 On the `SMTP` object, you must first call the `SEND()` method
-to start a new email request session:
+to start a new email request session.
 
 Then you can either add a MIME body or a raw body using `set_mime` or
 `set_body`.
 
-If adding a MIME body, it is possible to  add custom headers
+If adding a MIME body, it is possible to add custom headers
 using `add_headers()` which expects an unordered map of keys
-and values known as `curlev::key_values`.
+and values (a `curlev::key_values` object).
 
 ```cpp
 smtp->add_headers( { { "Priority", "urgent" } } );
@@ -472,7 +476,8 @@ The `smtp::address` struct accepts email addresses with or without display names
 - `<mary@x.test>`
 - `mary@x.test`
 
-`smtp::address` also accepts the recipient mode (To, Cc, or Bcc).
+`smtp::address` also accepts the recipient mode (To, Cc, or Bcc)
+as an extra parameter.
 This is only used with the [1] form of SEND since this is part of
 the RFC5322 body message, and not of SMTP.
 
@@ -521,13 +526,13 @@ and certificates: `options()`, `authentication()` and `certificates()`.
 
 They use the same syntax.
 
-## Executing the request
+## Executing the SMTP request
 
 Once the request is ready, it can be started using `start()` (asynchronous),
 `exec()` (synchronous), or `launch()` (future):
 
-See HTTP's `Executing the request` for more details.
-Executing the request](##-Executing-the-request)
+See HTTP's [Executing the request](##-Executing-the-HTTP-request)
+for more details.
 
 ## Retrieving the response
 
@@ -538,10 +543,15 @@ long code = smtp->get_code();
 ```
 
 Or, if using `launch()`, from the returned `response` struct:
+
 ```cpp
 auto resp = smtp->launch().get();
 long code = resp.code;
 ```
+
+## Aborting a request
+
+A request can be aborted while running by calling the `abort()` method.
 
 ## Example
 
