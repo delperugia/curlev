@@ -9,6 +9,7 @@ curlev
 [![Codecov](https://codecov.io/gh/delperugia/curlev/graph/badge.svg?token=339AIQXBS3)](https://codecov.io/gh/delperugia/curlev)
 ![MemorySanitizer](https://img.shields.io/badge/MemorySanitizer-enabled-blue)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10589/badge)](https://www.bestpractices.dev/projects/10589)
 
 A C++ library providing a flexible and easy-to-use interface for making Internet requests.
 It combines the power of `libcurl` for transfer operations with `libuv` for asynchronous I/O,
