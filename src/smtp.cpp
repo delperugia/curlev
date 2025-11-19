@@ -285,6 +285,7 @@ bool SMTP::fill_headers(
       case smtp::address::Mode::bcc: prefix = "Bcc: "; break;
       default:                       prefix = "To: " ; break;
     }
+    //
     ok = ok && curl_slist_checked_append( m_curl_headers, prefix + recipient.get_name_addr() );
   }
   //
