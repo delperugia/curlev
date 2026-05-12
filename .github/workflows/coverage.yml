@@ -44,7 +44,7 @@ jobs:
                --output-file build/coverage.info
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2
         with:
           files:          build/coverage.info
           disable_search: true
