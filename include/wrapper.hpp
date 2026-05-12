@@ -414,8 +414,10 @@ class Wrapper: public WrapperBase
       cb_protocol(); // invokes user's callback, clear m_user_cb
       //
       {
-        std::lock_guard lock( m_exec_mutex );
-        m_exec_state = State::idle;
+        {
+          std::lock_guard lock( m_exec_mutex );
+          m_exec_state = State::idle;
+        }
         m_exec_cv.notify_one(); // releases the join(): request is now terminated
       }
     }

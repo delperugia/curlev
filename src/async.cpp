@@ -966,9 +966,10 @@ void ASync::post_to_wrapper(
   //
   if ( ( *p_wrapper )->use_threaded_cb() ) // push it to CB queue for later delivery
   {
-    std::lock_guard lock( m_cb_mutex );
-    //
-    m_cb_queue.emplace_back( p_wrapper, p_result_code );
+    {
+      std::lock_guard lock( m_cb_mutex );
+      m_cb_queue.emplace_back( p_wrapper, p_result_code );
+    }
     m_cb_cv.notify_one();
   }
   else // call it now and here (in uv_run worker thread)
