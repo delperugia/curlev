@@ -57,10 +57,10 @@ while a `CURL` handle still has a reference on the `CURLSH` handle).
 ## Default configuration
 
 The default configuration of the various protocol instances can be set in `ASync` using
-the three methods `options()`, `authentication()` and `certificates()`.
+the three methods `authentication()`, `options()` and `certificates()`.
 When `HTTP` and `SMTP` instances are later created, they will use it.
 
-### Authentication
+### authentication()
 
 The string expected by `authentication()` is a key-value comma
 separated string with the following keys available:
@@ -75,7 +75,7 @@ For example:
 - mode=basic,user=joe,secret=abc123
 - mode=bearer,secret=ABCDEFHIJKLMNOQRSTUVWXYZ
 
-### Options
+### options()
 
 The string expected by `options()` is a key-value comma
 separated string with the following keys available:
@@ -104,7 +104,7 @@ Notes:
 - proxy:              see https://curl.se/libcurl/c/CURLOPT_PROXY.html
 - follow_location:    see modes in https://curl.se/libcurl/c/CURLOPT_FOLLOWLOCATION.html
 
-### Certificates
+### certificates()
 
 The string expected by `certificates()` is a key-value comma
 separated string with the following keys available:
@@ -168,12 +168,16 @@ called to specify the body:
 3. set_mime        to pass MIME parts
 
 Then, if needed, one or several of the following configuration methods
-can be invoked:
+can be invoked to override the defaults set in `ASync`:
 
-- `add_headers( headers )`         to add headers
-- `authentication( auth_string )`  to set authentication
-- `options( opt_string )`          to set options
-- `certificates( cert_string )`    to set SSL certificates
+- `add_headers( headers )`               to add headers
+- `authentication( auth_string )`        to set authentication
+- `options( opt_string )`                to set options
+- `certificates( cert_string )`          to set SSL certificates
+and
+- `safe_protocols( protocols_string )`   to set the allowed protocols
+
+See below for more details.
 
 Examples:
 
@@ -254,6 +258,14 @@ The same three methods `options()`, `authentication()` and `certificates()` pres
 `ASync` are also present in `HTTP`, and allows to override the default configuration.
 
 They use the same syntax.
+
+### Allowed protocols
+
+The method `safe_protocols()` can be used to change the allowed protocols.
+It expect string that holds a comma separated string of protocols.
+The list of available protocols is available at https://curl.se/libcurl/c/CURLOPT_PROTOCOLS_STR.html
+
+Default allowed protocols are: `http,https`
 
 ## Executing the HTTP request
 
@@ -525,6 +537,14 @@ The same methods as in `ASync` are available to configure authentication, option
 and certificates: `options()`, `authentication()` and `certificates()`.
 
 They use the same syntax.
+
+## Allowed protocols
+
+The method `safe_protocols()` can be used to change the allowed protocols.
+It expect string that holds a comma separated string of protocols.
+The list of available protocols is available at https://curl.se/libcurl/c/CURLOPT_PROTOCOLS_STR.html
+
+Default allowed protocols are: `smtp,smtps`
 
 ## Executing the SMTP request
 

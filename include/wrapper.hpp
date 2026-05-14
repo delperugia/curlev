@@ -32,6 +32,7 @@ constexpr long c_error_certificates_format        = -22; // bad certificates for
 constexpr long c_error_certificates_set           = -23; // bad certificates value
 constexpr long c_error_options_format             = -24; // bad options format string
 constexpr long c_error_options_set                = -25; // bad option value
+constexpr long c_error_safe_protocols_set         = -26; // bad protocols
 
 constexpr long c_error_user_callback              = -30; // callback crashed
 constexpr long c_error_url_set                    = -31; // error setting URL (and method/parameters)
@@ -150,9 +151,10 @@ class Wrapper: public WrapperBase
   public:
     using cb_user = std::function< void( const Protocol & ) >;
     //
-    explicit Wrapper( ASync & p_async ) :
-      WrapperBase(),
-      m_async( p_async )
+    explicit Wrapper( ASync & p_async, std::string p_safe_protocols ) :
+      WrapperBase     (),
+      m_safe_protocols( std::move( p_safe_protocols ) ),
+      m_async         ( p_async )
     {}
     //
     ~Wrapper() override
@@ -322,6 +324,17 @@ class Wrapper: public WrapperBase
       return static_cast< Protocol & >( *this );
     }
     //
+    // Set the allowed list of protocols
+    Protocol & safe_protocols( const std::string & p_safe_protocols )
+    {
+      do_if_idle( [ & ]() {
+        if ( m_response_code == c_success )
+          m_safe_protocols = p_safe_protocols;
+      } );
+      //
+      return static_cast< Protocol & >( *this );
+    }
+    //
     // Accessors
     long get_code() const noexcept { return is_running() ? c_running : m_response_code; };
     //
@@ -332,6 +345,7 @@ class Wrapper: public WrapperBase
     Options        m_options;
     Authentication m_authentication;
     Certificates   m_certificates;
+    std::string    m_safe_protocols;
     //
     // Reset the protocol before starting a new transfer.
     // m_exec_state must be idle and m_exec_mutex locked (use do_if_idle).
@@ -392,6 +406,13 @@ class Wrapper: public WrapperBase
       if ( ! m_certificates.apply( m_curl ) )
       {
         m_response_code = c_error_certificates_set;
+        return false;
+      }
+      //
+      if ( ! easy_setopt( m_curl, CURLOPT_PROTOCOLS_STR      , m_safe_protocols.c_str() ) ||
+           ! easy_setopt( m_curl, CURLOPT_REDIR_PROTOCOLS_STR, m_safe_protocols.c_str() ) )
+      {
+        m_response_code = c_error_safe_protocols_set;
         return false;
       }
       //

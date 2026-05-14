@@ -89,7 +89,7 @@ public:
   //
 protected:
   // Prevent creating directly an instance of the class, the Wrapper::create() method must be used
-  explicit SMTP( ASync & p_async ) : Wrapper< SMTP >( p_async ) {};
+  explicit SMTP( ASync & p_async ) : Wrapper< SMTP >( p_async, "smtp,smtps" ) {};
   //
   // Called by Wrapper before starting a request
   bool prepare_protocol() override;

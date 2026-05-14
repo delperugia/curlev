@@ -105,7 +105,7 @@ public:
   //
 protected:
   // Prevent creating directly an instance of the class, the Wrapper::create() method must be used
-  explicit HTTP( ASync & p_async ) : Wrapper< HTTP >( p_async ) {};
+  explicit HTTP( ASync & p_async ) : Wrapper< HTTP >( p_async, "http,https" ) {};
   //
   // Called by Wrapper before starting a request
   bool prepare_protocol() override;
