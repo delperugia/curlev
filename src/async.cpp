@@ -59,7 +59,7 @@ ASync::~ASync()
 }
 
 //--------------------------------------------------------------------
-// Must be called at least once before doing calling any other function of curlev.
+// Must be called at least once before calling any other function of curlev.
 // Start curl, share and multi, then UV and its worker thread.
 bool ASync::start()
 {

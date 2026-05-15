@@ -100,24 +100,22 @@ SMTP & SMTP::SEND(
     const std::string &   p_url,
     const smtp::address & p_from )
 {
-  do_if_idle(
-      [ & ]()
-      {
-        clear(); // clear Wrapper and SMTP
-        //
-        bool ok = true;
-        //
-        // Set URL
-        ok = ok && easy_setopt( m_curl, CURLOPT_URL, p_url.c_str() ); // doesn't have to be persistent
-        //
-        // Set MAIL FROM
-        ok = ok && easy_setopt( m_curl, CURLOPT_MAIL_FROM, p_from.get_addr_spec().c_str() ); // doesn't have to be persistent
-        //
-        if ( ! ok && m_response_code == c_success )
-          m_response_code = c_error_url_set;
-        //
-        m_request_sender = p_from; // may be used later if adding a MIME body
-      } );
+  do_if_idle( [ & ]()
+    {
+      clear(); // clear Wrapper and SMTP
+      //
+      bool ok = true;
+      //
+      ok = ok &&
+            easy_setopt( m_curl, CURLOPT_URL      , p_url.c_str()                  ); // doesn't have to be persistent
+      ok = ok &&
+            easy_setopt( m_curl, CURLOPT_MAIL_FROM, p_from.get_addr_spec().c_str() ); // doesn't have to be persistent
+      //
+      if ( ! ok && m_response_code == c_success )
+        m_response_code = c_error_url_set;
+      //
+      m_request_sender = p_from; // may be used later if adding a MIME body
+  } );
   //
   return *this;
 }
@@ -126,14 +124,16 @@ SMTP & SMTP::SEND(
 // Add headers to the email
 SMTP & SMTP::add_headers( const key_values & p_headers )
 {
-  do_if_idle( [ & ]() {
-    bool ok = true;
-    //
-    for ( const auto & header : p_headers )
-      ok = ok && curl_slist_checked_append( m_curl_headers, header.first + ": " + header.second );
-    //
-    if ( ! ok && m_response_code == c_success )
-          m_response_code = c_error_headers_set;
+  do_if_idle( [ & ]()
+    {
+      bool ok = true;
+      //
+      for ( const auto & header : p_headers )
+        ok = ok &&
+              curl_slist_checked_append( m_curl_headers, header.first + ": " + header.second );
+      //
+      if ( ! ok && m_response_code == c_success )
+        m_response_code = c_error_headers_set;
   } );
   //
   return *this;

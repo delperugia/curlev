@@ -20,19 +20,22 @@ HTTP::~HTTP()
 // Setup the request with the method and URL, possibly with query parameters
 HTTP & HTTP::REQUEST( const std::string & p_method, std::string p_url, const key_values & p_query_parameters )
 {
-  do_if_idle( [ & ]() {
-    clear(); // clear Wrapper and HTTP
-    //
-    bool already_has_parameters = p_url.rfind( '?' ) != std::string::npos;
-    append_url_encoded( p_url, p_query_parameters, already_has_parameters ? '&' : '?' );
-    //
-    bool ok = true;
-    //
-    ok = ok && easy_setopt( m_curl, CURLOPT_CUSTOMREQUEST, p_method.c_str() ); // doesn't have to be persistent
-    ok = ok && easy_setopt( m_curl, CURLOPT_URL          , p_url   .c_str() ); // doesn't have to be persistent
-    //
-    if ( ! ok && m_response_code == c_success )
-      m_response_code = c_error_url_set;
+  do_if_idle( [ & ]()
+    {
+      clear(); // clear Wrapper and HTTP
+      //
+      bool already_has_parameters = p_url.rfind( '?' ) != std::string::npos;
+      append_url_encoded( p_url, p_query_parameters, already_has_parameters ? '&' : '?' );
+      //
+      bool ok = true;
+      //
+      ok = ok &&
+            easy_setopt( m_curl, CURLOPT_CUSTOMREQUEST, p_method.c_str() ); // doesn't have to be persistent
+      ok = ok &&
+            easy_setopt( m_curl, CURLOPT_URL          , p_url.c_str()    ); // doesn't have to be persistent
+      //
+      if ( ! ok && m_response_code == c_success )
+        m_response_code = c_error_url_set;
   } );
   //
   return *this;
@@ -42,14 +45,16 @@ HTTP & HTTP::REQUEST( const std::string & p_method, std::string p_url, const key
 // Add headers to the request
 HTTP & HTTP::add_headers( const key_values & p_headers )
 {
-  do_if_idle( [ & ]() {
-    bool ok = true;
-    //
-    for ( const auto & header : p_headers )
-      ok = ok && curl_slist_checked_append( m_curl_headers, header.first + ": " + header.second );
-    //
-    if ( ! ok && m_response_code == c_success )
-      m_response_code = c_error_headers_set;
+  do_if_idle( [ & ]()
+    {
+      bool ok = true;
+      //
+      for ( const auto & header : p_headers )
+        ok = ok &&
+              curl_slist_checked_append( m_curl_headers, header.first + ": " + header.second );
+      //
+      if ( ! ok && m_response_code == c_success )
+        m_response_code = c_error_headers_set;
   } );
   //
   return *this;
