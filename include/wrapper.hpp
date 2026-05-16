@@ -230,8 +230,7 @@ class Wrapper: public WrapperBase
       {
         std::unique_lock lock( m_exec_mutex );
         //
-        if ( m_exec_state != State::idle )
-          m_exec_cv.wait( lock ); // wait for the end of the async processing
+        m_exec_cv.wait( lock, [ this ] { return m_exec_state == State::idle; } ); // wait for the end of the async processing
       }
       //
       return static_cast< Protocol & >( *this );
