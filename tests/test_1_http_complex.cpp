@@ -335,7 +335,7 @@ TEST( http_complex, two_start )
 }
 
 //--------------------------------------------------------------------
-TEST( http_complex, running )
+TEST( http_complex, state_running )
 {
   ASync async;
   async.start();
@@ -400,4 +400,26 @@ TEST( http_complex, retry )
   }
   //
   async.stop();
+}
+
+//--------------------------------------------------------------------
+// Request continues and ASync is stopped
+TEST( http_complex, destructor_running )
+{
+  bool forced = false;
+  //
+  {
+    ASync async;
+    async.start();
+    //
+    {
+      HTTP::create( async )
+          ->GET( c_server_httpbun + "delay/1" )
+          .start();
+    }
+    //
+    forced = async.stop( 50 ); // should wait for the end of all pending requests
+  }
+  //
+  EXPECT_TRUE( forced );
 }

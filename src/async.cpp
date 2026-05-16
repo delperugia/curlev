@@ -7,6 +7,7 @@
 #include <cstring>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "async.hpp"
 #include "wrapper.hpp"
@@ -91,6 +92,12 @@ bool ASync::start()
 bool ASync::stop( unsigned p_timeout_ms )
 {
   bool forced = ! wait_pending_requests( p_timeout_ms );
+  //
+  if ( forced )
+  {
+    abort_pending_requests();
+    wait_pending_requests( c_default_network_timeout_ms );
+  }
   //
   uv_clear();
   cb_clear();
@@ -192,6 +199,7 @@ bool ASync::start_request( CURL * p_curl, void * p_protocol_cb )
   // Added for the next uv_run() (in worker thread of uv_init())
   if ( curl_multi_add_handle( m_multi_handle, p_curl ) == CURLM_OK ) // ok on nullptr
   {
+    m_multi_requests_started.insert( p_curl );
     m_uv_run_cv.notify_one();
     return true;
   }
@@ -373,6 +381,75 @@ void ASync::multi_clear()
 {
   curl_multi_cleanup( m_multi_handle ); // ok on nullptr
   m_multi_handle = nullptr;
+}
+
+//--------------------------------------------------------------------
+// Abort all pending requests before ASync resources are destroyed.
+
+// Abort one request waiting to reattempt
+void ASync::abort_retrying_request( wrapper_shared_ptr_ptr & p_wrapper ) // NOLINT( readability-function-cognitive-complexity )
+{
+  auto & retry_timer = ( *p_wrapper )->m_retry_uv_timer;
+  //
+  uv_timer_stop( &retry_timer );
+  //
+  if ( uv_is_closing( reinterpret_cast< uv_handle_t * >( &retry_timer ) ) == 0 ) // NOLINT( cppcoreguidelines-pro-type-reinterpret-cast )
+  {
+    uv_close(
+        reinterpret_cast< uv_handle_t * >( &retry_timer ), // NOLINT( cppcoreguidelines-pro-type-reinterpret-cast )
+        []( uv_handle_t * handle )
+        {
+          ASSERT_RETURN_VOID( handle             != nullptr &&
+                              handle->data       != nullptr &&
+                              handle->loop       != nullptr &&
+                              handle->loop->data != nullptr ); // not possible
+          //
+          auto * closed_curl    = static_cast< CURL *  >( handle->data );
+          auto * self           = static_cast< ASync * >( handle->loop->data );
+          auto * closed_wrapper = ASync::get_wrapper_from_curl( closed_curl );
+          //
+          ASSERT_RETURN_VOID( closed_wrapper != nullptr && *closed_wrapper ); // not possible, since it was there above, post_to_wrapper must have already be called
+          //
+          self->post_to_wrapper( closed_curl, closed_wrapper, CURLE_ABORTED_BY_CALLBACK );
+        } );
+  }
+}
+
+// Abort one request
+// Similar to abort_request
+void ASync::abort_started_request( wrapper_shared_ptr_ptr & p_wrapper, CURL * p_curl )
+{
+  curl_multi_remove_handle( m_multi_handle, p_curl );
+  //
+  post_to_wrapper( p_curl, p_wrapper, CURLE_ABORTED_BY_CALLBACK );
+}
+
+// Loop on all requests
+void ASync::abort_pending_requests()
+{
+  {
+    std::lock_guard lock( m_uv_run_mutex );
+    //
+    std::vector< CURL * > requests;
+    requests.assign( m_multi_requests_started.begin(), m_multi_requests_started.end() );
+    //
+    for ( auto * curl : requests )
+    {
+      auto * wrapper = get_wrapper_from_curl( curl );
+      if ( wrapper == nullptr || ! *wrapper )            // not possible
+        continue;
+      //
+      if ( m_multi_requests_retrying.erase( curl ) > 0 ) // it was waiting to retry
+        abort_retrying_request( wrapper );               // modifies m_multi_requests_started
+      else
+        abort_started_request( wrapper, curl );          // modifies m_multi_requests_started
+    }
+    //
+    multi_update_running_stats( 0 );
+  }
+  //
+  m_uv_run_cv.notify_one();
+  m_cb_cv.notify_one();
 }
 
 //--------------------------------------------------------------------
@@ -598,6 +675,7 @@ void ASync::uv_run_wait_requests( std::unique_lock< std::mutex > & p_lock ) cons
 }
 
 //--------------------------------------------------------------------
+// m_uv_run_mutex must be locked.
 void ASync::multi_update_running_stats( int p_running_handles )
 {
   int previous = m_multi_running_max.load();
@@ -672,8 +750,13 @@ void ASync::uv_restart_cb( uv_timer_t * p_handle ) // NOLINT( readability-functi
                             handle->loop       != nullptr &&
                             handle->loop->data != nullptr ); // not possible
         //
-        auto * curl = static_cast< CURL *  >( handle->data );
+        auto * curl = static_cast< CURL *  >( handle->data       );
         auto * self = static_cast< ASync * >( handle->loop->data );
+        //
+        self->m_multi_requests_retrying.erase( curl );
+        //
+        if ( ASync::get_wrapper_from_curl( curl ) == nullptr )
+          return;
         //
         // Re-post the request
         if ( curl_multi_add_handle( self->m_multi_handle, curl ) == CURLM_OK ) // ok on nullptr
@@ -940,7 +1023,10 @@ void ASync::request_completed( CURL * p_curl, long p_result_code )
                                     ( *wrapper )->get_retry_delay_ms(), 0 );
     //
     if ( ok )
+    {
+      m_multi_requests_retrying.insert( p_curl );
       return;
+    }
     //
     // Keep the original result code if the restart fails
   }
@@ -959,6 +1045,9 @@ void ASync::post_to_wrapper(
     long                     p_result_code )
 {
   ASSERT_RETURN_VOID( p_curl != nullptr ); // not possible
+  //
+  m_multi_requests_started .erase( p_curl );
+  m_multi_requests_retrying.erase( p_curl );
   //
   curl_easy_setopt( p_curl, CURLOPT_PRIVATE, nullptr ); // set when Wrapper start(), cleared here
   //

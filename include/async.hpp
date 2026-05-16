@@ -12,6 +12,7 @@
 #include <deque>
 #include <mutex>
 #include <pthread.h>
+#include <set>
 #include <shared_mutex>
 #include <thread>
 #include <uv.h>
@@ -150,9 +151,11 @@ private:
   //
   // libcurl multi interface - enable multiple simultaneous transfers in the same thread
   //
-  CURLM *         m_multi_handle          = nullptr;
-  std::atomic_int m_multi_running_max     = 0; // maximum simultaneous requests reached
-  std::atomic_int m_multi_running_current = 0; // current simultaneous request
+  CURLM *            m_multi_handle          = nullptr;
+  std::atomic_int    m_multi_running_max     = 0; // maximum simultaneous requests reached
+  std::atomic_int    m_multi_running_current = 0; // current simultaneous request
+  std::set< CURL * > m_multi_requests_started;    // easy handles currently owned by multi/retry
+  std::set< CURL * > m_multi_requests_retrying;   // easy handles waiting on their retry timer
   //
   bool       multi_init ();
   void       multi_clear();
@@ -239,6 +242,10 @@ private:
   //
   // Retrieve the Wrapper from the curl handle
   static wrapper_shared_ptr_ptr get_wrapper_from_curl( CURL * p_curl );
+  //
+  static void abort_retrying_request( wrapper_shared_ptr_ptr & p_wrapper );
+         void abort_started_request ( wrapper_shared_ptr_ptr & p_wrapper, CURL * p_curl );
+         void abort_pending_requests();
 };
 
 } // namespace curlev
