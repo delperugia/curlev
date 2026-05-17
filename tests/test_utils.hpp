@@ -8,6 +8,7 @@
 #include <string>
 
 extern std::string c_server_httpbun;
+extern std::string c_server_httpbin;
 extern std::string c_server_compress;
 extern std::string c_server_certificates;
 

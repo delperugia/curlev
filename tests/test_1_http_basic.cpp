@@ -502,11 +502,11 @@ TEST( http_basic, protocols )
     long code;
     //
     code = http->GET( "file://" PROJECT_ROOT_DIR "/tests/data.txt" ).exec().get_code(); // error
-    EXPECT_EQ( code, CURLE_UNSUPPORTED_PROTOCOL );
+    ASSERT_EQ( code, CURLE_UNSUPPORTED_PROTOCOL );
     //
     code = http->GET( "file://" PROJECT_ROOT_DIR "/tests/data.txt" ).safe_protocols("file").exec().get_code(); // error
     ASSERT_EQ( code, 0 );
-    EXPECT_TRUE( http->get_body().find( "abc123" ) != std::string::npos );
+    ASSERT_TRUE( http->get_body().find( "abc123" ) != std::string::npos );
   }
   //
   async.options( "follow_location=1,verbose=1" );
@@ -515,18 +515,18 @@ TEST( http_basic, protocols )
     auto http = HTTP::create( async );
     long code;
     //
-    code = http->GET( c_server_httpbun + "redirect", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
+    code = http->GET( c_server_httpbin + "redirect-to", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
                 .exec().get_code();
-    EXPECT_EQ( code, CURLE_UNSUPPORTED_PROTOCOL );
+    ASSERT_EQ( code, CURLE_UNSUPPORTED_PROTOCOL );
     //
-    code = http->GET( c_server_httpbun + "redirect", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
+    code = http->GET( c_server_httpbin + "redirect-to", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
                 .safe_protocols("file").exec().get_code();
     ASSERT_EQ( code, CURLE_UNSUPPORTED_PROTOCOL );
     //
-    code = http->GET( c_server_httpbun + "redirect", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
+    code = http->GET( c_server_httpbin + "redirect-to", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
                 .safe_protocols("http,https,file").exec().get_code();
     ASSERT_EQ( code, 302 ); // last HTTP response, CURLE_FILE_COULDNT_READ_FILE on file error
-    EXPECT_TRUE( http->get_body().find( "abc123" ) != std::string::npos );
+    ASSERT_TRUE( http->get_body().find( "abc123" ) != std::string::npos );
   }
   //
   async.stop();

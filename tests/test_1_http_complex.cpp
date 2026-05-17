@@ -144,11 +144,11 @@ TEST( http_complex, redirect )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->GET( c_server_httpbun + "redirect", { { "url", "http://somewhere.com/" } } )
+    auto code = http->GET( c_server_httpbun + "redirect", { { "url", "http://example.com/" } } )
                      .exec().get_code();
     ASSERT_EQ( code, 302 );
     //
-    EXPECT_EQ(  http->get_redirect_url(), "http://somewhere.com/" );
+    EXPECT_EQ(  http->get_redirect_url(), "http://example.com/" );
   }
   //
   {
