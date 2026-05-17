@@ -310,7 +310,7 @@ class Wrapper: public WrapperBase
     }
     //
     // Set the maximal number of retries and delay between retries in milliseconds
-    Protocol & set_retries(unsigned p_retries, unsigned p_delay_ms)
+    Protocol & maximum_retries(unsigned p_retries, unsigned p_delay_ms)
     {
       do_if_idle( [ & ]() {
         if ( m_response_code == c_success )

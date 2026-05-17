@@ -285,7 +285,7 @@ While a request is running, all methods except `join()` are ignored
 The `HTTP` object can be configured to retry automatically if the request fails,
 and if there no risk that the request has been partially or totally executed
 (it retries on connection error, not on timeout).
-The method to use is `set_retries()`, it is disabled by default.
+The method to use is `maximum_retries()`, it is disabled by default.
 
 ### Callback
 

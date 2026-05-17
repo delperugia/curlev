@@ -403,7 +403,7 @@ TEST( http_complex, retry )
     auto http  = HTTP::create( async );
     auto code  =
         http->GET( "http://localhost:9999/" )
-            .set_retries( 10, 200 ) // 10 * 200ms = 2s
+            .maximum_retries( 10, 200 ) // 10 * 200ms = 2s
             .exec()
             .get_code();
     auto duration_ns = uv_hrtime() - start; // in nanoseconds
