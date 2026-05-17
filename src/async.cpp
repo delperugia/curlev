@@ -868,11 +868,14 @@ size_t ASync::curl_cb_read( void * p_ptr, size_t p_size, size_t p_nmemb, void * 
   ASSERT_RETURN( p_userdata != nullptr, CURL_READFUNC_ABORT );
   //
   auto * protocol = static_cast< WrapperBase * >( p_userdata );
+  size_t size;
+  if ( __builtin_mul_overflow( p_size, p_nmemb, &size ) )
+    return CURL_READFUNC_ABORT;
   //
   ASSERT_RETURN( protocol->m_request_body.size() > protocol->m_request_body_sent, CURL_READFUNC_ABORT );
   //
   auto to_read = std::min(
-      p_size * p_nmemb,                                                  // requested
+      size,                                                              // requested
       protocol->m_request_body.size() - protocol->m_request_body_sent ); // remaining
   //
   // FlawFinder reports a CWE-120, but to_read is properly calculated above
@@ -910,8 +913,10 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
 {
   ASSERT_RETURN( p_userdata != nullptr, CURL_WRITEFUNC_ERROR );
   //
-  auto *     protocol = static_cast< WrapperBase * >( p_userdata );
-  const auto to_add   = p_size * p_nmemb;
+  auto * protocol = static_cast< WrapperBase * >( p_userdata );
+  size_t size;
+  if ( __builtin_mul_overflow( p_size, p_nmemb, &size ) )
+    return CURL_WRITEFUNC_ERROR;
   //
   // Reserve buffer if content-length is known and not yet reserved
   if ( protocol->m_header_content_length > 0 )
@@ -925,19 +930,19 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
   }
   //
   // Prevent exceeding max response size
-  if ( protocol->m_response_body.size() + to_add > protocol->get_max_response_size() )
+  if ( protocol->m_response_body.size() + size > protocol->get_max_response_size() )
     return CURL_WRITEFUNC_ERROR;
   //
   try
   {
-    protocol->m_response_body.append( p_ptr, to_add );
+    protocol->m_response_body.append( p_ptr, size );
   }
   catch ( ... )
   {
     return CURL_WRITEFUNC_ERROR;
   }
   //
-  return to_add;
+  return size;
 }
 
 //--------------------------------------------------------------------
