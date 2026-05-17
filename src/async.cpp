@@ -868,7 +868,7 @@ size_t ASync::curl_cb_read( void * p_ptr, size_t p_size, size_t p_nmemb, void * 
   ASSERT_RETURN( p_userdata != nullptr, CURL_READFUNC_ABORT );
   //
   auto * protocol = static_cast< WrapperBase * >( p_userdata );
-  size_t size;
+  size_t size     = 0;
   if ( __builtin_mul_overflow( p_size, p_nmemb, &size ) )
     return CURL_READFUNC_ABORT;
   //
@@ -914,7 +914,7 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
   ASSERT_RETURN( p_userdata != nullptr, CURL_WRITEFUNC_ERROR );
   //
   auto * protocol = static_cast< WrapperBase * >( p_userdata );
-  size_t size;
+  size_t size     = 0;
   if ( __builtin_mul_overflow( p_size, p_nmemb, &size ) )
     return CURL_WRITEFUNC_ERROR;
   //

@@ -25,7 +25,7 @@ std::size_t hash_ci::operator()( const std::string & p_key ) const
   constexpr std::size_t multiplier = 31;
   std::size_t           hash       = 0;
   //
-  for ( char c : p_key )
+  for ( unsigned char c : p_key )
     hash = multiplier * hash + std::tolower( c ); // cppcheck-suppress useStlAlgorithm
   //
   return hash;
@@ -50,7 +50,7 @@ namespace
   // Appends to p_result the URL encoded string p_string
   void append_string_encoded( std::string & p_text, const std::string & p_string )
   {
-    for ( char c : p_string )
+    for ( unsigned char c : p_string )
     {
       if ( std::isalnum( c ) != 0 || c == '-' || c == '.' || c == '_' || c == '~' )
       {
