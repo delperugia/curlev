@@ -36,4 +36,9 @@ bool share_setopt( CURL * p_curl, CURLSHoption p_option, Type && p_parameter )
 // p_string must not be empty.
 bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_string );
 
+// Add a header to the list. The first time p_list must be set to nullptr.
+// p_list is updated at each call, and must be freed using curl_slist_free_all.
+// Ensure p_key and p_value can't cause header injection.
+bool curl_header_checked_append( curl_slist *& p_headers, std::string_view p_key, std::string_view p_value );
+
 } // namespace curlev

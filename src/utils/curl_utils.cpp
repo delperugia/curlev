@@ -4,6 +4,7 @@
  ********************************************************************/
 
 #include "utils/curl_utils.hpp"
+#include "utils/string_utils.hpp"
 
 namespace curlev
 {
@@ -25,6 +26,27 @@ bool curl_slist_checked_append( curl_slist *& p_list, const std::string & p_stri
   //
   p_list = temp;
   return true;
+}
+
+//--------------------------------------------------------------------
+// Add a header to the list. The first time p_list must be set to nullptr.
+// p_list is updated at each call, and must be freed using curl_slist_free_all.
+// Ensure p_key and p_value can't cause header injection.
+bool curl_header_checked_append(
+    curl_slist *&    p_headers,
+    std::string_view p_key,
+    std::string_view p_value )
+{
+  if ( ! is_safe_header_component( p_key ) || ! is_safe_header_component( p_value ) )
+    return false;
+  //
+  std::string result;
+  result.reserve( p_key.size() + 2 + p_value.size() );
+  result += p_key;
+  result += ": ";
+  result += p_value;
+  //
+  return curl_slist_checked_append( p_headers, result );
 }
 
 } // namespace curlev

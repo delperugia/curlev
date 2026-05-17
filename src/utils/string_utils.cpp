@@ -123,4 +123,11 @@ bool equal_ascii_ci( const std::string & p_a, const std::string & p_b )
          strcasecmp( p_a.c_str(), p_b.c_str() ) == 0;
 }
 
+//--------------------------------------------------------------------
+// Checks if the given string can be safely added in an header
+bool is_safe_header_component( std::string_view p_string )
+{
+  return p_string.find_first_of( "\r\n\0", 0, 3 ) == std::string_view::npos;
+}
+
 } // namespace curlev

@@ -50,8 +50,7 @@ HTTP & HTTP::add_headers( const key_values & p_headers )
       bool ok = true;
       //
       for ( const auto & header : p_headers )
-        ok = ok &&
-              curl_slist_checked_append( m_curl_headers, header.first + ": " + header.second );
+        ok = ok && curl_header_checked_append( m_curl_headers, header.first, header.second );
       //
       if ( ! ok && m_response_code == c_success )
         m_response_code = c_error_headers_set;
@@ -71,7 +70,7 @@ HTTP & HTTP::set_body( const std::string & p_content_type, std::string && p_body
     //
     bool ok = true;
     //
-    ok = ok && curl_slist_checked_append( m_curl_headers, "Content-Type: " + p_content_type );
+    ok = ok && curl_header_checked_append( m_curl_headers, "Content-Type", p_content_type );
     ok = ok && prepare_request_body(); // ASync will read from m_request_body
     //
     if ( ! ok && m_response_code == c_success )

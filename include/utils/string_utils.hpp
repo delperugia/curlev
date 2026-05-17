@@ -51,4 +51,7 @@ bool parse_cskv( std::string_view p_cskv, Callable && p_handler )
   return true;
 }
 
+// Checks if the given string can be safely added in an header
+bool is_safe_header_component( std::string_view p_string );
+
 } // namespace curlev

@@ -129,8 +129,7 @@ SMTP & SMTP::add_headers( const key_values & p_headers )
       bool ok = true;
       //
       for ( const auto & header : p_headers )
-        ok = ok &&
-              curl_slist_checked_append( m_curl_headers, header.first + ": " + header.second );
+        ok = ok && curl_header_checked_append( m_curl_headers, header.first, header.second );
       //
       if ( ! ok && m_response_code == c_success )
         m_response_code = c_error_headers_set;
@@ -271,9 +270,9 @@ bool SMTP::fill_headers(
 {
   bool ok = true;
   //
-  ok = ok && curl_slist_checked_append( m_curl_headers, "Date: "    + date()                 );
-  ok = ok && curl_slist_checked_append( m_curl_headers, "Subject: " + p_subject              );
-  ok = ok && curl_slist_checked_append( m_curl_headers, "From: "    + p_from.get_name_addr() );
+  ok = ok && curl_header_checked_append( m_curl_headers, "Date"   , date()                 );
+  ok = ok && curl_header_checked_append( m_curl_headers, "Subject", p_subject              );
+  ok = ok && curl_header_checked_append( m_curl_headers, "From"   , p_from.get_name_addr() );
   //
   for ( const auto & recipient : p_recipients )
   {
@@ -281,12 +280,12 @@ bool SMTP::fill_headers(
     //
     switch( recipient.mode )
     {
-      case smtp::address::Mode::cc:  prefix = "Cc: " ; break;
-      case smtp::address::Mode::bcc: prefix = "Bcc: "; break;
-      default:                       prefix = "To: " ; break;
+      case smtp::address::Mode::cc:  prefix = "Cc" ; break;
+      case smtp::address::Mode::bcc: prefix = "Bcc"; break;
+      default:                       prefix = "To" ; break;
     }
     //
-    ok = ok && curl_slist_checked_append( m_curl_headers, prefix + recipient.get_name_addr() );
+    ok = ok && curl_header_checked_append( m_curl_headers, prefix, recipient.get_name_addr() );
   }
   //
   if ( ! ok && m_response_code == c_success )

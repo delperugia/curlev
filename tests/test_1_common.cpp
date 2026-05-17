@@ -319,3 +319,44 @@ TEST( common, url_encode )
   EXPECT_EQ( enc( "", {{ "C++ > Java"        , "x" }}, 0, 0), "C%2B%2B%20%3E%20Java=x");
   EXPECT_EQ( enc( "", {{ "already%20encoded" , "x" }}, 0, 0), "already%2520encoded=x");
 }
+
+  //--------------------------------------------------------------------
+  TEST( common, is_valid_header_component )
+  {
+    EXPECT_TRUE( curlev::is_safe_header_component( "Header" ) );
+    EXPECT_TRUE( curlev::is_safe_header_component( "Value123" ) );
+    EXPECT_TRUE( curlev::is_safe_header_component( "!#$%&'*+-.^_`|~" ) );
+    EXPECT_TRUE( curlev::is_safe_header_component( "" ) );
+    EXPECT_TRUE( curlev::is_safe_header_component( "abc def" ) );
+    //
+    EXPECT_FALSE( curlev::is_safe_header_component( "Header\rName" ) );
+    EXPECT_FALSE( curlev::is_safe_header_component( "Header\nName" ) );
+    EXPECT_FALSE( curlev::is_safe_header_component( std::string("Header\0Name", 11) ) );
+  }
+
+  //--------------------------------------------------------------------
+  TEST( common, curl_header_checked_append )
+  {
+    using curlev::curl_header_checked_append;
+    curl_slist * slist = nullptr;
+    //
+    EXPECT_TRUE( curl_header_checked_append( slist, "Key", "Value" ) );
+    ASSERT_NE( slist, nullptr );
+    EXPECT_STREQ( slist->data, "Key: Value" );
+    //
+    curl_slist * before = slist;
+    EXPECT_FALSE( curl_header_checked_append( slist, "Inva\rKey", "Value" ) );
+    EXPECT_EQ( slist, before );
+    //
+    EXPECT_FALSE( curl_header_checked_append( slist, "Key", "Inva\nValue" ) );
+    EXPECT_EQ( slist, before );
+    //
+    EXPECT_FALSE( curl_header_checked_append( slist, "Inva\rKey", "Inva\nValue" ) );
+    EXPECT_EQ( slist, before );
+    //
+    EXPECT_TRUE( curl_header_checked_append( slist, "Another", "Header" ) );
+    ASSERT_NE( slist->next, nullptr );
+    EXPECT_STREQ( slist->next->data, "Another: Header" );
+    //
+    curl_slist_free_all( slist );
+  }
