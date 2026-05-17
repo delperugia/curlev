@@ -507,6 +507,10 @@ TEST( http_basic, protocols )
     code = http->GET( "file://" PROJECT_ROOT_DIR "/tests/data.txt" ).safe_protocols("file").exec().get_code(); // error
     ASSERT_EQ( code, 0 );
     ASSERT_TRUE( http->get_body().find( "abc123" ) != std::string::npos );
+    //
+    code = http->GET( c_server_httpbin + "get" )
+                .safe_protocols("http,https,unknown").exec().get_code();
+    ASSERT_EQ( code, c_error_safe_protocols_set );
   }
   //
   async.options( "follow_location=1,verbose=1" );
