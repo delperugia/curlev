@@ -110,7 +110,7 @@ protected:
   //
 private:
   //
-  // Number of start_request waiting for m_uv_run_mutex
+  // Number of start_request/abort_request waiting for m_uv_run_mutex
   std::atomic_long m_nb_waiting_requests = 0;
   //
   // Number of currently running (including waiting) requests, from start_request to post Wrapper notification

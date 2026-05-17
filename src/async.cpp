@@ -212,7 +212,9 @@ bool ASync::start_request( CURL * p_curl, void * p_protocol_cb )
 // Aborts a request previously started
 void ASync::abort_request( CURL * p_curl )
 {
+  m_nb_waiting_requests++;
   std::lock_guard lock( m_uv_run_mutex );
+  m_nb_waiting_requests--;
   //
   // Returns CURLM_OK if the easy handle is removed or was not present (already removed)
   auto result_code = curl_multi_remove_handle( m_multi_handle, p_curl ); // ok on nullptr
@@ -653,7 +655,7 @@ void ASync::uv_clear()
 //--------------------------------------------------------------------
 // Called between uv_run by uv_init thread when there is requests executing.
 // Try to sleep as little as possible, not at all if possible.
-// unlock, accept start_request, lock
+// unlock, accept start_request/abort_request, lock
 void ASync::uv_run_accept_requests( std::unique_lock< std::mutex > & p_lock ) const
 {
   if ( m_nb_waiting_requests == 0 ) // then it is not even needed to unlock

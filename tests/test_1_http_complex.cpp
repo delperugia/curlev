@@ -190,33 +190,46 @@ TEST( http_complex, proxy )
 // Abort the request then retry
 TEST( http_complex, abort )
 {
-  std::atomic_int cb_count = 0;
+  std::atomic_int cb_count;
   //
   {
     ASync async;
     async.start();
     //
+    uint64_t start, duration_ns;
+    //
     {
       auto http = HTTP::create( async );
       //
-      http->GET( c_server_httpbun + "delay/1" )
-           .start( [ &cb_count ]( const auto & http ) { cb_count++; } );
+      cb_count = 0;
+      http->GET( c_server_httpbun + "delay/2" )
+          .start(
+              [ &cb_count ]( const auto & http )
+              {
+                cb_count++;
+                if ( http.get_code() == CURLE_ABORTED_BY_CALLBACK ) // should be the case
+                  cb_count++;
+              } );
       //
       uv_sleep( 200 );
       //
+      start = uv_hrtime();
+      http->abort().join();
+      duration_ns = uv_hrtime() - start;  // in nanoseconds
+      EXPECT_LT( duration_ns, 500'000'000 ); // < 0.5s
+      EXPECT_EQ( cb_count, 2 ); // called w code aborted
+      //
+      start = uv_hrtime();
       http->abort();
-      http->join();
-      http->abort();
+      duration_ns = uv_hrtime() - start;  // in nanoseconds
+      EXPECT_LT( duration_ns, 110'000'000 ); // < 0.11s
     }
     //
-    auto start = uv_hrtime();
-    async.stop(); // should wait for the end of all pending requests
-    auto duration_ns = uv_hrtime() - start;  // in nanoseconds
-    //
-    EXPECT_LT( duration_ns, 3'000'000'000 ); // < 3s
+    start = uv_hrtime();
+    async.stop();
+    duration_ns = uv_hrtime() - start;  // in nanoseconds
+    EXPECT_LT( duration_ns, 120'000'000 ); // < 0.12s
   }
-  //
-  EXPECT_TRUE( cb_count == 1 );
   //
   {
     ASync async;
@@ -225,6 +238,7 @@ TEST( http_complex, abort )
     {
       auto http = HTTP::create( async );
       //
+      cb_count = 0;
       http->GET( c_server_httpbun + "delay/1" )
            .start( [ &cb_count ]( const auto & http ) { cb_count++; } );
       //
