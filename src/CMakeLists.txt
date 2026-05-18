@@ -42,12 +42,15 @@ target_compile_options( curlev PRIVATE
         -Wall -Wextra -Wpedantic -Wcast-align -Wcast-qual -Wformat=2
         -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow
         -Wswitch -Wswitch-default -Wundef -Werror
+        -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fvisibility=hidden
     >
 )
 
-if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-    target_compile_options( curlev PRIVATE -O0 --coverage )
-endif()
+target_compile_options( curlev PRIVATE
+    $<$<CONFIG:Debug>:
+    -O0 --coverage
+    >
+)
 
 # Installation
 include( GNUInstallDirs )
