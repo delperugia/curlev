@@ -67,13 +67,15 @@ public:
   HTTP & set_parameters( const key_values &  p_body_parameters );
   HTTP & set_mime      ( const mime::parts & p_parts );
   //
-  // These accessors return references for efficiency, directly exposing the object's
-  // internal. They must only be used after the request has fully completed to ensure data
-  // consistency and avoid unstable values during ongoing operations.
-  const key_values_ci & get_headers     () const noexcept;
-  const std::string   & get_content_type() const noexcept;
-  const std::string   & get_redirect_url() const noexcept;
-  const std::string   & get_body        () const noexcept;
+  // Fast accessors returning references to internal response storage.
+  // Use them only after the request has completed and while the HTTP object stays
+  // idle. The references are invalidated by clear(), a new request, launch(), or
+  // destruction. Do not keep them across calls that can restart or reset the object;
+  // copy the value instead, or use launch() when a self-contained response is needed.
+  [[nodiscard]] const key_values_ci & get_headers     () const noexcept;
+  [[nodiscard]] const std::string   & get_content_type() const noexcept;
+  [[nodiscard]] const std::string   & get_redirect_url() const noexcept;
+  [[nodiscard]] const std::string   & get_body        () const noexcept;
   //
   #if __has_include( <nlohmann/json.hpp> )
     bool get_json( nlohmann::json & p_json ) const noexcept;

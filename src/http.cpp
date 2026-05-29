@@ -113,9 +113,11 @@ HTTP & HTTP::set_mime( const mime::parts & p_parts )
 }
 
 //--------------------------------------------------------------------
-// These accessors return references for efficiency, directly exposing the object's
-// internal. They must only be used after the request has fully completed to ensure data
-// consistency and avoid unstable values during ongoing operations.
+// Fast accessors returning references to internal response storage.
+// Use them only after the request has completed and while the HTTP object stays
+// idle. The references are invalidated by clear(), a new request, launch(), or
+// destruction. Do not keep them across calls that can restart or reset the object;
+// copy the value instead, or use launch() when a self-contained response is needed.
 static const std::string   c_empty_string;
 static const key_values_ci c_empty_key_values_ci;
 
