@@ -335,7 +335,12 @@ class Wrapper: public WrapperBase
     }
     //
     // Accessors
-    long get_code() const noexcept { return is_running() ? c_running : m_response_code; };
+    long get_code() const noexcept
+    {
+      std::lock_guard lock( m_exec_mutex );
+      //
+      return m_exec_state == State::running ? c_running : m_response_code;
+    };
     //
   protected:
     CURL *         m_curl            = nullptr;
