@@ -413,12 +413,17 @@ class Wrapper: public WrapperBase
         return false;
       }
       //
-      if ( ! easy_setopt( m_curl, CURLOPT_PROTOCOLS_STR      , m_safe_protocols.c_str() ) ||
-           ! easy_setopt( m_curl, CURLOPT_REDIR_PROTOCOLS_STR, m_safe_protocols.c_str() ) )
-      {
-        m_response_code = c_error_safe_protocols_set;
-        return false;
-      }
+      #if LIBCURL_VERSION_NUM >= 0x075500   // 7.85.0
+        if ( ! easy_setopt( m_curl, CURLOPT_PROTOCOLS_STR      , m_safe_protocols.c_str() ) ||
+             ! easy_setopt( m_curl, CURLOPT_REDIR_PROTOCOLS_STR, m_safe_protocols.c_str() ) )
+        {
+          m_response_code = c_error_safe_protocols_set;
+          return false;
+        }
+      #else
+        curl_easy_setopt( m_curl, CURLOPT_PROTOCOLS      , CURLPROTO_HTTP | CURLPROTO_HTTPS );
+        curl_easy_setopt( m_curl, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS );
+      #endif
       //
       return true;
     }
