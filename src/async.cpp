@@ -946,8 +946,8 @@ size_t ASync::curl_cb_write( const char * p_ptr, size_t p_size, size_t p_nmemb, 
 }
 
 //--------------------------------------------------------------------
-// To store header received during the transfer.
-// Data is located in the Protocol and is a std::map< std::string, std::string >.
+// To store headers received during the transfer.
+// Data is located in the Protocol and is a key_values_ci (std::unordered_map< std::string, std::string>).
 // m_uv_run_mutex is locked.
 size_t ASync::curl_cb_header( const char * p_buffer, size_t p_size, size_t p_nitems, void * p_userdata )
 {
