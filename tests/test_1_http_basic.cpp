@@ -508,30 +508,35 @@ TEST( http_basic, protocols )
     ASSERT_EQ( code, 0 );
     ASSERT_TRUE( http->get_body().find( "abc123" ) != std::string::npos );
     //
-    code = http->GET( c_server_httpbin + "get" )
+    code = http->GET( c_server_httpbun + "get" )
                 .safe_protocols("http,https,unknown").exec().get_code();
     ASSERT_EQ( code, c_error_safe_protocols_set );
   }
   //
+  /*
+    Redirections in Httpbun are now limited to http, https.
+    This test is not possible anymore.
+
   async.options( "follow_location=1,verbose=1" );
   //
   {
     auto http = HTTP::create( async );
     long code;
     //
-    code = http->GET( c_server_httpbin + "redirect-to", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
+    code = http->GET( c_server_httpbun + "redirect-to", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
                 .exec().get_code();
-    ASSERT_EQ( code, CURLE_UNSUPPORTED_PROTOCOL );
+    ASSERT_EQ( code, CURLE_UNSUPPORTED_PROTOCOL ); // 2nd hop on file:// rejected
     //
-    code = http->GET( c_server_httpbin + "redirect-to", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
+    code = http->GET( c_server_httpbun + "redirect-to", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
                 .safe_protocols("file").exec().get_code();
-    ASSERT_EQ( code, CURLE_UNSUPPORTED_PROTOCOL );
+    ASSERT_EQ( code, CURLE_UNSUPPORTED_PROTOCOL ); // 1st hop on http(s):// rejected
     //
-    code = http->GET( c_server_httpbin + "redirect-to", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
-                .safe_protocols("http,https,file").exec().get_code();
+    code = http->GET( c_server_httpbun + "redirect-to", { { "url", "file://" PROJECT_ROOT_DIR "/tests/data.txt" } }  )
+                .safe_protocols("http,https,file").exec().get_code(); // both hops accepted
     ASSERT_EQ( code, 302 ); // last HTTP response, CURLE_FILE_COULDNT_READ_FILE on file error
     ASSERT_TRUE( http->get_body().find( "abc123" ) != std::string::npos );
   }
+  */
   //
   async.stop();
 }

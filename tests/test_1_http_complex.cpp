@@ -167,7 +167,8 @@ TEST( http_complex, redirect )
 }
 
 //--------------------------------------------------------------------
-// A 308 to the target site is received from httpbun.com
+// To test the proxy mode, try to go to an invalid DN via a regular
+// HTTP server. Request will connect and get a 404 (vs a connection error).
 TEST( http_complex, proxy )
 {
   ASync async;
@@ -175,12 +176,10 @@ TEST( http_complex, proxy )
   //
   {
     auto http = HTTP::create( async );
-    auto code = http->GET( "http://example.com/" )
+    auto code = http->GET( "http://host.invalid/" )
                      .options( "proxy=" + c_server_httpbun )
                      .exec().get_code();
-    ASSERT_EQ( code, 308 );
-    //
-    EXPECT_EQ(  http->get_redirect_url(), "https://example.com/" );
+    ASSERT_EQ( code, 404 );
   }
   //
   async.stop();

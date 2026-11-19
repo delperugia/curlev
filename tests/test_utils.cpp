@@ -6,10 +6,9 @@
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
-std::string c_server_httpbun      = "http://httpbun.com:80/"; // port needed for http_complex.proxy
-std::string c_server_httpbin      = "http://httpbin.org/";
-std::string c_server_compress     = "https://github.com/delperugia/curlev/blob/master/README.md";  // response size greater than 1024
-std::string c_server_certificates = "https://github.com/delperugia/curlev/blob/master/.gitignore";
+std::string c_server_httpbun      = "https://httpbun.com:443/"; // port needed for http_complex.proxy tests, TLS not required
+std::string c_server_compress     = "https://github.com/delperugia/curlev/blob/master/README.md";  // response size greater than 1024, TLS not required
+std::string c_server_certificates = "https://github.com/delperugia/curlev/blob/master/.gitignore"; // a small page with TLS
 
 //--------------------------------------------------------------------
 // Returns the number of attributes in the object pointed by p_path.
