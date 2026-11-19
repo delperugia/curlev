@@ -128,7 +128,6 @@ private:
 // Exception thrown when the factory fails to create a new protocol class
 struct bad_curl_easy_alloc : public std::bad_alloc
 {
-  // cppcheck-suppress unusedFunction
   [[nodiscard]] const char * what() const noexcept override
   {
     return "Initializing curl easy handle";
@@ -374,7 +373,7 @@ class Wrapper: public WrapperBase
     }
     //
     // Enable m_request_body usage
-    bool prepare_request_body()
+    bool prepare_request_body() const
     {
       // libcurl doesn't expose the maximal value of curl_off_t (internally CURL_OFF_T_MAX )
       constexpr int    bits = sizeof( curl_off_t ) * 8;

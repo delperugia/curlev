@@ -59,9 +59,11 @@ if( CPPCHECK_EXECUTABLE )
                 --inline-suppr --std=c++17 --quiet
                 --suppress=checkersReport
                 --suppress=missingIncludeSystem
+                --suppress=*:*/usr/include/*
                 --error-exitcode=1
-                -I ${CMAKE_SOURCE_DIR}/include -I ${CMAKE_BINARY_DIR}/include
-                ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/tests/
+                --check-level=exhaustive
+                -I ${CMAKE_SOURCE_DIR}/include -I ${CMAKE_BINARY_DIR}/include -I ${CURL_INCLUDE_DIR}
+                ${CMAKE_SOURCE_DIR}/include/ ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/tests/
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running Cppcheck on all sources"
     )

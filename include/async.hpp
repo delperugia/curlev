@@ -200,7 +200,7 @@ private:
   //
   curl_context * create_curl_context ( curl_socket_t p_socket );
   static
-  void           destroy_curl_context( curl_context * p_context ); // cppcheck-suppress functionStatic
+  void           destroy_curl_context( curl_context * p_context );
   //
   // Callback thread
   //
