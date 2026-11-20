@@ -42,7 +42,7 @@ target_compile_options( curlev PRIVATE
         -Wall -Wextra -Wpedantic -Wcast-align -Wcast-qual -Wformat=2
         -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow
         -Wswitch -Wswitch-default -Wundef -Werror
-        -D_FORTIFY_SOURCE=3 -fstack-protector-strong -fvisibility=hidden
+        -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fvisibility=hidden
     >
 )
 
