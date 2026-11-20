@@ -22,12 +22,12 @@ TEST( http_complex, simultaneous )
   {
     std::vector< std::shared_ptr< HTTP > > https;
     std::vector< std::string >             codes =
-      { "200", "204", "302", "400", "401", "404", "409", "501", "503" };
+      { "200", "201", "302", "400", "401", "404", "409", "410", "411" };
     //
     for ( const std::string & expected_code : codes )
     {
       https.emplace_back( HTTP::create( async ) );
-      https.back()->GET( c_server_httpbun + "status/" + expected_code ).start();
+      https.back()->GET( c_server_httpbun + "mix/d=1/s=" + expected_code ).start();
     }
     //
     for ( auto i = 0; i < codes.size(); i++ )
@@ -179,7 +179,7 @@ TEST( http_complex, proxy )
     auto code = http->GET( "http://host.invalid/" )
                      .options( "proxy=" + c_server_httpbun )
                      .exec().get_code();
-    ASSERT_EQ( code, 404 );
+    ASSERT_TRUE( code == 200 || code == 404 ); // online httpbun returns 404, container 200
   }
   //
   async.stop();
