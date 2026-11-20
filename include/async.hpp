@@ -5,13 +5,11 @@
 
 #pragma once
 
-#include <array>
 #include <atomic>
 #include <condition_variable>
 #include <curl/curl.h>
 #include <deque>
 #include <mutex>
-#include <pthread.h>
 #include <set>
 #include <shared_mutex>
 #include <thread>
@@ -30,34 +28,6 @@ constexpr auto c_default_network_timeout_ms = 30'000U;
 
 class                                WrapperBase;
 template < typename Protocol > class Wrapper;
-
-//--------------------------------------------------------------------
-// Because it is not possible to mix lock/unlock and lock_shared/unlock_shared
-// in std::shared_mutex, and because libcurl CURLSHOPT_UNLOCKFUNC function
-// does not receive the access, C functions must be used. They are wrapped
-// here for conveniency (even if libcurl seldom use shared locks).
-class shared_mutex : private non_transferable
-{
-public:
-  shared_mutex()
-  {
-    m_initialized = pthread_rwlock_init( &m_lock, nullptr ) == 0;
-  }
-  //
-  ~shared_mutex() override
-  {
-    if ( m_initialized )
-      pthread_rwlock_destroy( &m_lock );
-  }
-  //
-  void lock       () { pthread_rwlock_wrlock( &m_lock ); }
-  void lock_shared() { pthread_rwlock_rdlock( &m_lock ); }
-  void unlock     () { pthread_rwlock_unlock( &m_lock ); }
-  //
-private:
-  bool             m_initialized = false;
-  pthread_rwlock_t m_lock        = {};
-};
 
 //--------------------------------------------------------------------
 // This class handles the communications between libcurl multi and libuv.
@@ -137,21 +107,6 @@ private:
   //
   bool global_init ();
   void global_clear();
-  //
-  // libcurl share interface - share data between multiple easy handles (DNS, TLS...)
-  //
-  std::array< shared_mutex, CURL_LOCK_DATA_LAST > m_share_locks;
-  CURLSH *                                        m_share_handle = nullptr;
-  //
-  bool        share_init ();
-  void        share_clear();
-  static void share_cb_unlock( CURL * p_handle, curl_lock_data p_data, void * p_user_ptr );
-  static void share_cb_lock(
-      CURL *           p_handle,
-      curl_lock_data   p_data,
-      curl_lock_access p_access,
-      void *           p_user_ptr );
-  //
   // libcurl multi interface - enable multiple simultaneous transfers in the same thread
   //
   CURLM *            m_multi_handle          = nullptr;

@@ -61,7 +61,7 @@ ASync::~ASync()
 
 //--------------------------------------------------------------------
 // Must be called at least once before calling any other function of curlev.
-// Start curl, share and multi, then UV and its worker thread.
+// Start curl and multi, then UV and its worker thread.
 bool ASync::start()
 {
   if ( m_is_running )
@@ -70,7 +70,6 @@ bool ASync::start()
   bool ok = true;
   //
   ok = ok && global_init();
-  ok = ok && share_init();
   ok = ok && multi_init();
   ok = ok && uv_init(); // set m_uv_running to true
   ok = ok && cb_init(); // set m_cb_running to true
@@ -88,7 +87,7 @@ bool ASync::start()
 // Must be called at least when the program stops.
 // Waits a maximum of p_timeout_ms milliseconds before forcefully stopping,
 // returns true if stopping was forced.
-// Stop the worker thread used by UV and CB, clear share and multi of curl.
+// Stop the worker thread used by UV and CB, and clear multi of curl.
 // Ensure all UV handles are released.
 // Clean curl.
 bool ASync::stop( unsigned p_timeout_ms )
@@ -109,7 +108,6 @@ bool ASync::stop( unsigned p_timeout_ms )
   cb_clear();     // m_cb_queue is empty and worker thread stopped
   multi_clear();  // clean curl multiple async interface (multi_cb_socket can still be called with CURL_POLL_REMOVE)
   uv_clear();     // stop m_uv_worker thread, close uv handles
-  share_clear();  // clean curl shared structure
   global_clear(); // clear curl globals
   //
   return forced;
@@ -170,7 +168,6 @@ CURL * ASync::get_handle( WrapperBase * p_protocol ) const
   ok = ok && easy_setopt( curl, CURLOPT_WRITEDATA     , p_protocol     );
   ok = ok && easy_setopt( curl, CURLOPT_HEADERFUNCTION, curl_cb_header );
   ok = ok && easy_setopt( curl, CURLOPT_HEADERDATA    , p_protocol     );
-  ok = ok && easy_setopt( curl, CURLOPT_SHARE         , m_share_handle );
   ok = ok && easy_setopt( curl, CURLOPT_NOSIGNAL      , 1L             );
   //
   p_protocol->m_retry_uv_timer.data = curl; // the timer used for retry points on the curl handle
@@ -311,66 +308,6 @@ void ASync::global_clear()
 }
 
 //--------------------------------------------------------------------
-// Cookies are not shared since the easy handles can be used in
-// different contexts.
-bool ASync::share_init()
-{
-  m_share_handle = curl_share_init();
-  //
-  bool ok = true;
-  //
-  ok = ok && m_share_handle != nullptr;
-  ok = ok && share_setopt( m_share_handle, CURLSHOPT_SHARE     , CURL_LOCK_DATA_CONNECT     );
-  ok = ok && share_setopt( m_share_handle, CURLSHOPT_SHARE     , CURL_LOCK_DATA_DNS         );
-  ok = ok && share_setopt( m_share_handle, CURLSHOPT_SHARE     , CURL_LOCK_DATA_SSL_SESSION );
-  ok = ok && share_setopt( m_share_handle, CURLSHOPT_LOCKFUNC  , &share_cb_lock             );
-  ok = ok && share_setopt( m_share_handle, CURLSHOPT_UNLOCKFUNC, &share_cb_unlock           );
-  ok = ok && share_setopt( m_share_handle, CURLSHOPT_USERDATA  , this                       );
-  //
-  if ( ! ok )
-  {
-    curl_share_cleanup( m_share_handle ); // ok on nullptr
-    m_share_handle = nullptr;
-  }
-  //
-  return ok;
-}
-
-//--------------------------------------------------------------------
-void ASync::share_clear()
-{
-  curl_share_cleanup( m_share_handle ); // ok on nullptr
-  m_share_handle = nullptr;
-}
-
-//--------------------------------------------------------------------
-// Unlock some of curl share data
-void ASync::share_cb_unlock(
-    CURL *         /* easy */,
-    curl_lock_data p_data,
-    void *         p_user_ptr )
-{
-  auto * self = static_cast< ASync * >( p_user_ptr );
-  //
-  self->m_share_locks[ p_data ].unlock();
-}
-
-//--------------------------------------------------------------------
-// Lock some of curl share data
-void ASync::share_cb_lock(
-    CURL *           /* easy */,
-    curl_lock_data   p_data,
-    curl_lock_access p_access,
-    void *           p_user_ptr )
-{
-  auto * self = static_cast< ASync * >( p_user_ptr );
-  //
-  if ( p_access == CURL_LOCK_ACCESS_SHARED )
-    self->m_share_locks[ p_data ].lock_shared();
-  else
-    self->m_share_locks[ p_data ].lock(); // CURL_LOCK_ACCESS_SINGLE and unknown
-}
-
 //--------------------------------------------------------------------
 // Keep all the defaults maximum connection limits
 bool ASync::multi_init()
@@ -571,7 +508,7 @@ int ASync::multi_cb_socket(
   case CURL_POLL_OUT:
   case CURL_POLL_INOUT:
     if ( context == nullptr ) // the first time, create the context
-      context = self->create_curl_context( p_socket );
+      context = self->create_curl_context( p_socket ); // can return nullptr
     //
     if ( p_what != CURL_POLL_IN )
       events |= UV_WRITABLE;
