@@ -106,8 +106,8 @@ bool ASync::stop( unsigned p_timeout_ms )
   }
   //
   cb_clear();     // m_cb_queue is empty and worker thread stopped
-  multi_clear();  // clean curl multiple async interface (multi_cb_socket can still be called with CURL_POLL_REMOVE)
-  uv_clear();     // stop m_uv_worker thread, close uv handles
+  multi_clear();  // block m_uv_worker thread, then clean curl multiple async interface
+  uv_clear();     // stop m_uv_worker thread, close UV handles
   global_clear(); // clear curl globals
   //
   return forced;
@@ -334,6 +334,14 @@ bool ASync::multi_init()
 //--------------------------------------------------------------------
 void ASync::multi_clear()
 {
+  // Stop further uv_run() calls while holding the worker's lock:
+  // it won't call any of its callbacks (and libcurl via curl_multi_socket_action())
+  // Keep the loop initialized so cleanup can report CURL_POLL_REMOVE.
+  //
+  std::scoped_lock raii( m_uv_run_mutex );
+  //
+  m_uv_running = false;
+  //
   curl_multi_cleanup( m_multi_handle ); // ok on nullptr
   m_multi_handle = nullptr;
 }
@@ -486,7 +494,7 @@ int ASync::multi_cb_timer(
 // Either we expect data (and call uv_poll_start) or are done (and call uv_poll_stop).
 // m_uv_run_mutex is locked.
 // Can also be called by curl_multi_cleanup (commit #a58b50f) with CURL_POLL_REMOVE,
-// so uv must still be active (see ASync::stop order).
+// so UV must still be active (see ASync::stop order).
 int ASync::multi_cb_socket(
     CURL *        /* easy */,
     curl_socket_t p_socket,
@@ -572,7 +580,8 @@ bool ASync::uv_init()
 //--------------------------------------------------------------------
 void ASync::uv_clear()
 {
-  m_uv_running = false;
+  assert( ! m_uv_running ); // set by multi_clear() in stop()
+  //
   m_uv_run_cv.notify_one(); // speedup the exit of uv_run_wait_requests
   //
   if ( m_uv_worker.joinable() )
