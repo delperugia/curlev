@@ -64,7 +64,7 @@ ASync::~ASync()
 // Start curl, share and multi, then UV and its worker thread.
 bool ASync::start()
 {
-  if ( m_uv_running )
+  if ( m_is_running )
     return true;
   //
   bool ok = true;
@@ -79,6 +79,8 @@ bool ASync::start()
   m_default_authentication.set_default();
   m_default_certificates  .set_default( m_global_ca_info, m_global_ca_path );
   //
+  m_is_running = ok;
+  //
   return ok;
 }
 
@@ -91,6 +93,11 @@ bool ASync::start()
 // Clean curl.
 bool ASync::stop( unsigned p_timeout_ms )
 {
+  if ( ! m_is_running )
+    return false;
+  //
+  m_is_running = false;
+  //
   bool forced = ! wait_pending_requests( p_timeout_ms );
   //
   if ( forced )
@@ -99,11 +106,11 @@ bool ASync::stop( unsigned p_timeout_ms )
     wait_pending_requests( c_default_network_timeout_ms );
   }
   //
-  uv_clear();
-  cb_clear();
-  share_clear();
-  multi_clear();
-  global_clear();
+  cb_clear();     // m_cb_queue is empty and worker thread stopped
+  multi_clear();  // clean curl multiple async interface (multi_cb_socket can still be called with CURL_POLL_REMOVE)
+  uv_clear();     // stop m_uv_worker thread, close uv handles
+  share_clear();  // clean curl shared structure
+  global_clear(); // clear curl globals
   //
   return forced;
 }
@@ -148,6 +155,9 @@ CURL * ASync::get_handle( WrapperBase * p_protocol ) const
 {
   ASSERT_RETURN( p_protocol != nullptr, nullptr ); // bad protocol
   //
+  if ( ! m_is_running )
+    return nullptr;
+  //
   auto * curl = curl_easy_init();
   bool   ok   = true;
   //
@@ -187,6 +197,9 @@ void ASync::return_handle( CURL * & p_curl )
 // Waits the end of the current uv_run() to add the handle.
 bool ASync::start_request( CURL * p_curl, void * p_protocol_cb )
 {
+  if ( ! m_is_running )
+    return false;
+  //
   if ( ! easy_setopt( p_curl, CURLOPT_PRIVATE, p_protocol_cb ) )
     return false;
   //
@@ -532,6 +545,8 @@ int ASync::multi_cb_timer(
 // Called by curl_multi_socket_action when there is an update on one of multi socket.
 // Either we expect data (and call uv_poll_start) or are done (and call uv_poll_stop).
 // m_uv_run_mutex is locked.
+// Can also be called by curl_multi_cleanup (commit #a58b50f) with CURL_POLL_REMOVE,
+// so uv must still be active (see ASync::stop order).
 int ASync::multi_cb_socket(
     CURL *        /* easy */,
     curl_socket_t p_socket,
@@ -828,7 +843,7 @@ bool ASync::cb_init()
       {
         std::unique_lock lock( m_cb_mutex );              // lock
         //
-        while ( m_cb_running )
+        for (;;)
         {
           while ( ! m_cb_queue.empty() )                  // if some notifications are pending
           {
@@ -841,6 +856,9 @@ bool ASync::cb_init()
             lock.lock();                                  // lock
           }
           //
+          if ( ! m_cb_running )
+            break;
+          //
           m_cb_cv.wait_for( lock, c_event_wait_timeout ); // unlock, wait, lock
         }
       } );
@@ -850,9 +868,14 @@ bool ASync::cb_init()
 
 //--------------------------------------------------------------------
 // Stop the CB worker thread
+// By setting m_cb_running false then notifying, we are use that that
+// m_cb_queue is empty when exiting.
 void ASync::cb_clear()
 {
-  m_cb_running = false;
+  {
+      std::lock_guard lock( m_cb_mutex );
+      m_cb_running = false;
+  }
   m_cb_cv.notify_one(); // speedup the exit of cb_init's thread
   //
   if ( m_cb_worker.joinable() )
@@ -1064,7 +1087,8 @@ void ASync::post_to_wrapper(
   {
     {
       std::lock_guard lock( m_cb_mutex );
-      m_cb_queue.emplace_back( p_wrapper, p_result_code );
+      if ( m_cb_running )
+        m_cb_queue.emplace_back( p_wrapper, p_result_code );
     }
     m_cb_cv.notify_one();
   }

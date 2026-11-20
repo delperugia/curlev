@@ -110,6 +110,9 @@ protected:
   //
 private:
   //
+  // If Async was started
+  std::atomic_bool m_is_running = false;
+  //
   // Number of start_request/abort_request waiting for m_uv_run_mutex
   std::atomic_long m_nb_waiting_requests = 0;
   //
