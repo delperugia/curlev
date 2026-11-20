@@ -204,9 +204,10 @@ bool ASync::start_request( CURL * p_curl, void * p_protocol_cb )
     return false;
   //
   m_nb_running_requests++; // the running state includes the waiting period
-  //
   m_nb_waiting_requests++;
-  std::lock_guard lock( m_uv_run_mutex );
+  //
+  std::scoped_lock raii( m_uv_run_mutex );
+  //
   m_nb_waiting_requests--;
   //
   // Added for the next uv_run() (in worker thread of uv_init())
@@ -226,7 +227,9 @@ bool ASync::start_request( CURL * p_curl, void * p_protocol_cb )
 void ASync::abort_request( CURL * p_curl )
 {
   m_nb_waiting_requests++;
-  std::lock_guard lock( m_uv_run_mutex );
+  //
+  std::scoped_lock raii( m_uv_run_mutex );
+  //
   m_nb_waiting_requests--;
   //
   // Returns CURLM_OK if the easy handle is removed or was not present (already removed)
@@ -274,7 +277,7 @@ namespace
 
 bool ASync::global_init()
 {
-  std::lock_guard lock( m_global_mutex );
+  std::scoped_lock raii( m_global_mutex );
   //
   bool ok = true;
   //
@@ -300,7 +303,7 @@ bool ASync::global_init()
 // Number or curl_global_init() must match the number of curl_global_cleanup()
 void ASync::global_clear()
 {
-  std::lock_guard lock( m_global_mutex );
+  std::scoped_lock raii( m_global_mutex );
   //
   if ( m_global_count > 0 )       // safety if global_clear() is invoked more than global_init()
     if ( --m_global_count == 0 )  // last one
@@ -443,7 +446,7 @@ void ASync::abort_started_request( wrapper_shared_ptr_ptr & p_wrapper, CURL * p_
 void ASync::abort_pending_requests()
 {
   {
-    std::lock_guard lock( m_uv_run_mutex );
+    std::scoped_lock raii( m_uv_run_mutex );
     //
     std::vector< CURL * > requests;
     requests.assign( m_multi_requests_started.begin(), m_multi_requests_started.end() );
@@ -873,7 +876,8 @@ bool ASync::cb_init()
 void ASync::cb_clear()
 {
   {
-      std::lock_guard lock( m_cb_mutex );
+      std::scoped_lock raii( m_cb_mutex );
+      //
       m_cb_running = false;
   }
   m_cb_cv.notify_one(); // speedup the exit of cb_init's thread
@@ -1086,7 +1090,8 @@ void ASync::post_to_wrapper(
   if ( ( *p_wrapper )->use_threaded_cb() ) // push it to CB queue for later delivery
   {
     {
-      std::lock_guard lock( m_cb_mutex );
+      std::scoped_lock raii( m_cb_mutex );
+      //
       if ( m_cb_running )
         m_cb_queue.emplace_back( p_wrapper, p_result_code );
     }

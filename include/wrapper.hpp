@@ -184,7 +184,7 @@ class Wrapper: public WrapperBase
     Protocol & start( cb_user && p_user_cb = nullptr )
     {
       {
-        std::lock_guard lock( m_exec_mutex );
+        std::scoped_lock raii( m_exec_mutex );
         //
         if ( m_exec_state != State::idle )              // already running: do nothing at all
           return static_cast< Protocol & >( *this );
@@ -336,7 +336,7 @@ class Wrapper: public WrapperBase
     // Accessors
     long get_code() const noexcept
     {
-      std::lock_guard lock( m_exec_mutex );
+      std::scoped_lock raii( m_exec_mutex );
       //
       return m_exec_state == State::running ? c_running : m_response_code;
     };
@@ -436,7 +436,7 @@ class Wrapper: public WrapperBase
       finalize_protocol(); // calls Protocol to retrieve protocol related details
       //
       {
-        std::lock_guard lock( m_exec_mutex );
+        std::scoped_lock raii( m_exec_mutex );
         m_exec_state = State::finished; // transfer is now finished, received data can be read
       }
       //
@@ -444,7 +444,7 @@ class Wrapper: public WrapperBase
       //
       {
         {
-          std::lock_guard lock( m_exec_mutex );
+          std::scoped_lock raii( m_exec_mutex );
           m_exec_state = State::idle;
         }
         m_exec_cv.notify_one(); // releases the join(): request is now terminated
@@ -508,7 +508,7 @@ class Wrapper: public WrapperBase
     template < typename Callable >
     bool do_if_idle( Callable && p_action ) const
     {
-      std::lock_guard lock( m_exec_mutex );
+      std::scoped_lock raii( m_exec_mutex );
       //
       if ( m_exec_state == State::idle )
       {
@@ -522,7 +522,7 @@ class Wrapper: public WrapperBase
     // Transfer is active (or was since the lock goes out of scope)
     bool is_running() const
     {
-      std::lock_guard lock( m_exec_mutex );
+      std::scoped_lock raii( m_exec_mutex );
       //
       return m_exec_state == State::running;
     }
