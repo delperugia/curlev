@@ -34,6 +34,23 @@ jobs:
             cmake -B         build/  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
             cmake --build    build/
 
+      - name: Run Httpbun
+        run: |
+          sudo apt-get install --yes mkcert libnss3-tools
+          mkcert -install
+          mkcert -cert-file '/tmp/cert.pem' -key-file '/tmp/key.pem' httpbun.com
+          echo '127.0.0.1 httpbun.com' | sudo tee --append /etc/hosts
+          docker run \
+            --name httpbun \
+            --detach \
+            --publish 443:443 \
+            --volume /tmp:/tmp:ro \
+            --env HTTPBUN_TLS_CERT=/tmp/cert.pem \
+            --env HTTPBUN_TLS_KEY=/tmp/key.pem \
+            --pull always \
+            sharat87/httpbun
+          sleep 1
+
       - name: Run Valgrind
         run: |
             ctest --test-dir build/ -T memcheck --output-on-failure
