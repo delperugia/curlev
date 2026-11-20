@@ -14,7 +14,8 @@ using namespace curlev;
 
 //--------------------------------------------------------------------
 // 9 simultaneous requests
-TEST( http_complex, simultaneous )
+
+TEST( http_complex, simultaneous_slow )
 {
   ASync async;
   async.start();
@@ -34,6 +35,33 @@ TEST( http_complex, simultaneous )
       EXPECT_EQ( std::to_string( https[ i ]->join().get_code() ), codes[ i ] );
     //
     EXPECT_EQ( async.peak_requests(), codes.size() );
+    EXPECT_EQ( async.active_requests(), 0 );
+    EXPECT_FALSE( async.protocol_crashed() );
+  }
+  //
+  async.stop();
+}
+
+TEST( http_complex, simultaneous_fast )
+{
+  ASync async;
+  async.start();
+  //
+  {
+    std::vector< std::shared_ptr< HTTP > > https;
+    std::vector< std::string >             codes =
+      { "200", "201", "302", "400", "401", "404", "409", "410", "411" };
+    //
+    for ( const std::string & expected_code : codes )
+    {
+      https.emplace_back( HTTP::create( async ) );
+      https.back()->GET( c_server_httpbun + "mix/s=" + expected_code ).start();
+    }
+    //
+    for ( auto i = 0; i < codes.size(); i++ )
+      EXPECT_EQ( std::to_string( https[ i ]->join().get_code() ), codes[ i ] );
+    //
+    EXPECT_LE( async.peak_requests(), codes.size() );
     EXPECT_EQ( async.active_requests(), 0 );
     EXPECT_FALSE( async.protocol_crashed() );
   }
